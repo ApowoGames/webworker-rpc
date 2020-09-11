@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es5",
+    "lib": [
+      "es2015",
+      "webworker",
+      "dom"
+    ],
+    "declaration": false,
+    "noImplicitAny": false,
+    "sourceMap": false,
+    "outDir": "types",
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/phaser/types"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ],
+}
