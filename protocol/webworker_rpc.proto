@@ -1,0 +1,59 @@
+syntax = "proto2";
+import "def.proto";
+package webworker_rpc;
+
+enum MSG_ERR {
+    OK              = 0;
+    // TODO
+}
+
+message Executor{
+    required string method = 1;// 已注册的执行程序(每个worker都维护一个Registry来注册Executor)
+    optional string context = 2;// executor执行所在的上下文，结合注册表获取对象，如不设置默认工作在Global
+    repeated Param params = 3;// 方法入参描述，用&分割，可以带值传送。例如"x=1&y=2"
+}
+
+message Param {
+    required ParamType t = 1;
+    oneof val {
+        string val_str = 2;
+        bool val_bool = 3;
+        int32 val_num = 4;
+        bytes val_bytes = 5;
+    }
+}
+
+enum ParamType{
+    UNKNOWN = 0;
+
+    str = 1;
+    boolean = 2;
+    num = 3;
+    unit8array = 4;
+}
+
+message Header {
+    required string service_name = 1;// 发送者(worker)名称 
+    required MSG_ERR error = 2;
+    required Executor remote_executor = 3;// 远程调用
+    optional Executor callback_executor = 4;
+    optional int32 body_len = 5;
+}
+
+message ExecutePacket {
+    required Header header = 1;
+    optional bytes body = 2;
+}
+
+message RegistryPacket {
+    required string service_name = 1;// 发送者(worker)名称
+    repeated Executor executors = 2;// 发送者可调用方法
+}
+
+message WebWorkerMessage {
+    required string key = 1;
+    oneof data {
+        ExecutePacket data_execute = 2;
+        RegistryPacket data_registry = 3;
+    }
+}
