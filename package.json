@@ -22,7 +22,6 @@
     "js-base64": "^3.4.5",
     "jsdoc": "^3.6.4",
     "phaser": "^3.23.0",
-    "pixelpai_proto": "git+ssh://git@code.apowo.com:PixelPai/pixelpai_proto.git#typescriptdev",
     "remove": "^0.1.5",
     "ts-loader": "^6.2.1",
     "tslint": "^6.0.0",
