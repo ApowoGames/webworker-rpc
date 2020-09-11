@@ -1,7 +1,4 @@
 import "phaser";
-// import TestWorker from "worker-loader?name=dist/[name].js!./TestWorker";
-// import { Base64, decode, encode } from "js-base64";
-import { Inject } from "common-injector";
 import ForemanWorker from "worker-loader?name=dist/[name].js!./foremanworker";
 import { RPCPeer } from "./src/rpc.peer";
 export class World {
@@ -20,10 +17,6 @@ export class World {
 }
 
 export class GameScene extends Phaser.Scene {
-    private graphics: Phaser.GameObjects.Graphics;
-    private rt: Phaser.GameObjects.RenderTexture;
-    // @Inject() private workerControl: WorkerControl;
-
     private peer: RPCPeer;
 
     constructor() {
@@ -40,11 +33,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     public create() {
-        this.graphics = this.add.graphics();
-        this.graphics.setVisible(false);
-
-        this.rt = this.add.renderTexture(400, 300, 400, 400).setOrigin(0.5);
-
         // const imgBtn = this.add.image(300, 150, "bubble");
         // imgBtn.setInteractive();
         // imgBtn.once("pointerup", () => {

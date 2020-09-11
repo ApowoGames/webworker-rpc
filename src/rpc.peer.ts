@@ -1,6 +1,6 @@
 import { webworker_rpc } from "pixelpai_proto";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
-// import { Logger } from "../../src/utils/log";
+import { Logger } from "./utils/log";
 
 export const MESSAGEKEY_INIT: string = "init";
 export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
@@ -70,7 +70,7 @@ export class RPCPeer {
         return this.linkToWorker(workerName, worker);
     }
     public linkToWorker(workerName: string, worker: any): LinkListener {
-        // console.log(this.name + " linkToWorker", workerName);
+        // Logger.getInstance().log(this.name + " linkToWorker", workerName);
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
@@ -88,7 +88,7 @@ export class RPCPeer {
             return;
         }
         this.channels.set(worker, port);
-        // console.log(this.name + " addLink: ", worker);
+        // Logger.getInstance().log(this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
             if (!key) {
@@ -169,7 +169,7 @@ export class RPCPeer {
         }
     }
     private onMessage_AddRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_AddRegistry:", ev.data);
+        // Logger.getInstance().log(this.name + " onMessage_AddRegistry:", ev.data);
         const { dataRegistry } = ev.data;
         if (!dataRegistry) {
             // Logger.getInstance().warn("<data> not in ev.data");
@@ -192,14 +192,14 @@ export class RPCPeer {
         }
     }
     private onMessage_GotRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_GotRegistry:", ev.data);
+        // Logger.getInstance().log(this.name + " onMessage_GotRegistry:", ev.data);
         const { worker } = ev.data;
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(worker);
         }
     }
     private onMessage_RunMethod(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_RunMethod:", ev.data);
+        // Logger.getInstance().log(this.name + " onMessage_RunMethod:", ev.data);
         const { dataExecute } = ev.data;
         if (!dataExecute) {
             // Logger.getInstance().warn("<data> not in ev.data");
