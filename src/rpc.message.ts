@@ -1,4 +1,4 @@
-import { webworker_rpc } from "pixelpai_proto";
+import { webworker_rpc } from "../lib/protocols";
 import { Logger } from "./utils/log";
 
 export class RPCMessage extends webworker_rpc.WebWorkerMessage {

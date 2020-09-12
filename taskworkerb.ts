@@ -1,5 +1,5 @@
 import { RPCPeer, RPCFunction } from "./src/rpc.peer";
-import { webworker_rpc } from "pixelpai_proto";
+import { webworker_rpc } from "./lib/protocols";
 import { RPCExecutor, RPCParam } from "./src/rpc.message";
 
 const worker: Worker = self as any;

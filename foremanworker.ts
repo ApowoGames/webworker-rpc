@@ -2,7 +2,7 @@ import TaskWorkerA from "worker-loader?name=dist/[name].js!./taskworkera";
 import TaskWorkerB from "worker-loader?name=dist/[name].js!./taskworkerb";
 import TaskWorkerC from "worker-loader?name=dist/[name].js!./taskworkerc";
 import { RPCPeer, RPCFunction } from "./src/rpc.peer";
-import { webworker_rpc } from "pixelpai_proto";
+import { webworker_rpc } from "./lib/protocols";
 import { RPCExecutor, RPCExecutePacket, RPCParam } from "./src/rpc.message";
 
 // 主worker 创建子worker 并创建连接
