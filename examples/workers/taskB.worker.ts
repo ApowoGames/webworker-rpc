@@ -1,6 +1,7 @@
-import { RPCPeer, RPCFunction } from "./src/rpc.peer";
-import { webworker_rpc } from "./lib/protocols";
-import { RPCExecutor, RPCParam } from "./src/rpc.message";
+import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
+import { webworker_rpc } from "../../lib/protocols";
+import { RPCExecutor, RPCParam } from "../../src/rpc.message";
+import { Logger } from "../../src/utils/log";
 
 const worker: Worker = self as any;
 class WorkerBContext extends RPCPeer {
@@ -10,8 +11,7 @@ class WorkerBContext extends RPCPeer {
 
     @RPCFunction([webworker_rpc.ParamType.num])
     public methodB(val: number): Promise<string> {
-        // tslint:disable-next-line:no-console
-        console.log("methodB: ", val);
+        Logger.getInstance().log("methodB: ", val);
         return new Promise<string>((resolve, reject) => {
             resolve("callback from WorkerB");
         });

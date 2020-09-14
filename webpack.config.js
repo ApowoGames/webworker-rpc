@@ -1,11 +1,16 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './main.ts',
+  entry: './examples/main.ts',
   module: {
     rules: [
-      { test: /\.ts$/, loader: 'ts-loader', exclude: '/node_modules/' }
+      {
+        test: /\.ts$/,
+        loader: 'ts-loader',
+        exclude: '/node_modules/'
+      },
     ]
   },
   resolve: {

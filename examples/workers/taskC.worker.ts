@@ -1,6 +1,7 @@
-import { RPCPeer, RPCFunction } from "./src/rpc.peer";
-import { webworker_rpc } from "./lib/protocols";
-import { RPCExecutor, RPCParam } from "./src/rpc.message";
+import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
+import { webworker_rpc } from "../../lib/protocols";
+import { RPCExecutor, RPCParam } from "../../src/rpc.message";
+import { Logger } from "../../src/utils/log";
 
 const worker: Worker = self as any;
 class WorkerCContext extends RPCPeer {
@@ -10,8 +11,7 @@ class WorkerCContext extends RPCPeer {
 
     @RPCFunction([webworker_rpc.ParamType.unit8array])
     public methodC(val: Uint8Array): Promise<string> {
-        // tslint:disable-next-line:no-console
-        console.log("methodC: ", val);
+        Logger.getInstance().log("methodC: ", val);
         return new Promise<string>((resolve, reject) => {
             resolve("callback from WorkerC");
         });
