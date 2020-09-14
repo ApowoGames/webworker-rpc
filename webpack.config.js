@@ -5,8 +5,7 @@ module.exports = {
   entry: './main.ts',
   module: {
     rules: [
-      { test: /\.ts$/, loader: 'ts-loader', exclude: '/node_modules/' },
-      { test: /phaser\.js$/, loader: 'expose-loader?Phaser' },
+      { test: /\.ts$/, loader: 'ts-loader', exclude: '/node_modules/' }
     ]
   },
   resolve: {
@@ -16,14 +15,6 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'app.js'
   },
-  // devServer: {
-  //   contentBase: path.resolve(__dirname, './dist'),
-  //   publicPath: '/dist',
-  //   host: '0.0.0.0',
-  //   port: 8082,
-  //   open: false
-  // }
-
   devServer: {
     contentBase: path.resolve(__dirname, './'),
     publicPath: '/dist/',

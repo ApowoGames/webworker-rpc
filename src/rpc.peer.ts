@@ -1,4 +1,4 @@
-import { webworker_rpc } from "pixelpai_proto";
+import { webworker_rpc } from "../lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
 import { Logger } from "./utils/log";
 

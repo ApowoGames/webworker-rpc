@@ -7,7 +7,10 @@
     "outside": "bin/outside"
   },
   "scripts": {
-    "dev": "rm -rf dist && webpack && mv dist/dist/* dist/ && webpack-dev-server --mode development"
+    "dev": "rm -rf dist && webpack && mv dist/dist/* dist/ && webpack-dev-server --config ./webpack.config.js",
+    "mkproto:clean": "rimraf ./lib/protocols.d.ts ./lib/protocols.js",
+    "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./lib/protocols.js",
+    "mkproto": "yarn mkproto:clean && yarn mkproto:tojs && pbts -o ./lib/protocols.d.ts ./lib/protocols.js"
   },
   "dependencies": {
     "clean-webpack-plugin": "^3.0.0",
@@ -15,10 +18,8 @@
     "dts-dom": "^3.6.0",
     "expose-loader": "^0.7.5",
     "fs-extra": "^9.0.0",
-    "js-base64": "^3.4.5",
     "jsdoc": "^3.6.4",
-    "phaser": "^3.23.0",
-    "pixelpai_proto": "git+ssh://git@code.apowo.com:PixelPai/pixelpai_proto.git#typescriptdev",
+    "protobufjs": "^6.10.1",
     "remove": "^0.1.5",
     "ts-loader": "^6.2.1",
     "tslint": "^6.0.0",
@@ -32,7 +33,6 @@
     "file-loader": "^5.0.2",
     "html-webpack-plugin": "^4.3.0",
     "node-sloc": "^0.1.12",
-    "rimraf": "^3.0.2",
     "tern": "^0.24.3",
     "terser-webpack-plugin": "^3.0.5",
     "webpack": "^4.43.0",
