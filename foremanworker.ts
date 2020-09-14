@@ -4,6 +4,7 @@ import TaskWorkerC from "worker-loader?name=dist/[name].js!./taskworkerc";
 import { RPCPeer, RPCFunction } from "./src/rpc.peer";
 import { webworker_rpc } from "pixelpai_proto";
 import { RPCExecutor, RPCExecutePacket, RPCParam } from "./src/rpc.message";
+import { Logger } from "./src/utils/log";
 
 // 主worker 创建子worker 并创建连接
 const worker: Worker = self as any;
@@ -28,13 +29,12 @@ class ForemanContext extends RPCPeer {
 
     @RPCFunction()
     public methodF() {
-        console.log("methodF");
+        Logger.getInstance().log("methodF");
     }
 
     @RPCFunction([webworker_rpc.ParamType.str])
     public foremanCallback(val: string) {
-        // tslint:disable-next-line:no-console
-        console.log("foremanCallback: ", val);
+        Logger.getInstance().log("foremanCallback: ", val);
     }
 }
 
