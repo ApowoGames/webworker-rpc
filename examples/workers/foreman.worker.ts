@@ -17,13 +17,13 @@ class ForemanContext extends RPCPeer {
             [new RPCParam(webworker_rpc.ParamType.str)]);
 
         this.linkToWorker("workerA", new TaskWorkerA()).onReady(() => {
-            this.remote.workerA.WorkerAContext.methodA(callback, true);
+            this.remote.workerA.WorkerAContext.methodA(true, callback);
         });
         this.linkToWorker("workerB", new TaskWorkerB()).onReady(() => {
-            this.remote.workerB.WorkerBContext.methodB(null, 333);
+            this.remote.workerB.WorkerBContext.methodB(333);
         });
         this.linkToWorker("workerC", new TaskWorkerC()).onReady(() => {
-            this.remote.workerC.WorkerCContext.methodC(callback, new Uint8Array(webworker_rpc.Executor.encode(callback).finish().buffer.slice(0)));
+            this.remote.workerC.WorkerCContext.methodC(new Uint8Array(webworker_rpc.Executor.encode(callback).finish().buffer.slice(0)), callback);
         });
     }
 

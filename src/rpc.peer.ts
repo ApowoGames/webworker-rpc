@@ -11,9 +11,7 @@ export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
 export class RPCPeer {
     ["remote"]: {
         [worker: string]: {
-            [context: string]: {
-                [method: string]: (callback?: webworker_rpc.Executor, ...args) => {}
-            }
+            [context: string]: any
         };
     };// 解决编译时execute报错，并添加提示
 
@@ -63,7 +61,7 @@ export class RPCPeer {
         //     }
     }
 
-    public linkToUrl(workerName: string, workerUrl: string): LinkListener {
+    public linkTo(workerName: string, workerUrl: string): LinkListener {
         // TODO: 添加重复创建判定
 
         const worker = new Worker(workerUrl);
@@ -297,12 +295,16 @@ export class RPCPeer {
                 addProperty(serviceProp, executor.context, {});
             }
 
-            addProperty(serviceProp[executor.context], executor.method, (callback?: webworker_rpc.Executor, ...args) => {
+            addProperty(serviceProp[executor.context], executor.method, (...args) => {
                 const params: RPCParam[] = [];
+                let callback = null;
                 if (args) {
                     for (const arg of args) {
                         const t = RPCParam.typeOf(arg);
                         if (t === webworker_rpc.ParamType.UNKNOWN) {
+                            if (arg instanceof webworker_rpc.Executor) {
+                                callback = arg as webworker_rpc.Executor;
+                            }
                             // Logger.getInstance().warn("unknown param type: ", arg);
                             continue;
                         }
