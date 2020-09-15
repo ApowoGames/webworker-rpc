@@ -18,7 +18,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js']
   },
   output: {
-    path: path.resolve(__dirname, 'registry'),
+    path: path.resolve(__dirname, 'release'),
     filename: '[name].js'
   },
 };
