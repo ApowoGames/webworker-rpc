@@ -1,9 +1,10 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  mode: 'development',
-  entry: './examples/main.ts',
+  mode: 'production',
+  entry: {
+    rpcpeer: './src/rpc.peer.ts'
+  },
   module: {
     rules: [
       {
@@ -13,26 +14,11 @@ module.exports = {
       },
     ]
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      title: "webworker-rpc",
-    }),
-  ],
   resolve: {
     extensions: ['.ts', '.tsx', '.js']
   },
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'app.js'
-  },
-  devServer: {
-    contentBase: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
-    host: '0.0.0.0',
-    port: 8082,
-    watchOptions: {
-      poll: 1000
-    },
-    open: false
+    path: path.resolve(__dirname, 'registry'),
+    filename: '[name].js'
   },
 };
