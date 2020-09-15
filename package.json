@@ -1,13 +1,14 @@
 {
   "name": "webworker-rpc",
-  "main": "registry/rpcpeer.js",
+  "version": "0.0.2",
+  "main": "release/rpcpeer.js",
   "author": "apowo",
   "license": "MIT",
   "bin": {
     "outside": "bin/outside"
   },
   "scripts": {
-    "build": "rm -rf registry && webpack",
+    "build": "rm -rf release && webpack && yarn version --patch",
     "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && webpack-dev-server --config ./webpack.dev.config.js",
     "mkproto:clean": "rimraf ./lib/protocols.d.ts ./lib/protocols.js",
     "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./lib/protocols.js",
@@ -23,7 +24,6 @@
     "dts-dom": "^3.6.0",
     "expose-loader": "^0.7.5",
     "fs-extra": "^9.0.0",
-    "genversion": "^2.2.1",
     "jsdoc": "^3.6.4",
     "protobufjs": "^6.10.1",
     "remove": "^0.1.5",
