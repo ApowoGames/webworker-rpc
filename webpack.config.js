@@ -1,5 +1,5 @@
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -13,6 +13,11 @@ module.exports = {
       },
     ]
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: "webworker-rpc",
+    }),
+  ],
   resolve: {
     extensions: ['.ts', '.tsx', '.js']
   },
@@ -21,7 +26,7 @@ module.exports = {
     filename: 'app.js'
   },
   devServer: {
-    contentBase: path.resolve(__dirname, './'),
+    contentBase: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
     host: '0.0.0.0',
     port: 8082,

@@ -7,7 +7,7 @@
     "outside": "bin/outside"
   },
   "scripts": {
-    "dev": "rm -rf dist && webpack && mv dist/dist/* dist/ && webpack-dev-server --config ./webpack.config.js",
+    "dev": "rm -rf dist && webpack && webpack-dev-server --config ./webpack.config.js",
     "mkproto:clean": "rimraf ./lib/protocols.d.ts ./lib/protocols.js",
     "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./lib/protocols.js",
     "mkproto": "yarn mkproto:clean && yarn mkproto:tojs && pbts -o ./lib/protocols.d.ts ./lib/protocols.js"

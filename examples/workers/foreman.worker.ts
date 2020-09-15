@@ -1,6 +1,6 @@
-import TaskWorkerA from "worker-loader?name=dist/[name].js!./taskA.worker";
-import TaskWorkerB from "worker-loader?name=dist/[name].js!./taskB.worker";
-import TaskWorkerC from "worker-loader?name=dist/[name].js!./taskC.worker";
+import TaskWorkerA from "worker-loader?name=[name].js!./taskA.worker";
+import TaskWorkerB from "worker-loader?name=[name].js!./taskB.worker";
+import TaskWorkerC from "worker-loader?name=[name].js!./taskC.worker";
 import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
 import { webworker_rpc } from "../../lib/protocols";
 import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";

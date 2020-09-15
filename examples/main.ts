@@ -1,4 +1,4 @@
-import ForemanWorker from "worker-loader?name=dist/[name].js!./workers/foreman.worker";
+import ForemanWorker from "worker-loader?name=[name].js!./workers/foreman.worker";
 import { RPCPeer } from "../src/rpc.peer";
 
 window.onload = () => {
