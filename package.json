@@ -1,6 +1,6 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "release/rpcpeer.js",
   "author": "apowo",
   "license": "MIT",
