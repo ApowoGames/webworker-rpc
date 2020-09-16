@@ -1,5 +1,5 @@
 {
     "name": "webworker-rpc",
     "main": "types/src/index.d.ts",
-    "out": "../../release/types/index.d.ts"
+    "out": "../../release/index.d.ts"
 }
