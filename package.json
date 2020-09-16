@@ -1,6 +1,6 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "release/rpcpeer.js",
   "types": "release/index.d.ts",
   "author": "apowo",
@@ -9,7 +9,7 @@
     "outside": "bin/outside"
   },
   "scripts": {
-    "build:dev": "rm -rf release && webpack && mv && yarn dts && rm -rf types",
+    "build:dev": "rm -rf release && webpack && mkdir types/src/lib && cp src/lib/protocols.d.ts types/src/lib/ && yarn dts && rm -rf types",
     "build": "yarn build:dev && yarn version --patch",
     "dts": "dts-bundle --configJson dts-bundle.json",
     "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && webpack-dev-server --config ./webpack.dev.config.js",
