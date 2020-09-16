@@ -1,6 +1,6 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "release/rpcpeer.js",
   "author": "apowo",
   "license": "MIT",
@@ -8,8 +8,8 @@
     "outside": "bin/outside"
   },
   "scripts": {
-    "build:dev": "rm -rf release && webpack",
-    "build": "rm -rf release && webpack && yarn version --patch",
+    "build:dev": "rm -rf release && webpack && mv && yarn dts && rm -rf types",
+    "build": "yarn build:dev && yarn version --patch",
     "dts": "dts-bundle --configJson dts-bundle.json",
     "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && webpack-dev-server --config ./webpack.dev.config.js",
     "mkproto:clean": "rimraf ./src/lib/protocols.d.ts ./src/lib/protocols.js",
