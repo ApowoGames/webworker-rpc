@@ -2,7 +2,7 @@ import TaskWorkerA from "worker-loader?name=[name].js!./taskA.worker";
 import TaskWorkerB from "worker-loader?name=[name].js!./taskB.worker";
 import TaskWorkerC from "worker-loader?name=[name].js!./taskC.worker";
 import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
-import { webworker_rpc } from "../../lib/protocols";
+import { webworker_rpc } from "../../src/lib/protocols";
 import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";
 import { Logger } from "../../src/utils/log";
 

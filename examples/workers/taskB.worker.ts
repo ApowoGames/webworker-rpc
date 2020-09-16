@@ -1,5 +1,5 @@
 import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
-import { webworker_rpc } from "../../lib/protocols";
+import { webworker_rpc } from "../../src/lib/protocols";
 import { RPCExecutor, RPCParam } from "../../src/rpc.message";
 import { Logger } from "../../src/utils/log";
 

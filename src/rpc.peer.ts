@@ -1,4 +1,4 @@
-import { webworker_rpc } from "../lib/protocols";
+import { webworker_rpc } from "./lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
 import { Logger } from "./utils/log";
 
@@ -327,7 +327,7 @@ export class RPCPeer {
     }
 }
 
-class LinkListener {
+export class LinkListener {
     private readyFunc: () => any;
     private port1: string = "";
     private port2: string = "";
