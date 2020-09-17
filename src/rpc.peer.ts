@@ -1,10 +1,14 @@
 import { webworker_rpc } from "./lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
+// import HelperWorker from "worker-loader?name=[name].js!./helper.worker";
 
-export const MESSAGEKEY_INIT: string = "init";
+export const MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
+export const MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
 export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
 export const MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
 export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
+export const HELPWORKERNAME: string = "__HELPER";
+export const HELPWORKERURL: string = "worker-loader?name=[name].js!./help.worker";
 
 // decorater
 const RPCFunctions: RPCExecutor[] = [];
@@ -162,39 +166,45 @@ export class RPCPeer extends RPCEmitter {
         this.channels = new Map();
         this.linkListeners = new Map();
 
-        this.worker.onmessage = (ev: MessageEvent) => {
-            const { key } = ev.data;
-            if (key === MESSAGEKEY_INIT) {
-                const { workers } = ev.data;
-                const ports = ev.ports;
-                for (let i = 0; i < ports.length; i++) {
-                    const onePort = ports[i];
-                    const oneWorker = workers[i];
-                    this.addLink(oneWorker, onePort);
-                }
-            }
-        };
-
+        this.worker.onmessage = this.onMessage_Link;
 
         // console.log(name + " RPCFunctions", RPCFunctions);
         // console.log(name + " RPCContexts", RPCContexts);
         // console.log(name + " RPCListeners", RPCListeners);
     }
 
-    public linkTo(workerName: string, workerUrl: string): LinkListener {
-        // TODO: 添加重复创建判定
+    public linkTo(workerName: string, workerUrl?: string): LinkListener {
+        if (!this.channels.has(HELPWORKERNAME)) {
 
-        const worker = new Worker(workerUrl);
-        return this.linkToWorker(workerName, worker);
+            const requiredWorker = require(HELPWORKERURL);
+            const helperWorker = new requiredWorker();
+            const helperChannel = new MessageChannel();
+
+            helperWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [helperChannel.port2]);
+            this.addLink(HELPWORKERNAME, helperChannel.port1);
+        }
+
+        if (this.linkListeners.has(workerName)) {
+            console.warn("already requested link to " + workerName);
+            return this.linkListeners.get(workerName);
+        }
+
+        const listener = new LinkListener(this.name, workerName);
+        this.linkListeners.set(workerName, listener);
+
+        this.channels.get(HELPWORKERNAME).postMessage({ key: MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
+
+        return listener;
     }
-    public linkToWorker(workerName: string, worker: any): LinkListener {
+
+    private linkToWorker(workerName: string, worker: any): LinkListener {
         // console.log(this.name + " linkToWorker", workerName);
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
         const channel = new MessageChannel();
 
-        worker.postMessage({ key: MESSAGEKEY_INIT, workers: [this.name] }, [channel.port2]);
+        worker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [channel.port2]);
         this.addLink(workerName, channel.port1);
 
         return listener;
@@ -213,7 +223,14 @@ export class RPCPeer extends RPCEmitter {
                 // console.warn("<key> not in ev.data");
                 return;
             }
+            // TODO 使用map结构
             switch (key) {
+                case MESSAGEKEY_LINK:
+                    this.onMessage_Link(ev);
+                    break;
+                case MESSAGEKEY_REQUESTLINK:
+                    this.onMessage_RequestLink(ev);
+                    break;
                 case MESSAGEKEY_ADDREGISTRY:
                     this.onMessage_AddRegistry(ev);
                     break;
@@ -278,12 +295,51 @@ export class RPCPeer extends RPCEmitter {
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
+        if (worker === HELPWORKERNAME) return;
 
         const messageData = new RPCMessage(MESSAGEKEY_ADDREGISTRY, registry);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
         if (this.channels.has(worker)) {
             const port = this.channels.get(worker);
             port.postMessage(messageData, [].concat(buf.slice(0)));
+        }
+    }
+    private onMessage_Link(ev: MessageEvent) {
+        const { key } = ev.data;
+        if (key && key === MESSAGEKEY_LINK) {
+            const { workers } = ev.data;
+            const ports = ev.ports;
+            for (let i = 0; i < ports.length; i++) {
+                const onePort = ports[i];
+                const oneWorker = workers[i];
+                this.addLink(oneWorker, onePort);
+            }
+        }
+    }
+    private onMessage_RequestLink(ev: MessageEvent) {
+        const { serviceName, workerName, workerUrl } = ev.data;
+        const channel = new MessageChannel();
+
+        if (!this.channels.has(serviceName)) {
+            console.error(this.name + " not yet link to " + serviceName);
+            return;
+        }
+        this.channels.get(serviceName).postMessage({ key: MESSAGEKEY_LINK, workers: [workerName] }, [channel.port1]);
+
+        if (this.channels.has(workerName)) {
+            this.channels.get(workerName).postMessage({ key: MESSAGEKEY_LINK, workers: [serviceName] }, [channel.port2]);
+        } else {
+            if (!workerUrl) {
+                console.error("worker url undefined");
+                return;
+            }
+
+            const requiredWorker = require(workerUrl);
+            const tarWorker = new requiredWorker();
+            const helper2TarChannel = new MessageChannel();
+
+            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name, serviceName] }, [helper2TarChannel.port2, channel.port2]);
+            this.addLink(workerName, helper2TarChannel.port1);
         }
     }
     private onMessage_AddRegistry(ev: MessageEvent) {

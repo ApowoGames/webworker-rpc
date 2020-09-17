@@ -1,6 +1,6 @@
-import TaskWorkerA from "worker-loader?name=[name].js!./taskA.worker";
-import TaskWorkerB from "worker-loader?name=[name].js!./taskB.worker";
-import TaskWorkerC from "worker-loader?name=[name].js!./taskC.worker";
+// import TaskWorkerA from "worker-loader?name=[name].js!./taskA.worker";
+// import TaskWorkerB from "worker-loader?name=[name].js!./taskB.worker";
+// import TaskWorkerC from "worker-loader?name=[name].js!./taskC.worker";
 import { RPCPeer, Export, RPCEmitter, RemoteListener } from "../../src/rpc.peer";
 import { webworker_rpc } from "../../src/lib/protocols";
 import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";
@@ -10,13 +10,13 @@ import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";
 class ForemanContext extends RPCPeer {
     constructor() {
         super("foreman");
-        this.linkToWorker("workerA", new TaskWorkerA()).onReady(() => {
+        this.linkTo("workerA", "worker-loader?name=[name].js!../examples/workers/taskA.worker").onReady(() => {
             this.remote.workerA.WorkerAContext.methodA(true);
         });
-        this.linkToWorker("workerB", new TaskWorkerB()).onReady(() => {
+        this.linkTo("workerB", "worker-loader?name=[name].js!../examples/workers/taskB.worker").onReady(() => {
             this.remote.workerB.WorkerBContext.methodB(333);
         });
-        this.linkToWorker("workerC", new TaskWorkerC()).onReady(() => {
+        this.linkTo("workerC", "worker-loader?name=[name].js!../examples/workers/taskC.worker").onReady(() => {
             this.remote.workerC.WorkerCContext.methodC("111");
         });
     }

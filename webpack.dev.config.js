@@ -8,6 +8,11 @@ module.exports = {
   },
   module: {
     rules: [
+      // {
+      //   test: /\.worker\.ts$/,
+      //   loader: 'worker-loader',
+      //   options: { publicPath: '/dist/workers/' },
+      // },
       {
         test: /\.ts$/,
         loader: 'ts-loader',
