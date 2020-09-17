@@ -13,12 +13,12 @@ class ForemanContext extends RPCPeer {
         this.linkToWorker("workerA", new TaskWorkerA()).onReady(() => {
             this.remote.workerA.WorkerAContext.methodA(true);
         });
-        // this.linkToWorker("workerB", new TaskWorkerB()).onReady(() => {
-        //     this.remote.workerB.WorkerBContext.methodB(333);
-        // });
-        // this.linkToWorker("workerC", new TaskWorkerC()).onReady(() => {
-        //     this.remote.workerC.WorkerCContext.methodC("111");
-        // });
+        this.linkToWorker("workerB", new TaskWorkerB()).onReady(() => {
+            this.remote.workerB.WorkerBContext.methodB(333);
+        });
+        this.linkToWorker("workerC", new TaskWorkerC()).onReady(() => {
+            this.remote.workerC.WorkerCContext.methodC("111");
+        });
     }
 
     @Export()
@@ -26,7 +26,7 @@ class ForemanContext extends RPCPeer {
         console.log("methodF");
     }
 
-    @RemoteListener("workerA", "WorkerAContext", "foremanCall", [webworker_rpc.ParamType.str])
+    @RemoteListener("workerA", "WorkerAHelper", "foremanCall", [webworker_rpc.ParamType.str])
     public foremanListen2A(val: string) {
         console.log("foremanListen2A: ", val);
     }

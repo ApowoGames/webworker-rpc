@@ -4,7 +4,7 @@
 
 declare module 'webworker-rpc' {
     export { webworker_rpc } from "webworker-rpc/lib/protocols";
-    export { RPCPeer, LinkListener, RPCFunction, } from "webworker-rpc/rpc.peer";
+    export { RPCEmitter, RPCPeer, LinkListener, Export, RemoteListener } from "webworker-rpc/rpc.peer";
     export { RPCMessage, RPCRegistryPacket, RPCExecutePacket, RPCExecutor, RPCParam, } from "webworker-rpc/rpc.message";
 }
 
@@ -137,6 +137,9 @@ declare module 'webworker-rpc/lib/protocols' {
     
                     /** Param valBytes */
                     valBytes?: (Uint8Array|null);
+    
+                    /** Param valExecutor */
+                    valExecutor?: (webworker_rpc.IExecutor|null);
             }
     
             /** Represents a Param. */
@@ -163,8 +166,11 @@ declare module 'webworker-rpc/lib/protocols' {
                     /** Param valBytes. */
                     valBytes: Uint8Array;
     
+                    /** Param valExecutor. */
+                    valExecutor?: (webworker_rpc.IExecutor|null);
+    
                     /** Param val. */
-                    val?: ("valStr"|"valBool"|"valNum"|"valBytes");
+                    val?: ("valStr"|"valBool"|"valNum"|"valBytes"|"valExecutor");
     
                     /**
                         * Creates a new Param instance using the specified properties.
@@ -243,7 +249,8 @@ declare module 'webworker-rpc/lib/protocols' {
                     str = 1,
                     boolean = 2,
                     num = 3,
-                    unit8array = 4
+                    unit8array = 4,
+                    executor = 5
             }
     
             /** Properties of a Header. */
@@ -661,17 +668,27 @@ declare module 'webworker-rpc/lib/protocols' {
 
 declare module 'webworker-rpc/rpc.peer' {
     import { webworker_rpc } from "webworker-rpc/lib/protocols";
+    import { RPCExecutor } from "webworker-rpc/rpc.message";
     export const MESSAGEKEY_INIT: string;
     export const MESSAGEKEY_ADDREGISTRY: string;
     export const MESSAGEKEY_GOTREGISTRY: string;
     export const MESSAGEKEY_RUNMETHOD: string;
-    export class RPCPeer {
+    export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
+    export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
+    export class RPCEmitter {
+        constructor();
+        on(event: string, executor: RPCExecutor, worker: string): void;
+        off(event: string, executor?: RPCExecutor, worker?: string): void;
+        protected emit(event: string, ...args: any[]): void;
+    }
+    export class RPCPeer extends RPCEmitter {
         ["remote"]: {
             [worker: string]: {
                 [context: string]: any;
             };
         };
         name: string;
+        static getInstance(): RPCPeer;
         constructor(name: string, w?: Worker);
         linkTo(workerName: string, workerUrl: string): LinkListener;
         linkToWorker(workerName: string, worker: any): LinkListener;
@@ -681,7 +698,6 @@ declare module 'webworker-rpc/rpc.peer' {
         onReady(f: () => any): void;
         setPortReady(port: string): void;
     }
-    export function RPCFunction(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
 }
 
 declare module 'webworker-rpc/rpc.message' {

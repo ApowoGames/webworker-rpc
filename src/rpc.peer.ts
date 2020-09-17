@@ -11,7 +11,7 @@ const RPCFunctions: RPCExecutor[] = [];
 const RPCContexts: Map<string, any> = new Map();
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor) => {
-        console.log("Export: ", target, name, descriptor);
+        // console.log("Export: ", target, name, descriptor);
         const context = target.constructor.name;
         if (!RPCContexts.has(context)) RPCContexts.set(context, target);
 
@@ -48,14 +48,6 @@ export function RemoteListener(worker: string, context: string, event: string, p
         }
         //--
 
-        // const executorContext = target.constructor.name;
-
-        // const params: RPCParam[] = [];
-        // if (paramTypes) {
-        //     for (const pt of paramTypes) {
-        //         params.push(new RPCParam(pt));
-        //     }
-        // }
         let executor: RPCExecutor = null;
         if (params.length > 0) {
             executor = new RPCExecutor(name, executorContext, params);
@@ -70,17 +62,23 @@ export function RemoteListener(worker: string, context: string, event: string, p
 }
 
 export class RPCEmitter {
-    protected emitFunctions: Map<string, { worker: string, executor: RPCExecutor }[]>;
+    private emitFunctions: Map<string, { worker: string, executor: RPCExecutor }[]>;
 
     constructor() {
         this.emitFunctions = new Map();
 
-        console.log("Emitter constructor: ", this);
+        // console.log("Emitter constructor: ", this);
+
+        RPCContexts.set(this.constructor.name, this);
+        RPCFunctions.push(new RPCExecutor("on", this.constructor.name,
+            [new RPCParam(webworker_rpc.ParamType.str), new RPCParam(webworker_rpc.ParamType.executor), new RPCParam(webworker_rpc.ParamType.str)]));
+        RPCFunctions.push(new RPCExecutor("off", this.constructor.name,
+            [new RPCParam(webworker_rpc.ParamType.str)]));
     }
 
     // @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
     public on(event: string, executor: RPCExecutor, worker: string) {
-        console.log("on", event, executor, worker, this);
+        // console.log("on", event, executor, worker, this);
 
         if (!this.emitFunctions.has(event)) {
             this.emitFunctions.set(event, []);
@@ -103,6 +101,21 @@ export class RPCEmitter {
             this.emitFunctions.delete(event);
         }
     }
+
+    protected emit(event: string, ...args) {
+        if (!this.emitFunctions.has(event)) return;
+        if (!RPCPeer.getInstance()) {
+            console.error("no peer created");
+            return;
+        }
+
+        const funs = this.emitFunctions.get(event);
+        for (const fun of funs) {
+            if (fun.worker in RPCPeer.getInstance().remote) {
+                RPCPeer.getInstance().remote[fun.worker][fun.executor.context][fun.executor.method](...args);
+            }
+        }
+    }
 }
 
 // 各个worker之间通信桥梁
@@ -115,13 +128,25 @@ export class RPCPeer extends RPCEmitter {
 
     public name: string;
 
+    private static _instance: RPCPeer;
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
     private channels: Map<string, MessagePort>;
     private linkListeners: Map<string, LinkListener>;
 
+    static getInstance() {
+        return RPCPeer._instance;
+    }
+
     constructor(name: string, w?: Worker) {
         super();
+
+        if (RPCPeer._instance) {
+            console.error("duplicate RPCPeer created");
+            return;
+        }
+        RPCPeer._instance = this;
+
         if (!name) {
             console.error("param <name> error");
             return;
@@ -150,13 +175,6 @@ export class RPCPeer extends RPCEmitter {
             }
         };
 
-        // TODO 使用实例替换RPCContexts中的全部元素
-        RPCContexts.set(this.constructor.name, this);
-        RPCFunctions.push(new RPCExecutor("on", this.constructor.name,
-            [new RPCParam(webworker_rpc.ParamType.str), new RPCParam(webworker_rpc.ParamType.executor), new RPCParam(webworker_rpc.ParamType.str)]));
-        RPCFunctions.push(new RPCExecutor("off", this.constructor.name,
-            [new RPCParam(webworker_rpc.ParamType.str)]));
-
 
         // console.log(name + " RPCFunctions", RPCFunctions);
         // console.log(name + " RPCContexts", RPCContexts);
@@ -182,17 +200,6 @@ export class RPCPeer extends RPCEmitter {
         return listener;
     }
 
-    protected emit(event: string, ...args) {
-        if (!this.emitFunctions.has(event)) return;
-
-        const funs = this.emitFunctions.get(event);
-        for (const fun of funs) {
-            if (fun.worker in this.remote) {
-                this.remote[fun.worker][fun.executor.context][fun.executor.method](...args);
-            }
-        }
-    }
-
     // 增加worker之间的通道联系
     private addLink(worker: string, port: MessagePort) {
         if (this.channels.has(worker)) {
@@ -203,7 +210,7 @@ export class RPCPeer extends RPCEmitter {
         port.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
             if (!key) {
-                console.warn("<key> not in ev.data");
+                // console.warn("<key> not in ev.data");
                 return;
             }
             switch (key) {
@@ -217,7 +224,7 @@ export class RPCPeer extends RPCEmitter {
                     this.onMessage_RunMethod(ev);
                     break;
                 default:
-                    console.warn("got message outof control: ", ev.data);
+                    // console.warn("got message outof control: ", ev.data);
                     break;
             }
         };
