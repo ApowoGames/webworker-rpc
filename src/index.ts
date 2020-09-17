@@ -1,9 +1,11 @@
 export { webworker_rpc } from "./lib/protocols";
 
 export {
+    RPCEmitter,
     RPCPeer,
     LinkListener,
-    RPCFunction,
+    Export,
+    RemoteListener
 } from "./rpc.peer";
 
 export {

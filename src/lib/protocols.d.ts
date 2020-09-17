@@ -126,6 +126,9 @@ export namespace webworker_rpc {
 
         /** Param valBytes */
         valBytes?: (Uint8Array|null);
+
+        /** Param valExecutor */
+        valExecutor?: (webworker_rpc.IExecutor|null);
     }
 
     /** Represents a Param. */
@@ -152,8 +155,11 @@ export namespace webworker_rpc {
         /** Param valBytes. */
         public valBytes: Uint8Array;
 
+        /** Param valExecutor. */
+        public valExecutor?: (webworker_rpc.IExecutor|null);
+
         /** Param val. */
-        public val?: ("valStr"|"valBool"|"valNum"|"valBytes");
+        public val?: ("valStr"|"valBool"|"valNum"|"valBytes"|"valExecutor");
 
         /**
          * Creates a new Param instance using the specified properties.
@@ -232,7 +238,8 @@ export namespace webworker_rpc {
         str = 1,
         boolean = 2,
         num = 3,
-        unit8array = 4
+        unit8array = 4,
+        executor = 5
     }
 
     /** Properties of a Header. */

@@ -1,5 +1,4 @@
 import { webworker_rpc } from "./lib/protocols";
-import { Logger } from "./utils/log";
 
 export class RPCMessage extends webworker_rpc.WebWorkerMessage {
     constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket) {
@@ -107,6 +106,8 @@ export class RPCParam extends webworker_rpc.Param {
             return webworker_rpc.ParamType.num;
         } else if (val.constructor === Uint8Array) {
             return webworker_rpc.ParamType.unit8array;
+        } else if (val instanceof webworker_rpc.Executor) {
+            return webworker_rpc.ParamType.executor;
         }
 
         return webworker_rpc.ParamType.UNKNOWN;
@@ -120,34 +121,41 @@ export class RPCParam extends webworker_rpc.Param {
             switch (t) {
                 case webworker_rpc.ParamType.str:
                     if (typeof val !== "string") {
-                        // Logger.getInstance().error(`${val} is not type of string`);
+                        console.error(`${val} is not type of string`);
                         return;
                     }
                     this.valStr = val;
                     break;
                 case webworker_rpc.ParamType.boolean:
                     if (typeof val !== "boolean") {
-                        // Logger.getInstance().error(`${val} is not type of boolean`);
+                        console.error(`${val} is not type of boolean`);
                         return;
                     }
                     this.valBool = val;
                     break;
                 case webworker_rpc.ParamType.num:
                     if (typeof val !== "number") {
-                        // Logger.getInstance().error(`${val} is not type of number`);
+                        console.error(`${val} is not type of number`);
                         return;
                     }
                     this.valNum = val;
                     break;
                 case webworker_rpc.ParamType.unit8array:
                     if (val.constructor !== Uint8Array) {
-                        // Logger.getInstance().error(`${val} is not type of Uint8Array`);
+                        console.error(`${val} is not type of Uint8Array`);
                         return;
                     }
                     this.valBytes = val;
                     break;
+                case webworker_rpc.ParamType.executor:
+                    if (!(val instanceof webworker_rpc.Executor)) {
+                        console.error(`${val} is not type of Executor`);
+                        return;
+                    }
+                    this.valExecutor = val;
+                    break;
                 default:
-                    // Logger.getInstance().error("unkonw type : ", t);
+                    console.error("unkonw type : ", t);
                     break;
             }
         }

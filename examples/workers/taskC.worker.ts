@@ -1,17 +1,16 @@
-import { RPCPeer, RPCFunction } from "../../src/rpc.peer";
+import { RPCPeer, Export, RPCEmitter } from "../../src/rpc.peer";
 import { webworker_rpc } from "../../src/lib/protocols";
 import { RPCExecutor, RPCParam } from "../../src/rpc.message";
-import { Logger } from "../../src/utils/log";
 
-const worker: Worker = self as any;
 class WorkerCContext extends RPCPeer {
     constructor() {
-        super("workerC", worker);
+        super("workerC");
     }
 
-    @RPCFunction([webworker_rpc.ParamType.unit8array])
-    public methodC(val: Uint8Array): Promise<string> {
-        Logger.getInstance().log("methodC: ", val);
+    @Export([webworker_rpc.ParamType.str])
+    public methodC(val: string): Promise<string> {
+        console.log("methodC: ", val);
+        this.emit("foremanCall", "WorkerC emit");
         return new Promise<string>((resolve, reject) => {
             resolve("callback from WorkerC");
         });

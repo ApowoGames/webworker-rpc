@@ -1,14 +1,112 @@
 import { webworker_rpc } from "./lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
-import { Logger } from "./utils/log";
 
 export const MESSAGEKEY_INIT: string = "init";
 export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
 export const MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
 export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
 
+// decorater
+const RPCFunctions: RPCExecutor[] = [];
+const RPCContexts: Map<string, any> = new Map();
+export function Export(paramTypes?: webworker_rpc.ParamType[]) {
+    return (target, name, descriptor) => {
+        console.log("Export: ", target, name, descriptor);
+        const context = target.constructor.name;
+        if (!RPCContexts.has(context)) RPCContexts.set(context, target);
+
+        const params: RPCParam[] = [];
+        if (paramTypes) {
+            for (const pt of paramTypes) {
+                params.push(new RPCParam(pt));
+            }
+        }
+        if (params.length > 0) {
+            RPCFunctions.push(new RPCExecutor(name, context, params));
+        } else {
+            RPCFunctions.push(new RPCExecutor(name, context));
+        }
+    };
+}
+const RPCListeners: Map<string, { context: string, event: string, executor: RPCExecutor }[]> = new Map();
+export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]) {
+    return (target, name, descriptor) => {
+        //-- Export
+        const executorContext = target.constructor.name;
+        if (!RPCContexts.has(executorContext)) RPCContexts.set(executorContext, target);
+
+        const params: RPCParam[] = [];
+        if (paramTypes) {
+            for (const pt of paramTypes) {
+                params.push(new RPCParam(pt));
+            }
+        }
+        if (params.length > 0) {
+            RPCFunctions.push(new RPCExecutor(name, executorContext, params));
+        } else {
+            RPCFunctions.push(new RPCExecutor(name, executorContext));
+        }
+        //--
+
+        // const executorContext = target.constructor.name;
+
+        // const params: RPCParam[] = [];
+        // if (paramTypes) {
+        //     for (const pt of paramTypes) {
+        //         params.push(new RPCParam(pt));
+        //     }
+        // }
+        let executor: RPCExecutor = null;
+        if (params.length > 0) {
+            executor = new RPCExecutor(name, executorContext, params);
+        } else {
+            executor = new RPCExecutor(name, executorContext);
+        }
+        if (!RPCListeners.has(worker)) {
+            RPCListeners.set(worker, []);
+        }
+        RPCListeners.get(worker).push({ context, event, executor });
+    }
+}
+
+export class RPCEmitter {
+    protected emitFunctions: Map<string, { worker: string, executor: RPCExecutor }[]>;
+
+    constructor() {
+        this.emitFunctions = new Map();
+
+        console.log("Emitter constructor: ", this);
+    }
+
+    // @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
+    public on(event: string, executor: RPCExecutor, worker: string) {
+        console.log("on", event, executor, worker, this);
+
+        if (!this.emitFunctions.has(event)) {
+            this.emitFunctions.set(event, []);
+        }
+
+        this.emitFunctions.get(event).push({ worker: worker, executor: executor });
+    }
+
+    // @Export([webworker_rpc.ParamType.str])
+    public off(event: string, executor?: RPCExecutor, worker?: string) {
+        if (!this.emitFunctions.has(event)) return;
+
+        if (executor && executor instanceof RPCExecutor && worker && typeof worker === "string") {
+            const executors = this.emitFunctions.get(event);
+            const idx = executors.findIndex((x) => x.worker === worker && x.executor === executor);
+            if (idx > 0) {
+                executors.splice(idx, 0);
+            }
+        } else {
+            this.emitFunctions.delete(event);
+        }
+    }
+}
+
 // 各个worker之间通信桥梁
-export class RPCPeer {
+export class RPCPeer extends RPCEmitter {
     ["remote"]: {
         [worker: string]: {
             [context: string]: any
@@ -23,42 +121,46 @@ export class RPCPeer {
     private linkListeners: Map<string, LinkListener>;
 
     constructor(name: string, w?: Worker) {
+        super();
         if (!name) {
-            // Logger.getInstance().error("param <name> error");
+            console.error("param <name> error");
             return;
         }
 
         this.name = name;
-        this.worker = w;
+        if (w) {
+            this.worker = w;
+        } else {
+            this.worker = self as any;
+        }
         this.registry = new Map();
         this.channels = new Map();
         this.linkListeners = new Map();
 
-        if (w) {
-            w.onmessage = (ev: MessageEvent) => {
-                const { key } = ev.data;
-                if (key === MESSAGEKEY_INIT) {
-                    const { workers } = ev.data;
-                    const ports = ev.ports;
-                    for (let i = 0; i < ports.length; i++) {
-                        const onePort = ports[i];
-                        const oneWorker = workers[i];
-                        this.addLink(oneWorker, onePort);
-                    }
+        this.worker.onmessage = (ev: MessageEvent) => {
+            const { key } = ev.data;
+            if (key === MESSAGEKEY_INIT) {
+                const { workers } = ev.data;
+                const ports = ev.ports;
+                for (let i = 0; i < ports.length; i++) {
+                    const onePort = ports[i];
+                    const oneWorker = workers[i];
+                    this.addLink(oneWorker, onePort);
                 }
-            };
-        }
-        // works in Chrome 18 but not Firefox 10 or 11
-        // if (!ArrayBuffer.prototype.slice)
-        //     ArrayBuffer.prototype.slice = function (start, end) {
-        //         const that = new Uint8Array(this);
-        //         if (!end) end = that.length;
-        //         const result = new ArrayBuffer(end - start);
-        //         const resultArray = new Uint8Array(result);
-        //         for (let i = 0; i < resultArray.length; i++)
-        //             resultArray[i] = that[i + start];
-        //         return result;
-        //     }
+            }
+        };
+
+        // TODO 使用实例替换RPCContexts中的全部元素
+        RPCContexts.set(this.constructor.name, this);
+        RPCFunctions.push(new RPCExecutor("on", this.constructor.name,
+            [new RPCParam(webworker_rpc.ParamType.str), new RPCParam(webworker_rpc.ParamType.executor), new RPCParam(webworker_rpc.ParamType.str)]));
+        RPCFunctions.push(new RPCExecutor("off", this.constructor.name,
+            [new RPCParam(webworker_rpc.ParamType.str)]));
+
+
+        // console.log(name + " RPCFunctions", RPCFunctions);
+        // console.log(name + " RPCContexts", RPCContexts);
+        // console.log(name + " RPCListeners", RPCListeners);
     }
 
     public linkTo(workerName: string, workerUrl: string): LinkListener {
@@ -68,7 +170,7 @@ export class RPCPeer {
         return this.linkToWorker(workerName, worker);
     }
     public linkToWorker(workerName: string, worker: any): LinkListener {
-        // Logger.getInstance().log(this.name + " linkToWorker", workerName);
+        // console.log(this.name + " linkToWorker", workerName);
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
@@ -80,17 +182,28 @@ export class RPCPeer {
         return listener;
     }
 
+    protected emit(event: string, ...args) {
+        if (!this.emitFunctions.has(event)) return;
+
+        const funs = this.emitFunctions.get(event);
+        for (const fun of funs) {
+            if (fun.worker in this.remote) {
+                this.remote[fun.worker][fun.executor.context][fun.executor.method](...args);
+            }
+        }
+    }
+
     // 增加worker之间的通道联系
     private addLink(worker: string, port: MessagePort) {
         if (this.channels.has(worker)) {
             return;
         }
         this.channels.set(worker, port);
-        // Logger.getInstance().log(this.name + " addLink: ", worker);
+        // console.log(this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
             if (!key) {
-                // Logger.getInstance().warn("<key> not in ev.data");
+                console.warn("<key> not in ev.data");
                 return;
             }
             switch (key) {
@@ -104,7 +217,7 @@ export class RPCPeer {
                     this.onMessage_RunMethod(ev);
                     break;
                 default:
-                    // Logger.getInstance().warn("got message outof control: ", ev.data);
+                    console.warn("got message outof control: ", ev.data);
                     break;
             }
         };
@@ -114,15 +227,15 @@ export class RPCPeer {
 
     // worker调用其他worker方法
     private execute(worker: string, packet: RPCExecutePacket) {
-        // Logger.getInstance().log(this.name + " execute: ", worker, packet);
+        // console.log(this.name + " execute: ", worker, packet);
         if (!this.registry.has(worker)) {
-            // Logger.getInstance().error("worker <" + worker + "> not registed");
+            console.error("worker <" + worker + "> not registed");
             return;
         }
         const executor = this.registry.get(worker).find((x) => x.context === packet.header.remoteExecutor.context &&
             x.method === packet.header.remoteExecutor.method);
         if (!executor) {
-            // Logger.getInstance().error("method <" + packet.header.remoteExecutor.method + "> not registed");
+            console.error("method <" + packet.header.remoteExecutor.method + "> not registed");
             return;
         }
 
@@ -130,12 +243,12 @@ export class RPCPeer {
         const remoteParams = packet.header.remoteExecutor.params;
         if (regParams && regParams.length > 0) {
             if (!remoteParams || remoteParams.length === 0) {
-                // Logger.getInstance().error("execute param error! ", "param.length = 0");
+                console.error("execute param error! ", "param.length = 0");
                 return;
             }
 
             if (regParams.length > remoteParams.length) {
-                // Logger.getInstance().error("execute param error! ", "param not enough");
+                console.error("execute param error! ", "param not enough");
                 return;
             }
 
@@ -143,7 +256,7 @@ export class RPCPeer {
                 const regP = regParams[i];
                 const remoteP = remoteParams[i];
                 if (regP.t !== remoteP.t) {
-                    // Logger.getInstance().error("execute param error! ", "type not match, registry: <", regP.t, ">; execute: <", remoteP.t, ">");
+                    console.error("execute param error! ", "type not match, registry: <", regP.t, ">; execute: <", remoteP.t, ">");
                     return;
                 }
             }
@@ -157,7 +270,7 @@ export class RPCPeer {
     }
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
-        // Logger.getInstance().log(this.name + " postRegistry: ", worker, registry);
+        // console.log(this.name + " postRegistry: ", worker, registry);
 
         const messageData = new RPCMessage(MESSAGEKEY_ADDREGISTRY, registry);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
@@ -167,14 +280,14 @@ export class RPCPeer {
         }
     }
     private onMessage_AddRegistry(ev: MessageEvent) {
-        // Logger.getInstance().log(this.name + " onMessage_AddRegistry:", ev.data);
+        // console.log(this.name + " onMessage_AddRegistry:", ev.data);
         const { dataRegistry } = ev.data;
         if (!dataRegistry) {
-            // Logger.getInstance().warn("<data> not in ev.data");
+            console.warn("<data> not in ev.data");
             return;
         }
         if (!RPCRegistryPacket.checkType(dataRegistry)) {
-            // Logger.getInstance().warn("<data> type error: ", dataRegistry);
+            console.warn("<data> type error: ", dataRegistry);
             return;
         }
         const packet: RPCRegistryPacket = dataRegistry as RPCRegistryPacket;
@@ -188,23 +301,31 @@ export class RPCPeer {
         if (this.linkListeners.has(packet.serviceName)) {
             this.linkListeners.get(packet.serviceName).setPortReady(this.name);
         }
+
+        if (RPCListeners.has(packet.serviceName)) {
+            const listeners = RPCListeners.get(packet.serviceName);
+            for (const listener of listeners) {
+                // console.log(this.name + " remote on, ", this.remote, packet.serviceName, listener);
+                this.remote[packet.serviceName][listener.context].on(listener.event, listener.executor, this.name);
+            }
+        }
     }
     private onMessage_GotRegistry(ev: MessageEvent) {
-        // Logger.getInstance().log(this.name + " onMessage_GotRegistry:", ev.data);
+        // console.log(this.name + " onMessage_GotRegistry:", ev.data);
         const { worker } = ev.data;
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(worker);
         }
     }
     private onMessage_RunMethod(ev: MessageEvent) {
-        // Logger.getInstance().log(this.name + " onMessage_RunMethod:", ev.data);
+        // console.log(this.name + " onMessage_RunMethod:", ev.data);
         const { dataExecute } = ev.data;
         if (!dataExecute) {
-            // Logger.getInstance().warn("<data> not in ev.data");
+            console.warn("<data> not in ev.data");
             return;
         }
         if (!RPCExecutePacket.checkType(dataExecute)) {
-            // Logger.getInstance().warn("<data> type error: ", dataExecute);
+            console.warn("<data> type error: ", dataExecute);
             return;
         }
         const packet: RPCExecutePacket = dataExecute as RPCExecutePacket;
@@ -235,6 +356,11 @@ export class RPCPeer {
                             params.push(param.valBytes);
                         }
                         break;
+                    case webworker_rpc.ParamType.executor:
+                        {
+                            params.push(param.valExecutor);
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -242,7 +368,6 @@ export class RPCPeer {
         }
         const result = this.executeFunctionByName(remoteExecutor.method, remoteExecutor.context, params);
         if (result && result instanceof Promise) {
-            // tslint:disable-next-line:no-shadowed-variable
             result.then((...args) => {
                 const callbackParams: webworker_rpc.Param[] = [];
                 for (const arg of args) {
@@ -256,14 +381,14 @@ export class RPCPeer {
                     const callback = packet.header.callbackExecutor;
                     if (callback.params) {
                         if (callbackParams.length < callback.params.length) {
-                            // Logger.getInstance().error(`not enough data from promise`);
+                            console.error(`not enough data from promise`);
                             return;
                         }
                         for (let i = 0; i < callback.params.length; i++) {
                             const p = callback.params[i];
                             const cp = callbackParams[i];
                             if (p.t !== cp.t) {
-                                // Logger.getInstance().error(`param type not match: <${p.t}> <${cp.t}>`);
+                                console.error(`param type not match: <${p.t}> <${cp.t}>`);
                                 return;
                             }
                         }
@@ -278,10 +403,9 @@ export class RPCPeer {
 
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
         if (!RPCContexts.has(context)) {
-            // Logger.getInstance().error("no context exit: ", context);
+            console.error("no context exit: ", context);
             return null;
         }
-
         const con = RPCContexts.get(context);
         return con[functionName].apply(con, args);
     }
@@ -296,16 +420,14 @@ export class RPCPeer {
             }
 
             addProperty(serviceProp[executor.context], executor.method, (...args) => {
+                // console.log(this.name + " call property ", service, executor.method, executor.context);
                 const params: RPCParam[] = [];
-                let callback = null;
+                let callback = null;// TODO add callback from args
                 if (args) {
                     for (const arg of args) {
                         const t = RPCParam.typeOf(arg);
                         if (t === webworker_rpc.ParamType.UNKNOWN) {
-                            if (arg instanceof webworker_rpc.Executor) {
-                                callback = arg as webworker_rpc.Executor;
-                            }
-                            // Logger.getInstance().warn("unknown param type: ", arg);
+                            console.warn("unknown param type: ", arg);
                             continue;
                         }
                         params.push(new RPCParam(t, arg));
@@ -357,32 +479,9 @@ export class LinkListener {
     }
 }
 
-const RPCFunctions: RPCExecutor[] = [];
-const RPCContexts: Map<string, any> = new Map();
-
-// decorater
-export function RPCFunction(paramTypes?: webworker_rpc.ParamType[]) {
-    return (target, name, descriptor) => {
-        const context = target.constructor.name;
-        if (!RPCContexts.has(context)) RPCContexts.set(context, target);
-
-        const params: RPCParam[] = [];
-        if (paramTypes) {
-            for (const pt of paramTypes) {
-                params.push(new RPCParam(pt));
-            }
-        }
-        if (params.length > 0) {
-            RPCFunctions.push(new RPCExecutor(name, context, params));
-        } else {
-            RPCFunctions.push(new RPCExecutor(name, context));
-        }
-    };
-}
-
 function addProperty(obj: any, key: string, val: any) {
     if (key in obj) {
-        // Logger.getInstance().error("key exits, add property failed!", obj, key);
+        console.error("key exits, add property failed!", obj, key);
         return obj;
     }
     obj[key] = val;

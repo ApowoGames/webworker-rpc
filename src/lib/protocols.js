@@ -302,6 +302,7 @@
              * @property {boolean|null} [valBool] Param valBool
              * @property {number|null} [valNum] Param valNum
              * @property {Uint8Array|null} [valBytes] Param valBytes
+             * @property {webworker_rpc.IExecutor|null} [valExecutor] Param valExecutor
              */
     
             /**
@@ -359,17 +360,25 @@
              */
             Param.prototype.valBytes = $util.newBuffer([]);
     
+            /**
+             * Param valExecutor.
+             * @member {webworker_rpc.IExecutor|null|undefined} valExecutor
+             * @memberof webworker_rpc.Param
+             * @instance
+             */
+            Param.prototype.valExecutor = null;
+    
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
     
             /**
              * Param val.
-             * @member {"valStr"|"valBool"|"valNum"|"valBytes"|undefined} val
+             * @member {"valStr"|"valBool"|"valNum"|"valBytes"|"valExecutor"|undefined} val
              * @memberof webworker_rpc.Param
              * @instance
              */
             Object.defineProperty(Param.prototype, "val", {
-                get: $util.oneOfGetter($oneOfFields = ["valStr", "valBool", "valNum", "valBytes"]),
+                get: $util.oneOfGetter($oneOfFields = ["valStr", "valBool", "valNum", "valBytes", "valExecutor"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
     
@@ -406,6 +415,8 @@
                     writer.uint32(/* id 4, wireType 0 =*/32).int32(message.valNum);
                 if (message.valBytes != null && Object.hasOwnProperty.call(message, "valBytes"))
                     writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.valBytes);
+                if (message.valExecutor != null && Object.hasOwnProperty.call(message, "valExecutor"))
+                    $root.webworker_rpc.Executor.encode(message.valExecutor, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 return writer;
             };
     
@@ -455,6 +466,9 @@
                     case 5:
                         message.valBytes = reader.bytes();
                         break;
+                    case 6:
+                        message.valExecutor = $root.webworker_rpc.Executor.decode(reader, reader.uint32());
+                        break;
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -501,6 +515,7 @@
                 case 2:
                 case 3:
                 case 4:
+                case 5:
                     break;
                 }
                 if (message.valStr != null && message.hasOwnProperty("valStr")) {
@@ -528,6 +543,16 @@
                     properties.val = 1;
                     if (!(message.valBytes && typeof message.valBytes.length === "number" || $util.isString(message.valBytes)))
                         return "valBytes: buffer expected";
+                }
+                if (message.valExecutor != null && message.hasOwnProperty("valExecutor")) {
+                    if (properties.val === 1)
+                        return "val: multiple values";
+                    properties.val = 1;
+                    {
+                        var error = $root.webworker_rpc.Executor.verify(message.valExecutor);
+                        if (error)
+                            return "valExecutor." + error;
+                    }
                 }
                 return null;
             };
@@ -565,6 +590,10 @@
                 case 4:
                     message.t = 4;
                     break;
+                case "executor":
+                case 5:
+                    message.t = 5;
+                    break;
                 }
                 if (object.valStr != null)
                     message.valStr = String(object.valStr);
@@ -577,6 +606,11 @@
                         $util.base64.decode(object.valBytes, message.valBytes = $util.newBuffer($util.base64.length(object.valBytes)), 0);
                     else if (object.valBytes.length)
                         message.valBytes = object.valBytes;
+                if (object.valExecutor != null) {
+                    if (typeof object.valExecutor !== "object")
+                        throw TypeError(".webworker_rpc.Param.valExecutor: object expected");
+                    message.valExecutor = $root.webworker_rpc.Executor.fromObject(object.valExecutor);
+                }
                 return message;
             };
     
@@ -617,6 +651,11 @@
                     if (options.oneofs)
                         object.val = "valBytes";
                 }
+                if (message.valExecutor != null && message.hasOwnProperty("valExecutor")) {
+                    object.valExecutor = $root.webworker_rpc.Executor.toObject(message.valExecutor, options);
+                    if (options.oneofs)
+                        object.val = "valExecutor";
+                }
                 return object;
             };
     
@@ -643,6 +682,7 @@
          * @property {number} boolean=2 boolean value
          * @property {number} num=3 num value
          * @property {number} unit8array=4 unit8array value
+         * @property {number} executor=5 executor value
          */
         webworker_rpc.ParamType = (function() {
             var valuesById = {}, values = Object.create(valuesById);
@@ -651,6 +691,7 @@
             values[valuesById[2] = "boolean"] = 2;
             values[valuesById[3] = "num"] = 3;
             values[valuesById[4] = "unit8array"] = 4;
+            values[valuesById[5] = "executor"] = 5;
             return values;
         })();
     
