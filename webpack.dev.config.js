@@ -4,7 +4,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    app: './examples/main.ts'
+    app: './examples/main.ts',
+    helperWorker: './src/helper.worker.ts',
+    foremanWorker: './examples/workers/foreman.worker.ts',
+    taskAWorker: './examples/workers/taskA.worker.ts',
+    taskBWorker: './examples/workers/taskB.worker.ts',
+    taskCWorker: './examples/workers/taskC.worker.ts',
   },
   module: {
     rules: [

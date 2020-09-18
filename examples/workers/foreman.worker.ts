@@ -10,13 +10,13 @@ import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";
 class ForemanContext extends RPCPeer {
     constructor() {
         super("foreman");
-        this.linkTo("workerA", "worker-loader?name=[name].js!../examples/workers/taskA.worker").onReady(() => {
+        this.linkTo("workerA", "./taskAWorker.js").onReady(() => {
             this.remote.workerA.WorkerAContext.methodA(true);
         });
-        this.linkTo("workerB", "worker-loader?name=[name].js!../examples/workers/taskB.worker").onReady(() => {
+        this.linkTo("workerB", "./taskBWorker.js").onReady(() => {
             this.remote.workerB.WorkerBContext.methodB(333);
         });
-        this.linkTo("workerC", "worker-loader?name=[name].js!../examples/workers/taskC.worker").onReady(() => {
+        this.linkTo("workerC", "./taskCWorker.js").onReady(() => {
             this.remote.workerC.WorkerCContext.methodC("111");
         });
     }

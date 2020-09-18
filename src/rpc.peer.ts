@@ -1,14 +1,14 @@
 import { webworker_rpc } from "./lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
-// import HelperWorker from "worker-loader?name=[name].js!./helper.worker";
 
 export const MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
 export const MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
 export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
 export const MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
 export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
+export const MESSAGEKEY_Terminate: string = "terminate";// TODO: 创建对应方法
 export const HELPWORKERNAME: string = "__HELPER";
-export const HELPWORKERURL: string = "worker-loader?name=[name].js!./help.worker";
+export const HELPWORKERURL: string = "./helperWorker.js";
 
 // decorater
 const RPCFunctions: RPCExecutor[] = [];
@@ -35,6 +35,7 @@ export function Export(paramTypes?: webworker_rpc.ParamType[]) {
 const RPCListeners: Map<string, { context: string, event: string, executor: RPCExecutor }[]> = new Map();
 export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor) => {
+        // TODO: 合并function
         //-- Export
         const executorContext = target.constructor.name;
         if (!RPCContexts.has(executorContext)) RPCContexts.set(executorContext, target);
@@ -137,6 +138,7 @@ export class RPCPeer extends RPCEmitter {
     private registry: Map<string, webworker_rpc.IExecutor[]>;
     private channels: Map<string, MessagePort>;
     private linkListeners: Map<string, LinkListener>;
+    private linkTasks: { workerName: string, workerUrl?: string }[];
 
     static getInstance() {
         return RPCPeer._instance;
@@ -165,8 +167,14 @@ export class RPCPeer extends RPCEmitter {
         this.registry = new Map();
         this.channels = new Map();
         this.linkListeners = new Map();
+        this.linkTasks = [];
 
-        this.worker.onmessage = this.onMessage_Link;
+        this.worker.onmessage = (ev: MessageEvent) => {
+            const { key } = ev.data;
+            if (key && key === MESSAGEKEY_LINK) {
+                this.onMessage_Link(ev);
+            }
+        };
 
         // console.log(name + " RPCFunctions", RPCFunctions);
         // console.log(name + " RPCContexts", RPCContexts);
@@ -174,16 +182,6 @@ export class RPCPeer extends RPCEmitter {
     }
 
     public linkTo(workerName: string, workerUrl?: string): LinkListener {
-        if (!this.channels.has(HELPWORKERNAME)) {
-
-            const requiredWorker = require(HELPWORKERURL);
-            const helperWorker = new requiredWorker();
-            const helperChannel = new MessageChannel();
-
-            helperWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [helperChannel.port2]);
-            this.addLink(HELPWORKERNAME, helperChannel.port1);
-        }
-
         if (this.linkListeners.has(workerName)) {
             console.warn("already requested link to " + workerName);
             return this.linkListeners.get(workerName);
@@ -192,9 +190,28 @@ export class RPCPeer extends RPCEmitter {
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
+        if (!this.channels.has(HELPWORKERNAME)) {
+            const selfName = this.worker["name"];
+            if (selfName && selfName === this.name) {
+                // 这是由HelperWorker创建的worker，需要等待和HelperWorker连接完成后再进行linkTo操作
+                this.linkTasks.push({ workerName, workerUrl });
+                return listener;
+            }
+
+            const helperWorker = new Worker(HELPWORKERURL);
+            const helperChannel = new MessageChannel();
+
+            helperWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [helperChannel.port2]);
+            this.addLink(HELPWORKERNAME, helperChannel.port1);
+        }
+
         this.channels.get(HELPWORKERNAME).postMessage({ key: MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
 
         return listener;
+    }
+
+    public linkFinished() {
+        // TODO: 所有连接建立完毕 关闭HelperWorker
     }
 
     private linkToWorker(workerName: string, worker: any): LinkListener {
@@ -247,6 +264,20 @@ export class RPCPeer extends RPCEmitter {
         };
         // post registry
         this.postRegistry(worker, new RPCRegistryPacket(this.name, RPCFunctions));
+
+        if (worker === HELPWORKERNAME) {
+            // 执行未进行的linkTo task
+            const taskNum = this.linkTasks.length;
+            for (let i = 0; i < taskNum; i++) {
+                const task = this.linkTasks.pop();
+                this.channels.get(HELPWORKERNAME).postMessage({
+                    key: MESSAGEKEY_REQUESTLINK,
+                    serviceName: this.name,
+                    workerName: task.workerName,
+                    workerUrl: task.workerUrl
+                });
+            }
+        }
     }
 
     // worker调用其他worker方法
@@ -305,15 +336,13 @@ export class RPCPeer extends RPCEmitter {
         }
     }
     private onMessage_Link(ev: MessageEvent) {
-        const { key } = ev.data;
-        if (key && key === MESSAGEKEY_LINK) {
-            const { workers } = ev.data;
-            const ports = ev.ports;
-            for (let i = 0; i < ports.length; i++) {
-                const onePort = ports[i];
-                const oneWorker = workers[i];
-                this.addLink(oneWorker, onePort);
-            }
+        // console.log(this.name + " onMessage_Link: ", ev);
+        const { workers } = ev.data;
+        const ports = ev.ports;
+        for (let i = 0; i < ports.length; i++) {
+            const onePort = ports[i];
+            const oneWorker = workers[i];
+            this.addLink(oneWorker, onePort);
         }
     }
     private onMessage_RequestLink(ev: MessageEvent) {
@@ -334,8 +363,7 @@ export class RPCPeer extends RPCEmitter {
                 return;
             }
 
-            const requiredWorker = require(workerUrl);
-            const tarWorker = new requiredWorker();
+            const tarWorker = new Worker(workerUrl, { name: workerName });
             const helper2TarChannel = new MessageChannel();
 
             tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name, serviceName] }, [helper2TarChannel.port2, channel.port2]);

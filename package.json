@@ -12,7 +12,7 @@
     "build:dev": "rm -rf release && webpack && mkdir types/src/lib && cp src/lib/protocols.d.ts types/src/lib/ && yarn dts && rm -rf types",
     "build": "yarn build:dev && yarn version --patch",
     "dts": "dts-bundle --configJson dts-bundle.json",
-    "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js  && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
+    "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
     "mkproto:clean": "rimraf ./src/lib/protocols.d.ts ./src/lib/protocols.js",
     "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./src/lib/protocols.js",
     "mkproto": "yarn mkproto:clean && yarn mkproto:tojs && pbts -o ./src/lib/protocols.d.ts ./src/lib/protocols.js"
