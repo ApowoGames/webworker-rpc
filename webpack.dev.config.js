@@ -5,7 +5,7 @@ module.exports = {
   mode: 'development',
   entry: {
     app: './examples/main.ts',
-    helperWorker: './src/helper.worker.ts',
+    managerWorker: './src/manager.worker.ts',
     foremanWorker: './examples/workers/foreman.worker.ts',
     taskAWorker: './examples/workers/taskA.worker.ts',
     taskBWorker: './examples/workers/taskB.worker.ts',

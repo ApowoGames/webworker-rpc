@@ -7,8 +7,8 @@ export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
 export const MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
 export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
 export const MESSAGEKEY_Terminate: string = "terminate";// TODO: 创建对应方法
-export const HELPWORKERNAME: string = "__HELPER";
-export const HELPWORKERURL: string = "./helperWorker.js";
+export const MANAGERWORKERNAME: string = "__MANAGER";
+export const MANAGERWORKERURL: string = "./managerWorker.js";
 
 // decorater
 const RPCFunctions: RPCExecutor[] = [];
@@ -190,28 +190,28 @@ export class RPCPeer extends RPCEmitter {
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
-        if (!this.channels.has(HELPWORKERNAME)) {
+        if (!this.channels.has(MANAGERWORKERNAME)) {
             const selfName = this.worker["name"];
             if (selfName && selfName === this.name) {
-                // 这是由HelperWorker创建的worker，需要等待和HelperWorker连接完成后再进行linkTo操作
+                // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
                 this.linkTasks.push({ workerName, workerUrl });
                 return listener;
             }
 
-            const helperWorker = new Worker(HELPWORKERURL);
-            const helperChannel = new MessageChannel();
+            const managerWorker = new Worker(MANAGERWORKERURL);
+            const managerChannel = new MessageChannel();
 
-            helperWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [helperChannel.port2]);
-            this.addLink(HELPWORKERNAME, helperChannel.port1);
+            managerWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [managerChannel.port2]);
+            this.addLink(MANAGERWORKERNAME, managerChannel.port1);
         }
 
-        this.channels.get(HELPWORKERNAME).postMessage({ key: MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
+        this.channels.get(MANAGERWORKERNAME).postMessage({ key: MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
 
         return listener;
     }
 
     public linkFinished() {
-        // TODO: 所有连接建立完毕 关闭HelperWorker
+        // TODO: 所有连接建立完毕 关闭ManagerWorker
     }
 
     private linkToWorker(workerName: string, worker: any): LinkListener {
@@ -265,12 +265,12 @@ export class RPCPeer extends RPCEmitter {
         // post registry
         this.postRegistry(worker, new RPCRegistryPacket(this.name, RPCFunctions));
 
-        if (worker === HELPWORKERNAME) {
+        if (worker === MANAGERWORKERNAME) {
             // 执行未进行的linkTo task
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
-                this.channels.get(HELPWORKERNAME).postMessage({
+                this.channels.get(MANAGERWORKERNAME).postMessage({
                     key: MESSAGEKEY_REQUESTLINK,
                     serviceName: this.name,
                     workerName: task.workerName,
@@ -326,7 +326,7 @@ export class RPCPeer extends RPCEmitter {
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
-        if (worker === HELPWORKERNAME) return;
+        if (worker === MANAGERWORKERNAME) return;
 
         const messageData = new RPCMessage(MESSAGEKEY_ADDREGISTRY, registry);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
@@ -364,10 +364,10 @@ export class RPCPeer extends RPCEmitter {
             }
 
             const tarWorker = new Worker(workerUrl, { name: workerName });
-            const helper2TarChannel = new MessageChannel();
+            const manager2TarChannel = new MessageChannel();
 
-            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name, serviceName] }, [helper2TarChannel.port2, channel.port2]);
-            this.addLink(workerName, helper2TarChannel.port1);
+            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name, serviceName] }, [manager2TarChannel.port2, channel.port2]);
+            this.addLink(workerName, manager2TarChannel.port1);
         }
     }
     private onMessage_AddRegistry(ev: MessageEvent) {
