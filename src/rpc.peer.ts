@@ -1,15 +1,6 @@
 import { webworker_rpc } from "./lib/protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
 
-export const MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
-export const MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
-export const MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
-export const MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
-export const MESSAGEKEY_RUNMETHOD: string = "runMethod";
-export const MESSAGEKEY_Terminate: string = "terminate";// TODO: 创建对应方法
-export const MANAGERWORKERNAME: string = "__MANAGER";
-export const MANAGERWORKERURL: string = "./managerWorker.js";
-
 // decorater
 const RPCFunctions: RPCExecutor[] = [];
 const RPCContexts: Map<string, any> = new Map();
@@ -63,6 +54,83 @@ export function RemoteListener(worker: string, context: string, event: string, p
             RPCListeners.set(worker, []);
         }
         RPCListeners.get(worker).push({ context, event, executor });
+    }
+}
+
+// manager worker sprite
+const MANAGERWORKERSPRITE = (ev) => {
+    const MESSAGEKEY_LINK: string = "link";
+    const MESSAGEKEY_REQUESTLINK: string = "requestLink";
+    const MANAGERWORKERNAME: string = "__MANAGER";
+
+    const channels: Map<string, MessagePort> = new Map();
+
+    const addLink = (worker: string, port: MessagePort) => {
+        if (channels.has(worker)) {
+            return;
+        }
+        channels.set(worker, port);
+        port.onmessage = (ev: MessageEvent) => {
+            const { key } = ev.data;
+            if (!key) {
+                return;
+            }
+            // TODO 使用map结构
+            switch (key) {
+                case MESSAGEKEY_REQUESTLINK:
+                    onMessage_RequestLink(ev);
+                    break;
+                default:
+                    break;
+            }
+        };
+    }
+
+    const onMessage_Link = (_ev: MessageEvent) => {
+        const { workers } = _ev.data;
+        const ports = _ev.ports;
+        for (let i = 0; i < ports.length; i++) {
+            const onePort = ports[i];
+            const oneWorker = workers[i];
+            addLink(oneWorker, onePort);
+        }
+    }
+
+    const onMessage_RequestLink = (_ev: MessageEvent) => {
+        const { serviceName, workerName, workerUrl } = _ev.data;
+        const service2TarChannel = new MessageChannel();
+
+        if (!channels.has(serviceName)) {
+            console.error(MANAGERWORKERNAME + " not yet link to " + serviceName);
+            return;
+        }
+        channels.get(serviceName).postMessage({ key: MESSAGEKEY_LINK, workers: [workerName] }, [service2TarChannel.port1]);
+
+        if (channels.has(workerName)) {
+            channels.get(workerName).postMessage({ key: MESSAGEKEY_LINK, workers: [serviceName] }, [service2TarChannel.port2]);
+        } else {
+            if (!workerUrl) {
+                console.error("worker url undefined");
+                return;
+            }
+
+            // console.log(MANAGERWORKERNAME + " new worker: ", location, workerUrl, workerName);
+            const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
+            const manager2TarChannel = new MessageChannel();
+
+            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
+            addLink(workerName, manager2TarChannel.port1);
+        }
+    }
+
+    const { key } = ev.data;
+    switch (key) {
+        case MESSAGEKEY_LINK:
+            onMessage_Link(ev);
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -134,6 +202,15 @@ export class RPCPeer extends RPCEmitter {
     public name: string;
 
     private static _instance: RPCPeer;
+
+    private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
+    private readonly MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
+    private readonly MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
+    private readonly MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
+    private readonly MESSAGEKEY_RUNMETHOD: string = "runMethod";
+    private readonly MESSAGEKEY_Terminate: string = "terminate";// TODO: 创建对应方法
+    private readonly MANAGERWORKERNAME: string = "__MANAGER";
+
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
     private channels: Map<string, MessagePort>;
@@ -171,7 +248,7 @@ export class RPCPeer extends RPCEmitter {
 
         this.worker.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
-            if (key && key === MESSAGEKEY_LINK) {
+            if (key && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
                 this.onMessage_Link(ev);
             }
         };
@@ -190,7 +267,7 @@ export class RPCPeer extends RPCEmitter {
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
-        if (!this.channels.has(MANAGERWORKERNAME)) {
+        if (!this.channels.has(this.MANAGERWORKERNAME)) {
             const selfName = this.worker["name"];
             if (selfName && selfName === this.name) {
                 // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
@@ -198,14 +275,16 @@ export class RPCPeer extends RPCEmitter {
                 return listener;
             }
 
-            const managerWorker = new Worker(MANAGERWORKERURL);
+            const managerWorkerURL = this.getManagerWorkerURL();
+            // console.log(this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
+            const managerWorker = new Worker(managerWorkerURL);
             const managerChannel = new MessageChannel();
 
-            managerWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [managerChannel.port2]);
-            this.addLink(MANAGERWORKERNAME, managerChannel.port1);
+            managerWorker.postMessage({ key: this.MESSAGEKEY_LINK, workers: [this.name] }, [managerChannel.port2]);
+            this.addLink(this.MANAGERWORKERNAME, managerChannel.port1);
         }
 
-        this.channels.get(MANAGERWORKERNAME).postMessage({ key: MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
+        this.channels.get(this.MANAGERWORKERNAME).postMessage({ key: this.MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
 
         return listener;
     }
@@ -221,7 +300,7 @@ export class RPCPeer extends RPCEmitter {
 
         const channel = new MessageChannel();
 
-        worker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name] }, [channel.port2]);
+        worker.postMessage({ key: this.MESSAGEKEY_LINK, workers: [this.name] }, [channel.port2]);
         this.addLink(workerName, channel.port1);
 
         return listener;
@@ -242,19 +321,16 @@ export class RPCPeer extends RPCEmitter {
             }
             // TODO 使用map结构
             switch (key) {
-                case MESSAGEKEY_LINK:
+                case this.MESSAGEKEY_LINK:// 通过port接收到的信息，即ManagerWorker发送的消息
                     this.onMessage_Link(ev);
                     break;
-                case MESSAGEKEY_REQUESTLINK:
-                    this.onMessage_RequestLink(ev);
-                    break;
-                case MESSAGEKEY_ADDREGISTRY:
+                case this.MESSAGEKEY_ADDREGISTRY:
                     this.onMessage_AddRegistry(ev);
                     break;
-                case MESSAGEKEY_GOTREGISTRY:
+                case this.MESSAGEKEY_GOTREGISTRY:
                     this.onMessage_GotRegistry(ev);
                     break;
-                case MESSAGEKEY_RUNMETHOD:
+                case this.MESSAGEKEY_RUNMETHOD:
                     this.onMessage_RunMethod(ev);
                     break;
                 default:
@@ -265,13 +341,13 @@ export class RPCPeer extends RPCEmitter {
         // post registry
         this.postRegistry(worker, new RPCRegistryPacket(this.name, RPCFunctions));
 
-        if (worker === MANAGERWORKERNAME) {
+        if (worker === this.MANAGERWORKERNAME) {
             // 执行未进行的linkTo task
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
-                this.channels.get(MANAGERWORKERNAME).postMessage({
-                    key: MESSAGEKEY_REQUESTLINK,
+                this.channels.get(this.MANAGERWORKERNAME).postMessage({
+                    key: this.MESSAGEKEY_REQUESTLINK,
                     serviceName: this.name,
                     workerName: task.workerName,
                     workerUrl: task.workerUrl
@@ -317,7 +393,7 @@ export class RPCPeer extends RPCEmitter {
             }
         }
 
-        const messageData = new RPCMessage(MESSAGEKEY_RUNMETHOD, packet);
+        const messageData = new RPCMessage(this.MESSAGEKEY_RUNMETHOD, packet);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
         if (this.channels.has(worker)) {
             this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
@@ -326,9 +402,9 @@ export class RPCPeer extends RPCEmitter {
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
-        if (worker === MANAGERWORKERNAME) return;
+        if (worker === this.MANAGERWORKERNAME) return;
 
-        const messageData = new RPCMessage(MESSAGEKEY_ADDREGISTRY, registry);
+        const messageData = new RPCMessage(this.MESSAGEKEY_ADDREGISTRY, registry);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
         if (this.channels.has(worker)) {
             const port = this.channels.get(worker);
@@ -343,31 +419,6 @@ export class RPCPeer extends RPCEmitter {
             const onePort = ports[i];
             const oneWorker = workers[i];
             this.addLink(oneWorker, onePort);
-        }
-    }
-    private onMessage_RequestLink(ev: MessageEvent) {
-        const { serviceName, workerName, workerUrl } = ev.data;
-        const channel = new MessageChannel();
-
-        if (!this.channels.has(serviceName)) {
-            console.error(this.name + " not yet link to " + serviceName);
-            return;
-        }
-        this.channels.get(serviceName).postMessage({ key: MESSAGEKEY_LINK, workers: [workerName] }, [channel.port1]);
-
-        if (this.channels.has(workerName)) {
-            this.channels.get(workerName).postMessage({ key: MESSAGEKEY_LINK, workers: [serviceName] }, [channel.port2]);
-        } else {
-            if (!workerUrl) {
-                console.error("worker url undefined");
-                return;
-            }
-
-            const tarWorker = new Worker(workerUrl, { name: workerName });
-            const manager2TarChannel = new MessageChannel();
-
-            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [this.name, serviceName] }, [manager2TarChannel.port2, channel.port2]);
-            this.addLink(workerName, manager2TarChannel.port1);
         }
     }
     private onMessage_AddRegistry(ev: MessageEvent) {
@@ -387,7 +438,7 @@ export class RPCPeer extends RPCEmitter {
 
         if (this.channels.has(packet.serviceName)) {
             const port = this.channels.get(packet.serviceName);
-            port.postMessage({ key: MESSAGEKEY_GOTREGISTRY, worker: this.name });
+            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name });
         }
         if (this.linkListeners.has(packet.serviceName)) {
             this.linkListeners.get(packet.serviceName).setPortReady(this.name);
@@ -537,6 +588,25 @@ export class RPCPeer extends RPCEmitter {
         addProperty(this.remote, service, serviceProp);
 
         // Logger.getInstance().log(this.name + "addRegistryProperty", this);
+    }
+
+    private getManagerWorkerURL(): string {
+        // "./managerWorker.js"
+        // return URL.createObjectURL(new Blob([MANAGERWORKERTEXT], { type: 'text/javascript' }));
+        const resolveString = MANAGERWORKERSPRITE.toString();
+        // The template is basically an addEventListener attachment that creates a
+        // closure (IIFE*) with the provided function and invokes it with the provided
+        // data.
+        // * IIFE stands for immediately Immediately-Invoked Function Expression
+        // Removed the postMessage from this template in order to allow worker functions
+        // to use asynchronous functions and resolve whenever they need to.
+        const webWorkerTemplate = `
+            self.addEventListener('message', function(e) {
+                ((${resolveString})(e));
+            });
+        `;
+        const blob = new Blob([webWorkerTemplate], { type: 'text/javascript' });
+        return URL.createObjectURL(blob);
     }
 }
 

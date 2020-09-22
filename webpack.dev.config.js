@@ -5,7 +5,6 @@ module.exports = {
   mode: 'development',
   entry: {
     app: './examples/main.ts',
-    managerWorker: './src/manager.worker.ts',
     foremanWorker: './examples/workers/foreman.worker.ts',
     taskAWorker: './examples/workers/taskA.worker.ts',
     taskBWorker: './examples/workers/taskB.worker.ts',
@@ -13,11 +12,6 @@ module.exports = {
   },
   module: {
     rules: [
-      // {
-      //   test: /\.worker\.ts$/,
-      //   loader: 'worker-loader',
-      //   options: { publicPath: '/dist/workers/' },
-      // },
       {
         test: /\.ts$/,
         loader: 'ts-loader',
@@ -25,12 +19,6 @@ module.exports = {
       },
     ]
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      title: "webworker-rpc",
-      chunks: ['app']
-    }),
-  ],
   resolve: {
     extensions: ['.ts', '.tsx', '.js']
   },
@@ -38,6 +26,12 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js'
   },
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: "webworker-rpc",
+      chunks: ['app']
+    }),
+  ],
   devServer: {
     contentBase: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',

@@ -4,7 +4,6 @@ module.exports = {
   mode: 'production',
   entry: {
     rpcpeer: './src/rpc.peer.ts',
-    managerWorker: './src/manager.worker.ts',
   },
   module: {
     rules: [

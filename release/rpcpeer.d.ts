@@ -674,8 +674,9 @@ declare module 'webworker-rpc/rpc.peer' {
     export const MESSAGEKEY_ADDREGISTRY: string;
     export const MESSAGEKEY_GOTREGISTRY: string;
     export const MESSAGEKEY_RUNMETHOD: string;
-    export const HELPWORKERNAME: string;
-    export const HELPWORKERURL: string;
+    export const MESSAGEKEY_Terminate: string;
+    export const MANAGERWORKERNAME: string;
+    export const MANAGERWORKERTEXT: string;
     export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
     export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
     export class RPCEmitter {
@@ -694,6 +695,7 @@ declare module 'webworker-rpc/rpc.peer' {
         static getInstance(): RPCPeer;
         constructor(name: string, w?: Worker);
         linkTo(workerName: string, workerUrl?: string): LinkListener;
+        linkFinished(): void;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);

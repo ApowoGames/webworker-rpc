@@ -3,7 +3,7 @@ import { RPCPeer } from "../src/rpc.peer";
 
 window.onload = () => {
   const peer = new RPCPeer("main");
-  peer.linkTo("foreman", "./foremanWorker.js").onReady(() => {
+  peer.linkTo("foreman", "/foremanWorker.js").onReady(() => {
     peer.remote.foreman.ForemanContext.methodF();
   });
 };
