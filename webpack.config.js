@@ -19,6 +19,8 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'release'),
-    filename: '[name].js'
+    filename: '[name].js',
+    library: 'rpcpeer',
+    libraryTarget: 'umd'
   },
 };

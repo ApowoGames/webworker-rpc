@@ -626,6 +626,7 @@ export class LinkListener {
         this.readyFunc = f;
     }
 
+    // TODO: 对外隐藏
     public setPortReady(port: string) {
         if (this.port1 !== port && this.port2 !== port) return;
 
