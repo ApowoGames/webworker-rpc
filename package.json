@@ -1,6 +1,6 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "release/rpcpeer.js",
   "types": "release/rpcpeer.d.ts",
   "author": "apowo",
