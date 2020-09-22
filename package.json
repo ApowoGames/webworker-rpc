@@ -1,13 +1,13 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "main": "release/rpcpeer.js",
   "types": "release/rpcpeer.d.ts",
   "author": "apowo",
   "license": "MIT",
   "scripts": {
     "dts": "dts-bundle --configJson dts-bundle.json",
-    "build:dev": "rm -rf release && webpack && mkdir types/src/lib && cp src/lib/protocols.d.ts types/src/lib/ && yarn dts && rm -rf types && chmod +x ./src/lib/injectManagerWorker.sh && ./src/lib/injectManagerWorker.sh",
+    "build:dev": "rm -rf release && webpack && mkdir types/src/lib && cp src/lib/protocols.d.ts types/src/lib/ && yarn dts && rm -rf types",
     "build": "yarn build:dev && yarn version --patch",
     "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
     "mkproto:clean": "rimraf ./src/lib/protocols.d.ts ./src/lib/protocols.js",
