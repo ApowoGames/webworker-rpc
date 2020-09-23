@@ -1,4 +1,4 @@
-import { webworker_rpc } from "./lib/protocols";
+import { webworker_rpc } from "./protocols";
 
 export class RPCMessage extends webworker_rpc.WebWorkerMessage {
     constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket) {

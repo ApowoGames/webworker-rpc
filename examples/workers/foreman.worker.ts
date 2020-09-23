@@ -1,9 +1,4 @@
-// import TaskWorkerA from "worker-loader?name=[name].js!./taskA.worker";
-// import TaskWorkerB from "worker-loader?name=[name].js!./taskB.worker";
-// import TaskWorkerC from "worker-loader?name=[name].js!./taskC.worker";
-import { RPCPeer, Export, RPCEmitter, RemoteListener } from "../../src/rpc.peer";
-import { webworker_rpc } from "../../src/lib/protocols";
-import { RPCExecutor, RPCExecutePacket, RPCParam } from "../../src/rpc.message";
+import { RPCPeer, Export, RemoteListener, webworker_rpc } from "../../release/index";
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法

@@ -1,6 +1,4 @@
-import { RPCPeer, Export, RPCEmitter } from "../../src/rpc.peer";
-import { webworker_rpc } from "../../src/lib/protocols";
-import { RPCExecutor, RPCParam } from "../../src/rpc.message";
+import { RPCPeer, Export, RPCEmitter, webworker_rpc } from "../../release/index";
 
 // 子worker
 class WorkerAContext extends RPCPeer {

@@ -1,4 +1,4 @@
-export { webworker_rpc } from "./lib/protocols";
+export { webworker_rpc } from "./protocols";
 
 export {
     RPCEmitter,

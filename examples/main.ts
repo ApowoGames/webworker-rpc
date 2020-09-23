@@ -1,5 +1,5 @@
 // import ForemanWorker from "worker-loader?name=[name].js!./workers/foreman.worker";
-import { RPCPeer } from "../src/rpc.peer";
+import { RPCPeer } from "../release/index";
 
 window.onload = () => {
   const peer = new RPCPeer("main");
