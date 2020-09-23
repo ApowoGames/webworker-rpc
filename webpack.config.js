@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   entry: {
-    rpcpeer: './src/rpc.peer.ts',
+    index: './src/index.ts',
   },
   module: {
     rules: [
@@ -20,7 +20,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'release'),
     filename: '[name].js',
-    library: 'rpcpeer',
+    library: 'webworkerRPC',
     libraryTarget: 'umd',
     globalObject: "this"
   },

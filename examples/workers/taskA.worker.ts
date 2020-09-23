@@ -1,4 +1,4 @@
-import { RPCPeer, Export, RPCEmitter, webworker_rpc } from "../../release/index";
+import { RPCPeer, Export, RPCEmitter, webworker_rpc } from "../../src/index";
 
 // 子worker
 class WorkerAContext extends RPCPeer {
