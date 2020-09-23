@@ -1,18 +1,18 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.11",
-  "main": "release/rpcpeer.js",
-  "types": "release/rpcpeer.d.ts",
+  "version": "0.0.12",
+  "main": "release/index.js",
+  "types": "release/index.d.ts",
   "author": "apowo",
   "license": "MIT",
   "scripts": {
     "dts": "dts-bundle --configJson dts-bundle.json",
-    "build:dev": "rm -rf release && webpack && mkdir types/src/lib && cp src/lib/protocols.d.ts types/src/lib/ && yarn dts && rm -rf types",
+    "build:dev": "rm -rf release && mkdir release && cp src/protocols.d.ts src/protocols.js release/ && cp types/* release/ && rm -rf types",
     "build": "yarn build:dev && yarn version --patch",
     "dev": "rm -rf dist && webpack --config ./webpack.dev.config.js && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
-    "mkproto:clean": "rimraf ./src/lib/protocols.d.ts ./src/lib/protocols.js",
-    "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./src/lib/protocols.js",
-    "mkproto": "yarn mkproto:clean && yarn mkproto:tojs && pbts -o ./src/lib/protocols.d.ts ./src/lib/protocols.js"
+    "mkproto:clean": "rimraf ./src/protocols.d.ts ./src/protocols.js",
+    "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./src/protocols.js",
+    "mkproto": "yarn mkproto:clean && yarn mkproto:tojs && pbts -o ./src/protocols.d.ts ./src/protocols.js"
   },
   "repository": {
     "type": "git",
@@ -25,12 +25,9 @@
     "dts-dom": "^3.6.0",
     "expose-loader": "^0.7.5",
     "fs-extra": "^9.0.0",
-    "jsdoc": "^3.6.4",
     "protobufjs": "^6.10.1",
     "remove": "^0.1.5",
     "ts-loader": "^6.2.1",
-    "tslint": "^6.0.0",
-    "tslint-webpack-plugin": "^2.1.0",
     "typescript": "^3.7.5"
   },
   "devDependencies": {
