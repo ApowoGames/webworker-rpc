@@ -17,7 +17,7 @@ class ForemanContext extends RPCPeer {
     }
 
     @Export()
-    public methodF() {
+    public static methodF() {
         console.log("methodF");
     }
 

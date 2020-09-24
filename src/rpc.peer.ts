@@ -1,48 +1,36 @@
 import { webworker_rpc } from "./protocols";
 import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
 
-// decorater
+// decorator
 const RPCFunctions: RPCExecutor[] = [];
 const RPCContexts: Map<string, any> = new Map();
+const ExportDecorator = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
+    const context = typeof target === "function" ? target.name : target.constructor.name;
+    const params: RPCParam[] = [];
+    if (paramTypes) {
+        for (const pt of paramTypes) {
+            params.push(new RPCParam(pt));
+        }
+    }
+    RPCFunctions.push(new RPCExecutor(name, context, params));
+};
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor) => {
-        // console.log("Export: ", target, name, descriptor);
-        const context = target.constructor.name;
-        if (!RPCContexts.has(context)) RPCContexts.set(context, target);
-
-        const params: RPCParam[] = [];
-        if (paramTypes) {
-            for (const pt of paramTypes) {
-                params.push(new RPCParam(pt));
-            }
-        }
-        if (params.length > 0) {
-            RPCFunctions.push(new RPCExecutor(name, context, params));
-        } else {
-            RPCFunctions.push(new RPCExecutor(name, context));
-        }
-    };
+        ExportDecorator(target, name, descriptor, paramTypes);
+    }
 }
 const RPCListeners: Map<string, { context: string, event: string, executor: RPCExecutor }[]> = new Map();
 export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor) => {
-        // TODO: 合并function
-        //-- Export
-        const executorContext = target.constructor.name;
-        if (!RPCContexts.has(executorContext)) RPCContexts.set(executorContext, target);
+        ExportDecorator(target, name, descriptor, paramTypes);
 
+        const executorContext = typeof target === "function" ? target.name : target.constructor.name;
         const params: RPCParam[] = [];
         if (paramTypes) {
             for (const pt of paramTypes) {
                 params.push(new RPCParam(pt));
             }
         }
-        if (params.length > 0) {
-            RPCFunctions.push(new RPCExecutor(name, executorContext, params));
-        } else {
-            RPCFunctions.push(new RPCExecutor(name, executorContext));
-        }
-        //--
 
         let executor: RPCExecutor = null;
         if (params.length > 0) {
@@ -549,7 +537,12 @@ export class RPCPeer extends RPCEmitter {
             return null;
         }
         const con = RPCContexts.get(context);
-        return con[functionName].apply(con, args);
+        if (functionName in con) {
+            return con[functionName].apply(con, args);
+        } else {
+            // static function
+            return con.constructor[functionName].apply(con, args);
+        }
     }
 
     private addRegistryProperty(packet: RPCRegistryPacket) {
@@ -586,20 +579,10 @@ export class RPCPeer extends RPCEmitter {
         if (!this.remote) this.remote = {};
 
         addProperty(this.remote, service, serviceProp);
-
-        // Logger.getInstance().log(this.name + "addRegistryProperty", this);
     }
 
     private getManagerWorkerURL(): string {
-        // "./managerWorker.js"
-        // return URL.createObjectURL(new Blob([MANAGERWORKERTEXT], { type: 'text/javascript' }));
         const resolveString = MANAGERWORKERSPRITE.toString();
-        // The template is basically an addEventListener attachment that creates a
-        // closure (IIFE*) with the provided function and invokes it with the provided
-        // data.
-        // * IIFE stands for immediately Immediately-Invoked Function Expression
-        // Removed the postMessage from this template in order to allow worker functions
-        // to use asynchronous functions and resolve whenever they need to.
         const webWorkerTemplate = `
             self.addEventListener('message', function(e) {
                 ((${resolveString})(e));
