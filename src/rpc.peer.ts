@@ -139,7 +139,7 @@ const MANAGERWORKERSPRITE = (ev) => {
 
 const EXCEPTEDPROPERTIES: string[] = ["__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished", "constructor"];
 
-function ExceptProperty() {
+function ExceptClassProperties() {
     return (target, name, descriptor) => {
         for (const key in target) {
             if (!EXCEPTEDPROPERTIES.includes(key)) {
@@ -166,7 +166,7 @@ export class RPCEmitter {
     }
 
     // @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
-    @ExceptProperty()
+    @ExceptClassProperties()
     public on(event: string, executor: RPCExecutor, worker: string) {
         // console.log("on", event, executor, worker, this);
 
@@ -276,7 +276,7 @@ export class RPCPeer extends RPCEmitter {
         // console.log(name + " RPCListeners", RPCListeners);
     }
 
-    @ExceptProperty()
+    @ExceptClassProperties()
     public linkTo(workerName: string, workerUrl?: string): LinkListener {
         if (this.linkListeners.has(workerName)) {
             console.warn("already requested link to " + workerName);
