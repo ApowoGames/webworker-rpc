@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dts": "dts-bundle --configJson dts-bundle.json",
-    "build:dev": "rm -rf types && rm -rf release && webpack && cp src/protocols.d.ts types/ && yarn dts && rm -rf types",
+    "build:dev": "rm -rf types && rm -rf release && webpack && cp src/protocols.d.ts types/src/ && yarn dts && rm -rf types",
     "build": "yarn build:dev && yarn version --patch",
     "dev": "rm -rf types && rm -rf dist && webpack --config ./webpack.dev.config.js && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
     "mkproto:clean": "rimraf ./src/protocols.d.ts ./src/protocols.js",

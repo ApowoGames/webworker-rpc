@@ -4,8 +4,9 @@ export {
     RPCEmitter,
     RPCPeer,
     LinkListener,
+    ExportAll,
     Export,
-    RemoteListener
+    RemoteListener,
 } from "./rpc.peer";
 
 export {
