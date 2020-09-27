@@ -2,14 +2,17 @@ import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../..
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-@ExportAll
+@ExportAll()
 class ForemanContext extends RPCPeer {
+    // @Export()
     public son: ForemanSon;
+    public static staticSon: ForemanSon;
 
     constructor() {
         super("foreman");
 
         this.son = new ForemanSon();
+        ForemanContext.staticSon = new ForemanSon();
 
         // this.linkTo("workerA", "/taskAWorker.js").onReady(() => {
         //     this.remote.workerA.WorkerAContext.methodA(true);
@@ -22,7 +25,7 @@ class ForemanContext extends RPCPeer {
         // });
     }
 
-    @Export()
+    // @Export()
     public static methodF() {
         console.log("methodF");
     }
@@ -45,15 +48,19 @@ class ForemanContext extends RPCPeer {
 
 class ForemanSon {
     public grandSon: ForemanGrandson;
-    private grandSon2: ForemanGrandson;
+    public static grandSon2: ForemanGrandson;
 
     constructor() {
         this.grandSon = new ForemanGrandson();
-        this.grandSon2 = new ForemanGrandson();
+        ForemanSon.grandSon2 = new ForemanGrandson();
     }
 
     public foremanSonFunction() {
         console.log("foremanSonFunction");
+    }
+
+    public static foremanSonStaticFunction() {
+        console.log("foremanSonStaticFunction");
     }
 
     private privateFunction() {

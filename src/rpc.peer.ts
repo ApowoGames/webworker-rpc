@@ -4,7 +4,8 @@ import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket 
 // decorator
 const RPCFunctions: RPCExecutor[] = [];
 const RPCContexts: Map<string, any> = new Map();
-const RPCClasses: string[] = [];
+const RPCClasses: string[] = [];// 等待link之后，递归注册其所有function
+const RPCAttributes: Map<string, string[]> = new Map();// 等待link之后，注册其所有function
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
     const params: RPCParam[] = [];
@@ -17,21 +18,36 @@ const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.Par
 
     // if (!RPCContexts.has(context)) RPCContexts.set(context, target);
 };
+const ExportAttribute = (target, name) => {
+    const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
+    // console.log("ExportAttribute: ", context, name, target);
+
+    if (!RPCAttributes.has(context)) {
+        RPCAttributes.set(context, []);
+    }
+
+    RPCAttributes.get(context).push(name);
+}
 const AddRPCFunction = (executor: RPCExecutor) => {
     // TODO: 优化push效率
     const idx = RPCFunctions.findIndex((x) => x.method === executor.method && x.context === executor.context);
     if (idx < 0) {
         RPCFunctions.push(executor);
-        console.log("AddRPCFunction", executor);
+        // console.log("AddRPCFunction", executor);
     }
 }
-export function ExportAll(target) {
-    RPCClasses.push(target.name);
-    return target;
+export function ExportAll() {
+    return (target) => {
+        RPCClasses.push(target.name);
+        return target;
+    }
 }
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
-    return (target, name, descriptor) => {
-        ExportFunction(target, name, descriptor, paramTypes);
+    return (target, name, descriptor?) => {
+        if (descriptor)
+            ExportFunction(target, name, descriptor, paramTypes);
+        else
+            ExportAttribute(target, name);
     }
 }
 const RPCListeners: Map<string, { context: string, event: string, executor: RPCExecutor }[]> = new Map();
@@ -137,14 +153,14 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 }
 
-const EXCEPTEDPROPERTIES: string[] = ["__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished", "constructor"];
+const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished"];
 
 function ExceptClassProperties() {
     return (target, name, descriptor) => {
         for (const key in target) {
             if (!EXCEPTEDPROPERTIES.includes(key)) {
                 EXCEPTEDPROPERTIES.push(key);
-                console.log("ExceptProperty: ", key);
+                // console.log("ExceptProperty: ", key);
             }
         }
     }
@@ -233,7 +249,7 @@ export class RPCPeer extends RPCEmitter {
     private channels: Map<string, MessagePort>;
     private linkListeners: Map<string, LinkListener>;
     private linkTasks: { workerName: string, workerUrl?: string }[];
-    private checkedExportAll: boolean = false;
+    private exported: boolean = false;
 
     static getInstance() {
         return RPCPeer._instance;
@@ -345,16 +361,32 @@ export class RPCPeer extends RPCEmitter {
             }
         };
         // check export all
-        if (!this.checkedExportAll) {
-            this.checkedExportAll = true;
-            console.log(this.name + " checkedExportAll");
-            for (const oneClass of RPCClasses) {
-                if (!RPCContexts.has(oneClass)) {
-                    console.error("ExportAll can only decorate Emitter!");
+        if (!this.exported) {
+            this.exported = true;
+            // console.log(this.name + " checkedExportAll");
+            for (const context of RPCClasses) {
+                if (!RPCContexts.has(context)) {
+                    console.error("ExportAll only decorate Emitter!");
                     continue;
                 }
 
-                this.exportObject(RPCContexts.get(oneClass), oneClass);
+                this.exportObject(RPCContexts.get(context), context);
+            }
+
+            const attributeKeys = Array.from(RPCAttributes.keys());
+            for (const context of attributeKeys) {
+                if (!RPCContexts.has(context)) {
+                    console.error("Export only decorate Emitter!");
+                    continue;
+                }
+                for (const attr of RPCAttributes.get(context)) {
+                    const conObj = RPCContexts.get(context);
+                    if (!(attr in conObj)) {
+                        console.error(`${attr} not in `, conObj);
+                        continue;
+                    }
+                    this.exportObject(conObj[attr], context + "." + attr, false);
+                }
             }
         }
 
@@ -563,20 +595,28 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private exportObject(obj: any, rootContext: string) {
+    private exportObject(obj: any, rootContext: string, recursion = true) {
         // console.log(this.name + " exportObject: " + rootContext, obj);
-        // return;
+
         for (const key in obj) {
             if (EXCEPTEDPROPERTIES.includes(key)) continue;
 
             const element = obj[key];
             if (typeof element === "function") {
-                // TODO: 添加入参检测
+                // console.log("element: ", element);
                 AddRPCFunction(new RPCExecutor(key, rootContext));
-            } else if (element instanceof Object) {
+            } else if (recursion && element instanceof Object) {
                 const cStr = rootContext.concat(".", key);
                 this.exportObject(element, cStr);
             }
+        }
+
+        // 静态属性/方法注册
+        const rootPath = rootContext.split(".");
+        if (rootPath[rootPath.length - 1] !== "constructor") {
+            const objCons = obj.constructor;
+            // console.log("constructor exportObject: ", objCons);
+            this.exportObject(objCons, rootContext + ".constructor", false);
         }
     }
 
@@ -615,6 +655,9 @@ export class RPCPeer extends RPCEmitter {
             const contexts = executor.context.split(".");
             let methodCon = serviceProp;
             for (const context of contexts) {
+                if (context === "constructor") {
+                    continue;
+                }
                 if (!(context in methodCon)) {
                     addProperty(methodCon, context, {});
                 }
@@ -635,7 +678,7 @@ export class RPCPeer extends RPCEmitter {
                         params.push(new RPCParam(t, arg));
                     }
                 }
-                // TODO: 根据executor.params检测params
+                // 此处不检测params，检测在typescript层执行
                 if (callback) {
                     this.execute(service, new RPCExecutePacket(this.name, executor.method, executor.context, params, callback));
                 } else {
