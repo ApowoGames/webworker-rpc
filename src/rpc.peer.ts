@@ -374,18 +374,24 @@ export class RPCPeer extends RPCEmitter {
             }
 
             const attributeKeys = Array.from(RPCAttributes.keys());
-            for (const context of attributeKeys) {
-                if (!RPCContexts.has(context)) {
+            for (const oneKey of attributeKeys) {
+                const keyPath = oneKey.split(".");
+                const contextStr = keyPath[0];
+                if (!RPCContexts.has(contextStr)) {
                     console.error("Export only decorate Emitter!");
                     continue;
                 }
-                for (const attr of RPCAttributes.get(context)) {
-                    const conObj = RPCContexts.get(context);
+                for (const attr of RPCAttributes.get(oneKey)) {
+                    let conObj = RPCContexts.get(contextStr);
+                    for (let i = 1; i < keyPath.length; i++) {
+                        const p = keyPath[i];
+                        conObj = conObj[p];
+                    }
                     if (!(attr in conObj)) {
                         console.error(`${attr} not in `, conObj);
                         continue;
                     }
-                    this.exportObject(conObj[attr], context + "." + attr, false);
+                    this.exportObject(conObj[attr], oneKey + "." + attr, false);
                 }
             }
         }

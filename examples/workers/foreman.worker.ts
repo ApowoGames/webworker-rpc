@@ -2,10 +2,11 @@ import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../..
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-@ExportAll()
+// @ExportAll()
 class ForemanContext extends RPCPeer {
     // @Export()
     public son: ForemanSon;
+    @Export()
     public static staticSon: ForemanSon;
 
     constructor() {
