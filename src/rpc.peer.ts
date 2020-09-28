@@ -153,11 +153,17 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 }
 
-const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished"];
+const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished", "getInstance", "_instance"];
 
 function ExceptClassProperties() {
     return (target, name, descriptor) => {
         for (const key in target) {
+            if (!EXCEPTEDPROPERTIES.includes(key)) {
+                EXCEPTEDPROPERTIES.push(key);
+                // console.log("ExceptProperty: ", key);
+            }
+        }
+        for (const key of target.constructor) {
             if (!EXCEPTEDPROPERTIES.includes(key)) {
                 EXCEPTEDPROPERTIES.push(key);
                 // console.log("ExceptProperty: ", key);
@@ -603,11 +609,13 @@ export class RPCPeer extends RPCEmitter {
 
     private exportObject(obj: any, rootContext: string, recursion = true) {
         // console.log(this.name + " exportObject: " + rootContext, obj);
+        // if (RPCFunctions.length > 40) return;
 
         for (const key in obj) {
             if (EXCEPTEDPROPERTIES.includes(key)) continue;
 
             const element = obj[key];
+            // console.log(this.name + " exportKey: " + key, element);
             if (typeof element === "function") {
                 // console.log("element: ", element);
                 AddRPCFunction(new RPCExecutor(key, rootContext));
@@ -622,7 +630,7 @@ export class RPCPeer extends RPCEmitter {
         if (rootPath[rootPath.length - 1] !== "constructor") {
             const objCons = obj.constructor;
             // console.log("constructor exportObject: ", objCons);
-            this.exportObject(objCons, rootContext + ".constructor", false);
+            this.exportObject(objCons, rootContext + ".constructor", recursion);
         }
     }
 

@@ -2,11 +2,11 @@ import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../..
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-// @ExportAll()
+@ExportAll()
 class ForemanContext extends RPCPeer {
     // @Export()
     public son: ForemanSon;
-    @Export()
+    // @Export()
     public static staticSon: ForemanSon;
 
     constructor() {
@@ -49,11 +49,11 @@ class ForemanContext extends RPCPeer {
 
 class ForemanSon {
     public grandSon: ForemanGrandson;
-    public static grandSon2: ForemanGrandson;
+    public static staticGrandson: ForemanGrandson;
 
     constructor() {
         this.grandSon = new ForemanGrandson();
-        ForemanSon.grandSon2 = new ForemanGrandson();
+        ForemanSon.staticGrandson = new ForemanGrandson();
     }
 
     public foremanSonFunction() {
