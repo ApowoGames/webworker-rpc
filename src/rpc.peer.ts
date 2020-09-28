@@ -80,6 +80,7 @@ export function RemoteListener(worker: string, context: string, event: string, p
 const MANAGERWORKERSPRITE = (ev) => {
     const MESSAGEKEY_LINK: string = "link";
     const MESSAGEKEY_REQUESTLINK: string = "requestLink";
+    const MESSAGEKEY_UNLINK: string = "unlink";
     const MANAGERWORKERNAME: string = "__MANAGER";
 
     const channels: Map<string, MessagePort> = new Map();
@@ -98,6 +99,9 @@ const MANAGERWORKERSPRITE = (ev) => {
             switch (key) {
                 case MESSAGEKEY_REQUESTLINK:
                     onMessage_RequestLink(ev);
+                    break;
+                case MESSAGEKEY_UNLINK:
+                    onMessage_Unlink(ev);
                     break;
                 default:
                     break;
@@ -142,6 +146,15 @@ const MANAGERWORKERSPRITE = (ev) => {
         }
     }
 
+    const onMessage_Unlink = (_ev: MessageEvent) => {
+        const { worker } = _ev.data;
+        if (channels.has(worker)) {
+            channels.delete(worker);
+        }
+
+        // console.log(MANAGERWORKERNAME + " unlink: ", channels);
+    }
+
     const { key } = ev.data;
     switch (key) {
         case MESSAGEKEY_LINK:
@@ -153,7 +166,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 }
 
-const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "on", "off", "emit", "linkTo", "linkFinished", "getInstance", "_instance"];
+const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "getInstance", "_instance"];
 
 function ExceptClassProperties() {
     return (target, name, descriptor) => {
@@ -247,7 +260,7 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
     private readonly MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
     private readonly MESSAGEKEY_RUNMETHOD: string = "runMethod";
-    private readonly MESSAGEKEY_Terminate: string = "terminate";// TODO: 创建对应方法
+    private readonly MESSAGEKEY_UNLINK: string = "unlink";
     private readonly MANAGERWORKERNAME: string = "__MANAGER";
 
     private worker: Worker;
@@ -261,8 +274,9 @@ export class RPCPeer extends RPCEmitter {
         return RPCPeer._instance;
     }
 
-    constructor(name: string, w?: Worker) {
+    constructor(name: string) {
         super();
+        AddRPCFunction(new RPCExecutor("destroy", this.constructor.name));
 
         if (RPCPeer._instance) {
             console.error("duplicate RPCPeer created");
@@ -276,11 +290,7 @@ export class RPCPeer extends RPCEmitter {
         }
 
         this.name = name;
-        if (w) {
-            this.worker = w;
-        } else {
-            this.worker = self as any;
-        }
+        this.worker = self as any;
         this.registry = new Map();
         this.channels = new Map();
         this.linkListeners = new Map();
@@ -296,6 +306,26 @@ export class RPCPeer extends RPCEmitter {
         // console.log(name + " RPCFunctions", RPCFunctions);
         // console.log(name + " RPCContexts", RPCContexts);
         // console.log(name + " RPCListeners", RPCListeners);
+    }
+
+    public destroy() {
+        const names = Array.from(this.channels.keys());
+        for (const name of names) {
+            // remove listeners
+            if (RPCListeners.has(name)) {
+                const listeners = RPCListeners.get(name);
+                for (const listener of listeners) {
+                    this.remote[name][listener.context].off(listener.event, listener.executor, this.name);
+                }
+            }
+
+            // unlink: remove channel, remove registry
+            const w = this.channels.get(name);
+            w.postMessage({ key: this.MESSAGEKEY_UNLINK, worker: this.name });
+        }
+
+        if (RPCPeer._instance) RPCPeer._instance = null;
+        self.close();
     }
 
     @ExceptClassProperties()
@@ -361,46 +391,16 @@ export class RPCPeer extends RPCEmitter {
                 case this.MESSAGEKEY_RUNMETHOD:
                     this.onMessage_RunMethod(ev);
                     break;
+                case this.MESSAGEKEY_UNLINK:
+                    this.onMessage_Unlink(ev);
+                    break;
                 default:
                     // console.warn("got message outof control: ", ev.data);
                     break;
             }
         };
         // check export all
-        if (!this.exported) {
-            this.exported = true;
-            // console.log(this.name + " checkedExportAll");
-            for (const context of RPCClasses) {
-                if (!RPCContexts.has(context)) {
-                    console.error("ExportAll only decorate Emitter!");
-                    continue;
-                }
-
-                this.exportObject(RPCContexts.get(context), context);
-            }
-
-            const attributeKeys = Array.from(RPCAttributes.keys());
-            for (const oneKey of attributeKeys) {
-                const keyPath = oneKey.split(".");
-                const contextStr = keyPath[0];
-                if (!RPCContexts.has(contextStr)) {
-                    console.error("Export only decorate Emitter!");
-                    continue;
-                }
-                for (const attr of RPCAttributes.get(oneKey)) {
-                    let conObj = RPCContexts.get(contextStr);
-                    for (let i = 1; i < keyPath.length; i++) {
-                        const p = keyPath[i];
-                        conObj = conObj[p];
-                    }
-                    if (!(attr in conObj)) {
-                        console.error(`${attr} not in `, conObj);
-                        continue;
-                    }
-                    this.exportObject(conObj[attr], oneKey + "." + attr, false);
-                }
-            }
-        }
+        this.updateRegistry();
 
         // post registry
         this.postRegistry(worker, new RPCRegistryPacket(this.name, RPCFunctions));
@@ -461,6 +461,41 @@ export class RPCPeer extends RPCEmitter {
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
         if (this.channels.has(worker)) {
             this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
+        }
+    }
+    private updateRegistry() {
+        if (this.exported) return;
+        this.exported = true;
+        // console.log(this.name + " checkedExportAll");
+        for (const context of RPCClasses) {
+            if (!RPCContexts.has(context)) {
+                console.error("ExportAll only decorate Emitter!");
+                continue;
+            }
+
+            this.exportObject(RPCContexts.get(context), context);
+        }
+
+        const attributeKeys = Array.from(RPCAttributes.keys());
+        for (const oneKey of attributeKeys) {
+            const keyPath = oneKey.split(".");
+            const contextStr = keyPath[0];
+            if (!RPCContexts.has(contextStr)) {
+                console.error("Export only decorate Emitter!");
+                continue;
+            }
+            for (const attr of RPCAttributes.get(oneKey)) {
+                let conObj = RPCContexts.get(contextStr);
+                for (let i = 1; i < keyPath.length; i++) {
+                    const p = keyPath[i];
+                    conObj = conObj[p];
+                }
+                if (!(attr in conObj)) {
+                    console.error(`${attr} not in `, conObj);
+                    continue;
+                }
+                this.exportObject(conObj[attr], oneKey + "." + attr, false);
+            }
         }
     }
     // 通知其他worker添加回调注册表
@@ -605,6 +640,21 @@ export class RPCPeer extends RPCEmitter {
                 }
             });
         }
+    }
+    private onMessage_Unlink(ev: MessageEvent) {
+        const { worker } = ev.data;
+
+        if (this.channels.has(worker)) {
+            this.channels.delete(worker);
+        }
+        if (this.registry.has(worker)) {
+            this.registry.delete(worker);
+        }
+        if (this.remote && (worker in this.remote)) {
+            delete this.remote[worker];
+        }
+
+        // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
     }
 
     private exportObject(obj: any, rootContext: string, recursion = true) {
