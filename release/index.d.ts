@@ -687,13 +687,14 @@ declare module 'webworker-rpc/rpc.peer' {
         name: string;
         static getInstance(): RPCPeer;
         constructor(name: string);
-        destroy(): void;
         linkTo(workerName: string, workerUrl?: string): LinkListener;
         linkFinished(): void;
+        destroy(): void;
+        export(attr: any, context: any): void;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);
-        onReady(f: () => any): void;
+        onceReady(f: () => any): void;
         setPortReady(port: string): void;
     }
 }

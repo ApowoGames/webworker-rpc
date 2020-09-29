@@ -34,7 +34,9 @@ const AddRPCFunction = (executor: RPCExecutor) => {
     if (idx < 0) {
         RPCFunctions.push(executor);
         // console.log("AddRPCFunction", executor);
+        return true;
     }
+    return false;
 }
 export function ExportAll() {
     return (target) => {
@@ -308,26 +310,6 @@ export class RPCPeer extends RPCEmitter {
         // console.log(name + " RPCListeners", RPCListeners);
     }
 
-    public destroy() {
-        const names = Array.from(this.channels.keys());
-        for (const name of names) {
-            // remove listeners
-            if (RPCListeners.has(name)) {
-                const listeners = RPCListeners.get(name);
-                for (const listener of listeners) {
-                    this.remote[name][listener.context].off(listener.event, listener.executor, this.name);
-                }
-            }
-
-            // unlink: remove channel, remove registry
-            const w = this.channels.get(name);
-            w.postMessage({ key: this.MESSAGEKEY_UNLINK, worker: this.name });
-        }
-
-        if (RPCPeer._instance) RPCPeer._instance = null;
-        self.close();
-    }
-
     @ExceptClassProperties()
     public linkTo(workerName: string, workerUrl?: string): LinkListener {
         if (this.linkListeners.has(workerName)) {
@@ -362,6 +344,71 @@ export class RPCPeer extends RPCEmitter {
 
     public linkFinished() {
         // TODO: 所有连接建立完毕 关闭ManagerWorker
+    }
+
+    public destroy() {
+        const linkedNames = Array.from(this.channels.keys());
+        for (const oneName of linkedNames) {
+            // remove listeners
+            if (RPCListeners.has(oneName)) {
+                const listeners = RPCListeners.get(oneName);
+                for (const listener of listeners) {
+                    this.remote[oneName][listener.context].off(listener.event, listener.executor, this.name);
+                }
+            }
+
+            // unlink: remove channel, remove registry
+            const w = this.channels.get(oneName);
+            w.postMessage({ key: this.MESSAGEKEY_UNLINK, worker: this.name });
+        }
+
+        if (RPCPeer._instance) RPCPeer._instance = null;
+        self.close();
+    }
+
+    // 动态暴露属性
+    public export(attr: any, context: any) {
+        // console.log(this.name + " export: ", attr, context);
+        let attrName = "";
+        for (const key in context) {
+            if (Object.prototype.hasOwnProperty.call(context, key)) {
+                const element = context[key];
+                if (element === attr) {
+                    attrName = key;
+                    // console.log("attrName: ", attrName);
+                }
+            }
+        }
+        if (attrName.length === 0) {
+            console.error(`${attr} is not in ${context}`);
+            return;
+        }
+
+        let exitConName = "";
+        const exitConNames = Array.from(RPCContexts.keys());
+        for (const oneName of exitConNames) {
+            const oneCon = RPCContexts.get(oneName);
+            if (oneCon === context) {
+                exitConName = oneName;
+                break;
+            }
+        }
+
+        let conName = exitConName;
+        if (exitConName.length === 0) {
+            conName = context.constructor.name;
+            if (RPCContexts.has(conName)) {
+                console.error(`context name <${conName}> exit`);
+                return;
+            }
+            RPCContexts.set(conName, context);
+        }
+
+        const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
+        const linkedNames = Array.from(this.channels.keys());
+        for (const oneName of linkedNames) {
+            this.postRegistry(oneName, new RPCRegistryPacket(this.name, addExecutors));
+        }
     }
 
     // 增加worker之间的通道联系
@@ -543,12 +590,14 @@ export class RPCPeer extends RPCEmitter {
             this.linkListeners.get(packet.serviceName).setPortReady(this.name);
         }
 
+        // add listeners while got registry firstly
         if (RPCListeners.has(packet.serviceName)) {
             const listeners = RPCListeners.get(packet.serviceName);
             for (const listener of listeners) {
                 // console.log(this.name + " remote on, ", this.remote, packet.serviceName, listener);
                 this.remote[packet.serviceName][listener.context].on(listener.event, listener.executor, this.name);
             }
+            RPCListeners.delete(packet.serviceName);
         }
     }
     private onMessage_GotRegistry(ev: MessageEvent) {
@@ -657,9 +706,10 @@ export class RPCPeer extends RPCEmitter {
         // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
     }
 
-    private exportObject(obj: any, rootContext: string, recursion = true) {
+    private exportObject(obj: any, rootContext: string, recursion = true): RPCExecutor[] {
         // console.log(this.name + " exportObject: " + rootContext, obj);
         // if (RPCFunctions.length > 40) return;
+        let addExecutors: RPCExecutor[] = [];
 
         for (const key in obj) {
             if (EXCEPTEDPROPERTIES.includes(key)) continue;
@@ -668,10 +718,11 @@ export class RPCPeer extends RPCEmitter {
             // console.log(this.name + " exportKey: " + key, element);
             if (typeof element === "function") {
                 // console.log("element: ", element);
-                AddRPCFunction(new RPCExecutor(key, rootContext));
+                const newExecutor = new RPCExecutor(key, rootContext);
+                if (AddRPCFunction(newExecutor)) addExecutors.push(newExecutor);
             } else if (recursion && element instanceof Object) {
                 const cStr = rootContext.concat(".", key);
-                this.exportObject(element, cStr);
+                addExecutors = addExecutors.concat(this.exportObject(element, cStr));
             }
         }
 
@@ -679,9 +730,11 @@ export class RPCPeer extends RPCEmitter {
         const rootPath = rootContext.split(".");
         if (rootPath[rootPath.length - 1] !== "constructor") {
             const objCons = obj.constructor;
-            // console.log("constructor exportObject: ", objCons);
-            this.exportObject(objCons, rootContext + ".constructor", recursion);
+            const constructorExportResult = this.exportObject(objCons, rootContext + ".constructor", recursion);
+            addExecutors = addExecutors.concat(constructorExportResult);
         }
+
+        return addExecutors;
     }
 
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
@@ -712,9 +765,18 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private addRegistryProperty(packet: RPCRegistryPacket) {
+        if (!this.remote) this.remote = {};
+
         const service = packet.serviceName;
         const executors = packet.executors;
-        const serviceProp = {};
+
+        let serviceProp = {};
+        if (service in this.remote) {
+            serviceProp = this.remote[service];
+        } else {
+            addProperty(this.remote, service, serviceProp);
+        }
+
         for (const executor of executors) {
             const contexts = executor.context.split(".");
             let methodCon = serviceProp;
@@ -751,10 +813,6 @@ export class RPCPeer extends RPCEmitter {
             });
         }
 
-        if (!this.remote) this.remote = {};
-
-        addProperty(this.remote, service, serviceProp);
-
         console.log(this.name + ".remote: ", this.remote);
     }
 
@@ -782,7 +840,8 @@ export class LinkListener {
         this.port2 = port2;
     }
 
-    public onReady(f: () => any) {
+    // 仅执行一次
+    public onceReady(f: () => any) {
         this.readyFunc = f;
     }
 
@@ -796,6 +855,7 @@ export class LinkListener {
         if (this.port1Ready && this.port2Ready) {
             if (this.readyFunc) {
                 this.readyFunc();
+                this.readyFunc = null;
             }
         }
     }
