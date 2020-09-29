@@ -298,12 +298,18 @@ export class RPCPeer extends RPCEmitter {
         this.linkListeners = new Map();
         this.linkTasks = [];
 
-        this.worker.onmessage = (ev: MessageEvent) => {
+        this.worker.addEventListener("message", (ev: MessageEvent) => {
             const { key } = ev.data;
             if (key && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
                 this.onMessage_Link(ev);
             }
-        };
+        });
+        // this.worker.onmessage = (ev: MessageEvent) => {
+        //     const { key } = ev.data;
+        //     if (key && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
+        //         this.onMessage_Link(ev);
+        //     }
+        // };
 
         // console.log(name + " RPCFunctions", RPCFunctions);
         // console.log(name + " RPCContexts", RPCContexts);
