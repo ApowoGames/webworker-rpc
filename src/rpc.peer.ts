@@ -1,5 +1,6 @@
+import { ValueResolver } from "./promise";
 import { webworker_rpc } from "./protocols";
-import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket } from "./rpc.message";
+import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket, RPCResponsePacket } from "./rpc.message";
 
 // decorator
 const RPCFunctions: RPCExecutor[] = [];
@@ -261,7 +262,8 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
     private readonly MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
     private readonly MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
-    private readonly MESSAGEKEY_RUNMETHOD: string = "runMethod";
+    private readonly MESSAGEKEY_EXECUTE: string = "execute";
+    private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
     private readonly MANAGERWORKERNAME: string = "__MANAGER";
 
@@ -271,6 +273,8 @@ export class RPCPeer extends RPCEmitter {
     private linkListeners: Map<string, LinkListener>;
     private linkTasks: { workerName: string, workerUrl?: string }[];
     private exported: boolean = false;
+    private resolvers: Map<number, ValueResolver<any>>;
+    private resolverID: number;
 
     static getInstance() {
         return RPCPeer._instance;
@@ -297,6 +301,8 @@ export class RPCPeer extends RPCEmitter {
         this.channels = new Map();
         this.linkListeners = new Map();
         this.linkTasks = [];
+        this.resolvers = new Map();
+        this.resolverID = 0;
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
             const { key } = ev.data;
@@ -304,16 +310,6 @@ export class RPCPeer extends RPCEmitter {
                 this.onMessage_Link(ev);
             }
         });
-        // this.worker.onmessage = (ev: MessageEvent) => {
-        //     const { key } = ev.data;
-        //     if (key && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
-        //         this.onMessage_Link(ev);
-        //     }
-        // };
-
-        // console.log(name + " RPCFunctions", RPCFunctions);
-        // console.log(name + " RPCContexts", RPCContexts);
-        // console.log(name + " RPCListeners", RPCListeners);
     }
 
     @ExceptClassProperties()
@@ -441,8 +437,11 @@ export class RPCPeer extends RPCEmitter {
                 case this.MESSAGEKEY_GOTREGISTRY:
                     this.onMessage_GotRegistry(ev);
                     break;
-                case this.MESSAGEKEY_RUNMETHOD:
-                    this.onMessage_RunMethod(ev);
+                case this.MESSAGEKEY_EXECUTE:
+                    this.onMessage_Execute(ev);
+                    break;
+                case this.MESSAGEKEY_RESPOND:
+                    this.onMessage_Respond(ev);
                     break;
                 case this.MESSAGEKEY_UNLINK:
                     this.onMessage_Unlink(ev);
@@ -474,35 +473,34 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // worker调用其他worker方法
-    private execute(worker: string, packet: RPCExecutePacket) {
+    private execute(worker: string, method: string, context: string, params?: webworker_rpc.Param[]): Promise<any> {
         // console.log(this.name + " execute: ", worker, packet);
         if (!this.registry.has(worker)) {
             console.error("worker <" + worker + "> not registed");
             return;
         }
-        const executor = this.registry.get(worker).find((x) => x.context === packet.header.remoteExecutor.context &&
-            x.method === packet.header.remoteExecutor.method);
+        const executor = this.registry.get(worker).find((x) => x.context === context &&
+            x.method === method);
         if (!executor) {
-            console.error("method <" + packet.header.remoteExecutor.method + "> not registed");
+            console.error("method <" + method + "> not registed");
             return;
         }
 
         const regParams = executor.params;
-        const remoteParams = packet.header.remoteExecutor.params;
         if (regParams && regParams.length > 0) {
-            if (!remoteParams || remoteParams.length === 0) {
+            if (!params || params.length === 0) {
                 console.error("execute param error! ", "param.length = 0");
                 return;
             }
 
-            if (regParams.length > remoteParams.length) {
+            if (regParams.length > params.length) {
                 console.error("execute param error! ", "param not enough");
                 return;
             }
 
             for (let i = 0; i < regParams.length; i++) {
                 const regP = regParams[i];
-                const remoteP = remoteParams[i];
+                const remoteP = params[i];
                 if (regP.t !== remoteP.t) {
                     console.error("execute param error! ", "type not match, registry: <", regP.t, ">; execute: <", remoteP.t, ">");
                     return;
@@ -510,7 +508,19 @@ export class RPCPeer extends RPCEmitter {
             }
         }
 
-        const messageData = new RPCMessage(this.MESSAGEKEY_RUNMETHOD, packet);
+        const id = this.resolverID++;
+        const holder = new ValueResolver<any>();
+        this.resolvers.set(id, holder);
+        return holder.promise(() => {
+            const messageData = new RPCMessage(this.MESSAGEKEY_EXECUTE, new RPCExecutePacket(id, this.name, method, context, params));
+            const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
+            if (this.channels.has(worker)) {
+                this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
+            }
+        });
+    }
+    private respond(worker: string, id: number, vals?: webworker_rpc.Param[], err?: string) {
+        const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, vals, err));
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
         if (this.channels.has(worker)) {
             this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
@@ -613,7 +623,7 @@ export class RPCPeer extends RPCEmitter {
             this.linkListeners.get(worker).setPortReady(worker);
         }
     }
-    private onMessage_RunMethod(ev: MessageEvent) {
+    private onMessage_Execute(ev: MessageEvent) {
         // console.log(this.name + " onMessage_RunMethod:", ev.data);
         const { dataExecute } = ev.data;
         if (!dataExecute) {
@@ -626,74 +636,80 @@ export class RPCPeer extends RPCEmitter {
         }
         const packet: RPCExecutePacket = dataExecute as RPCExecutePacket;
 
+        const id = packet.id;
+        const service = packet.header.serviceName;
         const remoteExecutor = packet.header.remoteExecutor;
 
         const params = [];
         if (remoteExecutor.params) {
             for (const param of remoteExecutor.params) {
-                switch (param.t) {
-                    case webworker_rpc.ParamType.boolean:
-                        {
-                            params.push(param.valBool);
-                        }
-                        break;
-                    case webworker_rpc.ParamType.num:
-                        {
-                            params.push(param.valNum);
-                        }
-                        break;
-                    case webworker_rpc.ParamType.str:
-                        {
-                            params.push(param.valStr);
-                        }
-                        break;
-                    case webworker_rpc.ParamType.unit8array:
-                        {
-                            params.push(param.valBytes);
-                        }
-                        break;
-                    case webworker_rpc.ParamType.executor:
-                        {
-                            params.push(param.valExecutor);
-                        }
-                        break;
-                    default:
-                        break;
-                }
+                const v = RPCParam.getValue(param);
+                if (v) params.push(v);
             }
         }
         const result = this.executeFunctionByName(remoteExecutor.method, remoteExecutor.context, params);
-        if (result && result instanceof Promise) {
-            result.then((...args) => {
-                const callbackParams: webworker_rpc.Param[] = [];
-                for (const arg of args) {
-                    const t = RPCParam.typeOf(arg);
-                    if (t !== webworker_rpc.ParamType.UNKNOWN) {
-                        callbackParams.push(new RPCParam(t, arg));
-                    }
-                }
+        let resultArr = [];
+        if (result) {
+            if (!Array.isArray(result)) {
+                resultArr = [result];
+            } else {
+                resultArr = result;
+            }
+        }
 
-                if (packet.header.callbackExecutor) {
-                    const callback = packet.header.callbackExecutor;
-                    if (callback.params) {
-                        if (callbackParams.length < callback.params.length) {
-                            console.error(`not enough data from promise`);
-                            return;
-                        }
-                        for (let i = 0; i < callback.params.length; i++) {
-                            const p = callback.params[i];
-                            const cp = callbackParams[i];
-                            if (p.t !== cp.t) {
-                                console.error(`param type not match: <${p.t}> <${cp.t}>`);
-                                return;
-                            }
-                        }
-                        this.execute(packet.header.serviceName, new RPCExecutePacket(this.name, callback.method, callback.context, callbackParams));
-                    } else {
-                        this.execute(packet.header.serviceName, new RPCExecutePacket(this.name, callback.method, callback.context));
-                    }
-                }
-            });
+        const responseVals: RPCParam[] = [];
+        for (const oneVal of resultArr) {
+            const t = RPCParam.typeOf(oneVal);
+            if (t === webworker_rpc.ParamType.UNKNOWN) {
+                console.warn("unknown param type: ", oneVal);
+                continue;
+            }
+
+            responseVals.push(new RPCParam(t, oneVal));
+        }
+        this.respond(service, id, responseVals);
+    }
+    private onMessage_Respond(ev: MessageEvent) {
+        const { dataResponse } = ev.data;
+        if (!dataResponse) {
+            console.warn("<data> not in ev.data");
+            return;
+        }
+        if (!RPCResponsePacket.checkType(dataResponse)) {
+            console.warn("<data> type error: ", dataResponse);
+            return;
+        }
+        const packet: RPCResponsePacket = dataResponse as RPCResponsePacket;
+
+        if (!this.resolvers.has(packet.id)) {
+            console.error("respones.id undefined: ", packet.id);
+            return;
+        }
+
+        const resolver = this.resolvers.get(packet.id);
+        this.resolvers.delete(packet.id);
+        if (packet.err) {
+            console.error("get error response: ", packet.err);
+            resolver.reject(packet.err);
+            return;
+        }
+
+        const vals = packet.vals;
+        if (!vals || vals.length === 0) {
+            resolver.resolve();
+        } else {
+            const result = [];
+            for (const val of vals) {
+                const v = RPCParam.getValue(val);
+                if (v) result.push(v);
+            }
+            if (result.length === 0) {
+                resolver.resolve();
+            } else if (result.length === 1) {
+                resolver.resolve(result[0]);
+            } else {
+                resolver.resolve(result);
+            }
         }
     }
     private onMessage_Unlink(ev: MessageEvent) {
@@ -799,7 +815,6 @@ export class RPCPeer extends RPCEmitter {
             addProperty(methodCon, executor.method, (...args) => {
                 // console.log(this.name + " call property ", service, executor.method, executor.context);
                 const params: RPCParam[] = [];
-                let callback = null;// TODO add callback from args
                 if (args) {
                     for (const arg of args) {
                         const t = RPCParam.typeOf(arg);
@@ -811,11 +826,7 @@ export class RPCPeer extends RPCEmitter {
                     }
                 }
                 // 此处不检测params，检测在typescript层执行
-                if (callback) {
-                    this.execute(service, new RPCExecutePacket(this.name, executor.method, executor.context, params, callback));
-                } else {
-                    this.execute(service, new RPCExecutePacket(this.name, executor.method, executor.context, params));
-                }
+                return this.execute(service, executor.method, executor.context, params);
             });
         }
 

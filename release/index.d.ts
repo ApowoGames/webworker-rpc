@@ -5,7 +5,7 @@
 declare module 'webworker-rpc' {
     export { webworker_rpc } from "webworker-rpc/protocols";
     export { RPCEmitter, RPCPeer, LinkListener, ExportAll, Export, RemoteListener, } from "webworker-rpc/rpc.peer";
-    export { RPCMessage, RPCRegistryPacket, RPCExecutePacket, RPCExecutor, RPCParam, } from "webworker-rpc/rpc.message";
+    export { RPCMessage, RPCRegistryPacket, RPCExecutePacket, RPCResponsePacket, RPCExecutor, RPCParam, } from "webworker-rpc/rpc.message";
 }
 
 declare module 'webworker-rpc/protocols' {
@@ -259,17 +259,8 @@ declare module 'webworker-rpc/protocols' {
                     /** Header serviceName */
                     serviceName: string;
     
-                    /** Header error */
-                    error: webworker_rpc.MSG_ERR;
-    
                     /** Header remoteExecutor */
                     remoteExecutor: webworker_rpc.IExecutor;
-    
-                    /** Header callbackExecutor */
-                    callbackExecutor?: (webworker_rpc.IExecutor|null);
-    
-                    /** Header bodyLen */
-                    bodyLen?: (number|null);
             }
     
             /** Represents a Header. */
@@ -284,17 +275,8 @@ declare module 'webworker-rpc/protocols' {
                     /** Header serviceName. */
                     serviceName: string;
     
-                    /** Header error. */
-                    error: webworker_rpc.MSG_ERR;
-    
                     /** Header remoteExecutor. */
                     remoteExecutor: webworker_rpc.IExecutor;
-    
-                    /** Header callbackExecutor. */
-                    callbackExecutor?: (webworker_rpc.IExecutor|null);
-    
-                    /** Header bodyLen. */
-                    bodyLen: number;
     
                     /**
                         * Creates a new Header instance using the specified properties.
@@ -370,8 +352,14 @@ declare module 'webworker-rpc/protocols' {
             /** Properties of an ExecutePacket. */
             interface IExecutePacket {
     
+                    /** ExecutePacket id */
+                    id: number;
+    
                     /** ExecutePacket header */
                     header: webworker_rpc.IHeader;
+    
+                    /** ExecutePacket bodyLen */
+                    bodyLen?: (number|null);
     
                     /** ExecutePacket body */
                     body?: (Uint8Array|null);
@@ -386,8 +374,14 @@ declare module 'webworker-rpc/protocols' {
                         */
                     constructor(properties?: webworker_rpc.IExecutePacket);
     
+                    /** ExecutePacket id. */
+                    id: number;
+    
                     /** ExecutePacket header. */
                     header: webworker_rpc.IHeader;
+    
+                    /** ExecutePacket bodyLen. */
+                    bodyLen: number;
     
                     /** ExecutePacket body. */
                     body: Uint8Array;
@@ -458,6 +452,108 @@ declare module 'webworker-rpc/protocols' {
     
                     /**
                         * Converts this ExecutePacket to JSON.
+                        * @returns JSON object
+                        */
+                    toJSON(): { [k: string]: any };
+            }
+    
+            /** Properties of a ResponesPacket. */
+            interface IResponesPacket {
+    
+                    /** ResponesPacket id */
+                    id: number;
+    
+                    /** ResponesPacket vals */
+                    vals?: (webworker_rpc.IParam[]|null);
+    
+                    /** ResponesPacket err */
+                    err?: (string|null);
+            }
+    
+            /** Represents a ResponesPacket. */
+            class ResponesPacket implements IResponesPacket {
+    
+                    /**
+                        * Constructs a new ResponesPacket.
+                        * @param [properties] Properties to set
+                        */
+                    constructor(properties?: webworker_rpc.IResponesPacket);
+    
+                    /** ResponesPacket id. */
+                    id: number;
+    
+                    /** ResponesPacket vals. */
+                    vals: webworker_rpc.IParam[];
+    
+                    /** ResponesPacket err. */
+                    err: string;
+    
+                    /**
+                        * Creates a new ResponesPacket instance using the specified properties.
+                        * @param [properties] Properties to set
+                        * @returns ResponesPacket instance
+                        */
+                    static create(properties?: webworker_rpc.IResponesPacket): webworker_rpc.ResponesPacket;
+    
+                    /**
+                        * Encodes the specified ResponesPacket message. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
+                        * @param message ResponesPacket message or plain object to encode
+                        * @param [writer] Writer to encode to
+                        * @returns Writer
+                        */
+                    static encode(message: webworker_rpc.IResponesPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+    
+                    /**
+                        * Encodes the specified ResponesPacket message, length delimited. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
+                        * @param message ResponesPacket message or plain object to encode
+                        * @param [writer] Writer to encode to
+                        * @returns Writer
+                        */
+                    static encodeDelimited(message: webworker_rpc.IResponesPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+    
+                    /**
+                        * Decodes a ResponesPacket message from the specified reader or buffer.
+                        * @param reader Reader or buffer to decode from
+                        * @param [length] Message length if known beforehand
+                        * @returns ResponesPacket
+                        * @throws {Error} If the payload is not a reader or valid buffer
+                        * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                        */
+                    static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.ResponesPacket;
+    
+                    /**
+                        * Decodes a ResponesPacket message from the specified reader or buffer, length delimited.
+                        * @param reader Reader or buffer to decode from
+                        * @returns ResponesPacket
+                        * @throws {Error} If the payload is not a reader or valid buffer
+                        * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                        */
+                    static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.ResponesPacket;
+    
+                    /**
+                        * Verifies a ResponesPacket message.
+                        * @param message Plain object to verify
+                        * @returns `null` if valid, otherwise the reason why it is not
+                        */
+                    static verify(message: { [k: string]: any }): (string|null);
+    
+                    /**
+                        * Creates a ResponesPacket message from a plain object. Also converts values to their respective internal types.
+                        * @param object Plain object
+                        * @returns ResponesPacket
+                        */
+                    static fromObject(object: { [k: string]: any }): webworker_rpc.ResponesPacket;
+    
+                    /**
+                        * Creates a plain object from a ResponesPacket message. Also converts values to other types if specified.
+                        * @param message ResponesPacket
+                        * @param [options] Conversion options
+                        * @returns Plain object
+                        */
+                    static toObject(message: webworker_rpc.ResponesPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+    
+                    /**
+                        * Converts this ResponesPacket to JSON.
                         * @returns JSON object
                         */
                     toJSON(): { [k: string]: any };
@@ -565,11 +661,14 @@ declare module 'webworker-rpc/protocols' {
                     /** WebWorkerMessage key */
                     key: string;
     
+                    /** WebWorkerMessage dataRegistry */
+                    dataRegistry?: (webworker_rpc.IRegistryPacket|null);
+    
                     /** WebWorkerMessage dataExecute */
                     dataExecute?: (webworker_rpc.IExecutePacket|null);
     
-                    /** WebWorkerMessage dataRegistry */
-                    dataRegistry?: (webworker_rpc.IRegistryPacket|null);
+                    /** WebWorkerMessage dataResponse */
+                    dataResponse?: (webworker_rpc.IResponesPacket|null);
             }
     
             /** Represents a WebWorkerMessage. */
@@ -584,14 +683,17 @@ declare module 'webworker-rpc/protocols' {
                     /** WebWorkerMessage key. */
                     key: string;
     
-                    /** WebWorkerMessage dataExecute. */
-                    dataExecute?: (webworker_rpc.IExecutePacket|null);
-    
                     /** WebWorkerMessage dataRegistry. */
                     dataRegistry?: (webworker_rpc.IRegistryPacket|null);
     
+                    /** WebWorkerMessage dataExecute. */
+                    dataExecute?: (webworker_rpc.IExecutePacket|null);
+    
+                    /** WebWorkerMessage dataResponse. */
+                    dataResponse?: (webworker_rpc.IResponesPacket|null);
+    
                     /** WebWorkerMessage data. */
-                    data?: ("dataExecute"|"dataRegistry");
+                    data?: ("dataRegistry"|"dataExecute"|"dataResponse");
     
                     /**
                         * Creates a new WebWorkerMessage instance using the specified properties.
@@ -702,7 +804,7 @@ declare module 'webworker-rpc/rpc.peer' {
 declare module 'webworker-rpc/rpc.message' {
     import { webworker_rpc } from "webworker-rpc/protocols";
     export class RPCMessage extends webworker_rpc.WebWorkerMessage {
-        constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket);
+        constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket | webworker_rpc.ResponesPacket);
     }
     export class RPCRegistryPacket extends webworker_rpc.RegistryPacket {
         static checkType(obj: any): boolean;
@@ -710,7 +812,7 @@ declare module 'webworker-rpc/rpc.message' {
     }
     export class RPCExecutePacket extends webworker_rpc.ExecutePacket {
         static checkType(obj: any): boolean;
-        constructor(service: string, method: string, context?: string, params?: webworker_rpc.Param[], callback?: webworker_rpc.Executor);
+        constructor(id: number, service: string, method: string, context: string, params?: webworker_rpc.Param[]);
     }
     export class RPCExecutor extends webworker_rpc.Executor {
         static checkType(obj: any): boolean;
@@ -719,7 +821,12 @@ declare module 'webworker-rpc/rpc.message' {
     export class RPCParam extends webworker_rpc.Param {
         static checkType(obj: any): boolean;
         static typeOf(val: any): webworker_rpc.ParamType;
+        static getValue(param: webworker_rpc.IParam): null | undefined | boolean | number | string | Uint8Array | webworker_rpc.IExecutor;
         constructor(t: webworker_rpc.ParamType, val?: any);
+    }
+    export class RPCResponsePacket extends webworker_rpc.ResponesPacket {
+        static checkType(obj: any): boolean;
+        constructor(id: number, vals?: webworker_rpc.Param[], err?: string);
     }
 }
 

@@ -11,13 +11,10 @@ class WorkerAContext extends RPCPeer {
     }
 
     @Export([webworker_rpc.ParamType.boolean])
-    public methodA(val: boolean): Promise<string> {
+    public methodA(val: boolean) {
         console.log("methodA: ", val);
 
         this.helper.doHelp();
-        return new Promise<string>((resolve, reject) => {
-            resolve("callback from WorkerA");
-        });
     }
 }
 

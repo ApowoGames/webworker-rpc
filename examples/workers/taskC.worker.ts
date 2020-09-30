@@ -6,12 +6,9 @@ class WorkerCContext extends RPCPeer {
     }
 
     @Export([webworker_rpc.ParamType.str])
-    public methodC(val: string): Promise<string> {
+    public methodC(val: string) {
         console.log("methodC: ", val);
         this.emit("foremanCall", "WorkerC emit");
-        return new Promise<string>((resolve, reject) => {
-            resolve("callback from WorkerC");
-        });
     }
 }
 

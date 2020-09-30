@@ -15,22 +15,27 @@ class ForemanContext extends RPCPeer {
         this.son = new ForemanSon();
         // ForemanContext.staticSon = new ForemanSon();
 
-        // this.linkTo("workerA", "/taskAWorker.js").onReady(() => {
-        //     this.remote.workerA.WorkerAContext.methodA(true);
-        // });
-        // this.linkTo("workerB", "/taskBWorker.js").onReady(() => {
-        //     this.remote.workerB.WorkerBContext.methodB(333);
-        // });
-        // this.linkTo("workerC", "/taskCWorker.js").onReady(() => {
-        //     this.remote.workerC.WorkerCContext.methodC("111");
-        // });
+        this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
+            this.remote.workerA.WorkerAContext.methodA(true);
+        });
+        this.linkTo("workerB", "/taskBWorker.js").onceReady(() => {
+            this.remote.workerB.WorkerBContext.methodB(333);
+        });
+        this.linkTo("workerC", "/taskCWorker.js").onceReady(() => {
+            this.remote.workerC.WorkerCContext.methodC("111");
+        });
     }
 
+    // @Export()
+    // public createSon() {
+    //     console.log("createSon");
+    //     this.son = new ForemanSon();
+    //     this.export(this.son, this);
+    // }
+
     @Export()
-    public createSon() {
-        console.log("createSon");
-        this.son = new ForemanSon();
-        this.export(this.son, this);
+    public getValue() {
+        return [1, true, "sss"];
     }
 
     // @RemoteListener("workerA", "WorkerAHelper", "foremanCall", [webworker_rpc.ParamType.str])

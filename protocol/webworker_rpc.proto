@@ -36,15 +36,20 @@ enum ParamType{
 
 message Header {
     required string service_name = 1;// 发送者(worker)名称 
-    required MSG_ERR error = 2;
-    required Executor remote_executor = 3;// 远程调用
-    optional Executor callback_executor = 4;
-    optional int32 body_len = 5;
+    required Executor remote_executor = 2;// 远程调用
 }
 
 message ExecutePacket {
-    required Header header = 1;
-    optional bytes body = 2;
+    required int32 id = 1;
+    required Header header = 2;
+    optional int32 body_len = 3;// 复杂类型支持
+    optional bytes body = 4;// 复杂类型支持
+}
+
+message ResponesPacket {
+    required int32 id = 1;
+    repeated Param vals = 2;
+    optional string err = 3;
 }
 
 message RegistryPacket {
@@ -55,7 +60,8 @@ message RegistryPacket {
 message WebWorkerMessage {
     required string key = 1;
     oneof data {
-        ExecutePacket data_execute = 2;
-        RegistryPacket data_registry = 3;
+        RegistryPacket data_registry = 2;
+        ExecutePacket data_execute = 3;
+        ResponesPacket data_response = 4; 
     }
 }
