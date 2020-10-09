@@ -230,7 +230,7 @@ export class RPCEmitter {
         }
     }
 
-    protected emit(event: string, ...args) {
+    public emit(event: string, ...args) {
         if (!this.emitFunctions.has(event)) return;
         if (!RPCPeer.getInstance()) {
             console.error("no peer created");
