@@ -9,6 +9,12 @@ install
 
 **Execute**
 
+## Features
+* remote.xx.xx(): Promise
+* @Export/@ExportAll
+* @RemoteListener
+* rpcPeer.export()
+* rpcPeer.destroy()
 
 ## Examples
 
