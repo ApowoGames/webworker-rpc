@@ -473,7 +473,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // worker调用其他worker方法
-    private execute(worker: string, method: string, context: string, params?: webworker_rpc.Param[]): Promise<any> {
+    private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
         // console.log(this.name + " execute: ", worker, packet);
         if (!this.registry.has(worker)) {
             console.error("worker <" + worker + "> not registed");
@@ -513,17 +513,29 @@ export class RPCPeer extends RPCEmitter {
         this.resolvers.set(id, holder);
         return holder.promise(() => {
             const messageData = new RPCMessage(this.MESSAGEKEY_EXECUTE, new RPCExecutePacket(id, this.name, method, context, params));
+            if (messageData.encodeable) {
+                const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
+                if (this.channels.has(worker)) {
+                    this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
+                }
+            } else {
+                if (this.channels.has(worker)) {
+                    this.channels.get(worker).postMessage(messageData);
+                }
+            }
+        });
+    }
+    private respond(worker: string, id: number, vals?: RPCParam[], err?: string) {
+        const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, vals, err));
+        if (messageData.encodeable) {
             const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
             if (this.channels.has(worker)) {
                 this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
             }
-        });
-    }
-    private respond(worker: string, id: number, vals?: webworker_rpc.Param[], err?: string) {
-        const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, vals, err));
-        const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
-        if (this.channels.has(worker)) {
-            this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
+        } else {
+            if (this.channels.has(worker)) {
+                this.channels.get(worker).postMessage(messageData);
+            }
         }
     }
     private updateRegistry() {
@@ -643,7 +655,7 @@ export class RPCPeer extends RPCEmitter {
         const params = [];
         if (remoteExecutor.params) {
             for (const param of remoteExecutor.params) {
-                const v = RPCParam.getValue(param);
+                const v = RPCParam.getValue(param as RPCParam);
                 if (v) params.push(v);
             }
         }
@@ -660,10 +672,10 @@ export class RPCPeer extends RPCEmitter {
         const responseVals: RPCParam[] = [];
         for (const oneVal of resultArr) {
             const t = RPCParam.typeOf(oneVal);
-            if (t === webworker_rpc.ParamType.UNKNOWN) {
-                console.warn("unknown param type: ", oneVal);
-                continue;
-            }
+            // if (t === webworker_rpc.ParamType.UNKNOWN) {
+            //     console.warn("unknown param type: ", oneVal);
+            //     continue;
+            // }
 
             responseVals.push(new RPCParam(t, oneVal));
         }
@@ -700,7 +712,7 @@ export class RPCPeer extends RPCEmitter {
         } else {
             const result = [];
             for (const val of vals) {
-                const v = RPCParam.getValue(val);
+                const v = RPCParam.getValue(val as RPCParam);
                 if (v) result.push(v);
             }
             if (result.length === 0) {
@@ -818,10 +830,10 @@ export class RPCPeer extends RPCEmitter {
                 if (args) {
                     for (const arg of args) {
                         const t = RPCParam.typeOf(arg);
-                        if (t === webworker_rpc.ParamType.UNKNOWN) {
-                            console.warn("unknown param type: ", arg);
-                            continue;
-                        }
+                        // if (t === webworker_rpc.ParamType.UNKNOWN) {
+                        //     console.warn("unknown param type: ", arg);
+                        //     continue;
+                        // }
                         params.push(new RPCParam(t, arg));
                     }
                 }

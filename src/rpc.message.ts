@@ -1,16 +1,21 @@
 import { webworker_rpc } from "./protocols";
 
 export class RPCMessage extends webworker_rpc.WebWorkerMessage {
-    constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket | webworker_rpc.ResponesPacket) {
+    public encodeable = true;
+
+    constructor(key: string, data: RPCRegistryPacket | RPCExecutePacket | RPCResponsePacket) {
         super();
 
         this.key = key;
-        if (data instanceof webworker_rpc.RegistryPacket) {
+        if (data instanceof RPCRegistryPacket) {
             this.dataRegistry = data;
-        } else if (data instanceof webworker_rpc.ExecutePacket) {
+        } else if (data instanceof RPCExecutePacket) {
             this.dataExecute = data;
-        } else if (data instanceof webworker_rpc.ResponesPacket) {
+            const executor = data.header.remoteExecutor as RPCExecutor;
+            if (executor.hasUnknownParam) this.encodeable = false;
+        } else if (data instanceof RPCResponsePacket) {
             this.dataResponse = data;
+            if (data.hasUnknownParam) this.encodeable = false;
         }
     }
 }
@@ -53,16 +58,13 @@ export class RPCExecutePacket extends webworker_rpc.ExecutePacket {
         return true;
     }
 
-    constructor(id: number, service: string, method: string, context: string, params?: webworker_rpc.Param[]) {
+    constructor(id: number, service: string, method: string, context: string, params?: RPCParam[]) {
         super();
 
         this.id = id;
         this.header = new webworker_rpc.Header();
         this.header.serviceName = service;
-        this.header.remoteExecutor = new webworker_rpc.Executor();
-        this.header.remoteExecutor.method = method;
-        this.header.remoteExecutor.context = context;
-        if (params) this.header.remoteExecutor.params = params;
+        this.header.remoteExecutor = new RPCExecutor(method, context, params);
     }
 }
 
@@ -83,12 +85,24 @@ export class RPCExecutor extends webworker_rpc.Executor {
         return true;
     }
 
-    constructor(method: string, context: string, params?: webworker_rpc.Param[]) {
+    public hasUnknownParam: boolean = false;
+
+    constructor(method: string, context: string, params?: RPCParam[]) {
         super();
 
         this.method = method;
         if (context) this.context = context;
-        if (params) this.params = params;
+
+        if (params) {
+            for (const p of params) {
+                if (p.t === webworker_rpc.ParamType.UNKNOWN) {
+                    this.hasUnknownParam = true;
+                    break;
+                }
+            }
+
+            this.params = params;
+        }
     }
 }
 
@@ -116,8 +130,10 @@ export class RPCParam extends webworker_rpc.Param {
         return webworker_rpc.ParamType.UNKNOWN;
     }
 
-    static getValue(param: webworker_rpc.IParam): null | undefined | boolean | number | string | Uint8Array | webworker_rpc.IExecutor {
+    static getValue(param: RPCParam): any | null {
         switch (param.t) {
+            case webworker_rpc.ParamType.UNKNOWN:
+                return param.valUnknown;
             case webworker_rpc.ParamType.boolean:
                 return param.valBool;
             case webworker_rpc.ParamType.num:
@@ -133,12 +149,17 @@ export class RPCParam extends webworker_rpc.Param {
         }
     }
 
+    private valUnknown: any;
+
     constructor(t: webworker_rpc.ParamType, val?: any) {
         super();
 
         this.t = t;
         if (val) {
             switch (t) {
+                case webworker_rpc.ParamType.UNKNOWN:
+                    this.valUnknown = val;
+                    break;
                 case webworker_rpc.ParamType.str:
                     if (typeof val !== "string") {
                         console.error(`${val} is not type of string`);
@@ -198,11 +219,21 @@ export class RPCResponsePacket extends webworker_rpc.ResponesPacket {
         return true;
     }
 
-    constructor(id: number, vals?: webworker_rpc.Param[], err?: string) {
+    public hasUnknownParam: boolean = false;
+
+    constructor(id: number, vals?: RPCParam[], err?: string) {
         super();
 
         this.id = id;
-        if (vals) this.vals = vals;
+        if (vals) {
+            this.vals = vals;
+            for (const p of vals) {
+                if (p.t === webworker_rpc.ParamType.UNKNOWN) {
+                    this.hasUnknownParam = true;
+                    break;
+                }
+            }
+        }
         if (err) this.err = err;
     }
 }

@@ -804,7 +804,8 @@ declare module 'webworker-rpc/rpc.peer' {
 declare module 'webworker-rpc/rpc.message' {
     import { webworker_rpc } from "webworker-rpc/protocols";
     export class RPCMessage extends webworker_rpc.WebWorkerMessage {
-        constructor(key: string, data: webworker_rpc.ExecutePacket | webworker_rpc.RegistryPacket | webworker_rpc.ResponesPacket);
+        encodeable: boolean;
+        constructor(key: string, data: RPCRegistryPacket | RPCExecutePacket | RPCResponsePacket);
     }
     export class RPCRegistryPacket extends webworker_rpc.RegistryPacket {
         static checkType(obj: any): boolean;
@@ -812,21 +813,23 @@ declare module 'webworker-rpc/rpc.message' {
     }
     export class RPCExecutePacket extends webworker_rpc.ExecutePacket {
         static checkType(obj: any): boolean;
-        constructor(id: number, service: string, method: string, context: string, params?: webworker_rpc.Param[]);
+        constructor(id: number, service: string, method: string, context: string, params?: RPCParam[]);
     }
     export class RPCExecutor extends webworker_rpc.Executor {
         static checkType(obj: any): boolean;
-        constructor(method: string, context: string, params?: webworker_rpc.Param[]);
+        hasUnknownParam: boolean;
+        constructor(method: string, context: string, params?: RPCParam[]);
     }
     export class RPCParam extends webworker_rpc.Param {
         static checkType(obj: any): boolean;
         static typeOf(val: any): webworker_rpc.ParamType;
-        static getValue(param: webworker_rpc.IParam): null | undefined | boolean | number | string | Uint8Array | webworker_rpc.IExecutor;
+        static getValue(param: RPCParam): any | null;
         constructor(t: webworker_rpc.ParamType, val?: any);
     }
     export class RPCResponsePacket extends webworker_rpc.ResponesPacket {
         static checkType(obj: any): boolean;
-        constructor(id: number, vals?: webworker_rpc.Param[], err?: string);
+        hasUnknownParam: boolean;
+        constructor(id: number, vals?: RPCParam[], err?: string);
     }
 }
 

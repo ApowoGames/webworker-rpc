@@ -35,7 +35,12 @@ class ForemanContext extends RPCPeer {
 
     @Export()
     public getValue() {
-        return [1, true, "sss"];
+        return [1, true, "sss", { "posX": 10, "posY": 15, "flipX": true }];
+    }
+
+    @Export()
+    public setValue(obj: { "posX": number, "posY": number, "flipX": boolean }) {
+        console.log("foreman got value: ", obj);
     }
 
     // @RemoteListener("workerA", "WorkerAHelper", "foremanCall", [webworker_rpc.ParamType.str])
