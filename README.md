@@ -15,6 +15,7 @@ install
 * @RemoteListener
 * rpcPeer.export()
 * rpcPeer.destroy()
+* object param
 
 ## Examples
 
