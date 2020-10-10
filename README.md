@@ -15,7 +15,7 @@ install
 * @RemoteListener
 * rpcPeer.export()
 * rpcPeer.destroy()
-* ~object~ param (**transferable unsupported**)
+* **object** param (*transferable unsupported*)
 
 ## Examples
 
