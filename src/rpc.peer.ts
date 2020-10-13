@@ -197,9 +197,9 @@ export class RPCEmitter {
         // console.log("Emitter constructor: ", this);
 
         RPCContexts.set(this.constructor.name, this);
-        AddRPCFunction(new RPCExecutor("on", this.constructor.name,
+        this.addRegistry(new RPCExecutor("on", this.constructor.name,
             [new RPCParam(webworker_rpc.ParamType.str), new RPCParam(webworker_rpc.ParamType.executor), new RPCParam(webworker_rpc.ParamType.str)]));
-        AddRPCFunction(new RPCExecutor("off", this.constructor.name,
+        this.addRegistry(new RPCExecutor("off", this.constructor.name,
             [new RPCParam(webworker_rpc.ParamType.str)]));
     }
 
@@ -244,6 +244,11 @@ export class RPCEmitter {
             }
         }
     }
+
+    // 用于基类构造中暴露方法
+    protected addRegistry(executor: RPCExecutor): boolean {
+        return AddRPCFunction(executor);
+    }
 }
 
 // 各个worker之间通信桥梁
@@ -282,7 +287,7 @@ export class RPCPeer extends RPCEmitter {
 
     constructor(name: string) {
         super();
-        AddRPCFunction(new RPCExecutor("destroy", this.constructor.name));
+        this.addRegistry(new RPCExecutor("destroy", this.constructor.name));
 
         if (RPCPeer._instance) {
             console.error("duplicate RPCPeer created");
@@ -753,7 +758,7 @@ export class RPCPeer extends RPCEmitter {
             if (typeof element === "function") {
                 // console.log("element: ", element);
                 const newExecutor = new RPCExecutor(key, rootContext);
-                if (AddRPCFunction(newExecutor)) addExecutors.push(newExecutor);
+                if (this.addRegistry(newExecutor)) addExecutors.push(newExecutor);
             } else if (recursion && element instanceof Object) {
                 const cStr = rootContext.concat(".", key);
                 addExecutors = addExecutors.concat(this.exportObject(element, cStr));

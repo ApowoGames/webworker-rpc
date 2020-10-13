@@ -779,6 +779,7 @@ declare module 'webworker-rpc/rpc.peer' {
         on(event: string, executor: RPCExecutor, worker: string): void;
         off(event: string, executor?: RPCExecutor, worker?: string): void;
         emit(event: string, ...args: any[]): void;
+        protected addRegistry(executor: RPCExecutor): boolean;
     }
     export class RPCPeer extends RPCEmitter {
         ["remote"]: {
