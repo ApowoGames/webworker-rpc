@@ -770,7 +770,7 @@ declare module 'webworker-rpc/protocols' {
 
 declare module 'webworker-rpc/rpc.peer' {
     import { webworker_rpc } from "webworker-rpc/protocols";
-    import { RPCExecutor } from "webworker-rpc/rpc.message";
+    import { RPCExecutor, RPCParam } from "webworker-rpc/rpc.message";
     export function ExportAll(): (target: any) => any;
     export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor?: any) => void;
     export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
@@ -779,7 +779,7 @@ declare module 'webworker-rpc/rpc.peer' {
         on(event: string, executor: RPCExecutor, worker: string): void;
         off(event: string, executor?: RPCExecutor, worker?: string): void;
         emit(event: string, ...args: any[]): void;
-        protected addRegistry(executor: RPCExecutor): boolean;
+        protected exportFunction(funcName: string, params?: RPCParam[]): boolean;
     }
     export class RPCPeer extends RPCEmitter {
         ["remote"]: {
@@ -793,7 +793,7 @@ declare module 'webworker-rpc/rpc.peer' {
         linkTo(workerName: string, workerUrl?: string): LinkListener;
         linkFinished(): void;
         destroy(): void;
-        export(attr: any, context: any): void;
+        exportProperty(attr: any, context: any): void;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);
