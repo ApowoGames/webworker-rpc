@@ -34,6 +34,13 @@ class ForemanContext extends RPCPeer {
     // }
 
     @Export()
+    public tryLinkToMain() {
+        this.linkTo("main").onceReady(() => {
+            console.log("link to main ready");
+        });
+    }
+
+    @Export()
     public getValue() {
         return [1, true, "sss", { "posX": 10, "posY": 15, "flipX": true }];
     }

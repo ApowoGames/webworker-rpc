@@ -123,6 +123,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_RequestLink = (_ev: MessageEvent) => {
+        console.log("onMessage_RequestLink ", _ev.data);
         const { serviceName, workerName, workerUrl } = _ev.data;
         const service2TarChannel = new MessageChannel();
 
@@ -421,6 +422,9 @@ export class RPCPeer extends RPCEmitter {
     // 增加worker之间的通道联系
     private addLink(worker: string, port: MessagePort) {
         if (this.channels.has(worker)) {
+            if (this.registry.has(worker)) {
+                this.updateLinkState(worker);
+            }
             return;
         }
         this.channels.set(worker, port);
@@ -615,13 +619,7 @@ export class RPCPeer extends RPCEmitter {
         this.registry.set(packet.serviceName, packet.executors);
         this.addRegistryProperty(packet);
 
-        if (this.channels.has(packet.serviceName)) {
-            const port = this.channels.get(packet.serviceName);
-            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name });
-        }
-        if (this.linkListeners.has(packet.serviceName)) {
-            this.linkListeners.get(packet.serviceName).setPortReady(this.name);
-        }
+        this.updateLinkState(packet.serviceName);
 
         // add listeners while got registry firstly
         if (RPCListeners.has(packet.serviceName)) {
@@ -859,6 +857,16 @@ export class RPCPeer extends RPCEmitter {
         `;
         const blob = new Blob([webWorkerTemplate], { type: 'text/javascript' });
         return URL.createObjectURL(blob);
+    }
+
+    private updateLinkState(worker: string) {
+        if (this.channels.has(worker)) {
+            const port = this.channels.get(worker);
+            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name });
+        }
+        if (this.linkListeners.has(worker)) {
+            this.linkListeners.get(worker).setPortReady(this.name);
+        }
     }
 }
 
