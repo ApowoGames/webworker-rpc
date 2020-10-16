@@ -79,6 +79,7 @@ export function RemoteListener(worker: string, context: string, event: string, p
     }
 }
 
+const MANAGERWORKERNAME: string = "__MANAGER";
 // manager worker sprite
 const MANAGERWORKERSPRITE = (ev) => {
     const MESSAGEKEY_LINK: string = "link";
@@ -271,7 +272,6 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_EXECUTE: string = "execute";
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
-    private readonly MANAGERWORKERNAME: string = "__MANAGER";
 
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
@@ -332,7 +332,7 @@ export class RPCPeer extends RPCEmitter {
         const listener = new LinkListener(this.name, workerName);
         this.linkListeners.set(workerName, listener);
 
-        if (!this.channels.has(this.MANAGERWORKERNAME)) {
+        if (!this.channels.has(MANAGERWORKERNAME)) {
             const selfName = this.worker["name"];
             if (selfName && selfName === this.name) {
                 // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
@@ -346,10 +346,10 @@ export class RPCPeer extends RPCEmitter {
             const managerChannel = new MessageChannel();
 
             managerWorker.postMessage({ key: this.MESSAGEKEY_LINK, workers: [this.name] }, [managerChannel.port2]);
-            this.addLink(this.MANAGERWORKERNAME, managerChannel.port1);
+            this.addLink(MANAGERWORKERNAME, managerChannel.port1);
         }
 
-        this.channels.get(this.MANAGERWORKERNAME).postMessage({ key: this.MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
+        this.channels.get(MANAGERWORKERNAME).postMessage({ key: this.MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
 
         return listener;
     }
@@ -474,12 +474,12 @@ export class RPCPeer extends RPCEmitter {
         // post registry
         this.postRegistry(worker, new RPCRegistryPacket(this.registryPackID, this.name, RPCFunctions));
 
-        if (worker === this.MANAGERWORKERNAME) {
+        if (worker === MANAGERWORKERNAME) {
             // 执行未进行的linkTo task
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
-                this.channels.get(this.MANAGERWORKERNAME).postMessage({
+                this.channels.get(MANAGERWORKERNAME).postMessage({
                     key: this.MESSAGEKEY_REQUESTLINK,
                     serviceName: this.name,
                     workerName: task.workerName,
@@ -594,7 +594,7 @@ export class RPCPeer extends RPCEmitter {
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
-        if (worker === this.MANAGERWORKERNAME) return;
+        if (worker === MANAGERWORKERNAME) return;
 
         const messageData = new RPCMessage(this.MESSAGEKEY_ADDREGISTRY, registry);
         const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
@@ -651,7 +651,7 @@ export class RPCPeer extends RPCEmitter {
         }
     }
     private onMessage_GotRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_GotRegistry:", ev.data);
+        // console.log(this.name + " onMessage_GotRegistry:", ev.data, this.syncRegistryListeners);
         const { worker, id } = ev.data;
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(worker);
@@ -938,6 +938,9 @@ export class SyncRegistryListener {
     constructor(private id: number, workers: string[]) {
         this.workersState = new Map();
         for (const w of workers) {
+            if (w === MANAGERWORKERNAME) {
+                continue;
+            }
             this.workersState.set(w, false);
         }
     }
