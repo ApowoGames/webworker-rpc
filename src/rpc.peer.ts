@@ -491,12 +491,12 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        console.log(this.name + " execute: ", worker, method, context);
+        // console.log(this.name + " execute: ", worker, method, context);
         if (!this.registry.has(worker)) {
             console.error("worker <" + worker + "> not registed");
             return;
         }
-        console.log(this.name + " registry: ", this.registry);
+        // console.log(this.name + " registry: ", this.registry);
         const executor = this.registry.get(worker).find((x) => x.context === context &&
             x.method === method);
         if (!executor) {
@@ -625,7 +625,11 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
         const packet: RPCRegistryPacket = dataRegistry as RPCRegistryPacket;
-        this.registry.set(packet.serviceName, packet.executors);
+        if (!this.registry.has(packet.serviceName)) {
+            this.registry.set(packet.serviceName, []);
+        }
+        const newRegistries = this.registry.get(packet.serviceName).concat(packet.executors);
+        this.registry.set(packet.serviceName, newRegistries);
         this.addRegistryProperty(packet);
 
         // send GOT message
