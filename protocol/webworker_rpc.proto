@@ -53,8 +53,9 @@ message ResponesPacket {
 }
 
 message RegistryPacket {
-    required string service_name = 1;// 发送者(worker)名称
-    repeated Executor executors = 2;// 发送者可调用方法
+    required int32 id = 1;
+    required string service_name = 2;// 发送者(worker)名称
+    repeated Executor executors = 3;// 发送者可调用方法
 }
 
 message WebWorkerMessage {

@@ -551,6 +551,9 @@ export namespace webworker_rpc {
     /** Properties of a RegistryPacket. */
     interface IRegistryPacket {
 
+        /** RegistryPacket id */
+        id: number;
+
         /** RegistryPacket serviceName */
         serviceName: string;
 
@@ -566,6 +569,9 @@ export namespace webworker_rpc {
          * @param [properties] Properties to set
          */
         constructor(properties?: webworker_rpc.IRegistryPacket);
+
+        /** RegistryPacket id. */
+        public id: number;
 
         /** RegistryPacket serviceName. */
         public serviceName: string;

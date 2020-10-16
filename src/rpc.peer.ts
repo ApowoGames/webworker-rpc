@@ -280,7 +280,9 @@ export class RPCPeer extends RPCEmitter {
     private linkTasks: { workerName: string, workerUrl?: string }[];
     private exported: boolean = false;
     private resolvers: Map<number, ValueResolver<any>>;
+    private registryPackID: number;
     private resolverID: number;
+    private syncRegistryListeners: Map<number, SyncRegistryListener>;
 
     static getInstance() {
         return RPCPeer._instance;
@@ -308,7 +310,9 @@ export class RPCPeer extends RPCEmitter {
         this.linkListeners = new Map();
         this.linkTasks = [];
         this.resolvers = new Map();
+        this.registryPackID = 0;
         this.resolverID = 0;
+        this.syncRegistryListeners = new Map();
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
             const { key } = ev.data;
@@ -375,7 +379,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // 动态暴露属性
-    public exportProperty(attr: any, context: any) {
+    public exportProperty(attr: any, context: any): SyncRegistryListener {
         // console.log(this.name + " export: ", attr, context);
         let attrName = "";
         for (const key in context) {
@@ -414,9 +418,13 @@ export class RPCPeer extends RPCEmitter {
 
         const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
         const linkedNames = Array.from(this.channels.keys());
+        this.registryPackID++;
+        const listener = new SyncRegistryListener(this.registryPackID, linkedNames);
+        this.syncRegistryListeners.set(this.registryPackID, listener);
         for (const oneName of linkedNames) {
-            this.postRegistry(oneName, new RPCRegistryPacket(this.name, addExecutors));
+            this.postRegistry(oneName, new RPCRegistryPacket(this.registryPackID, this.name, addExecutors));
         }
+        return listener;
     }
 
     // 增加worker之间的通道联系
@@ -464,7 +472,7 @@ export class RPCPeer extends RPCEmitter {
         this.updateRegistry();
 
         // post registry
-        this.postRegistry(worker, new RPCRegistryPacket(this.name, RPCFunctions));
+        this.postRegistry(worker, new RPCRegistryPacket(this.registryPackID, this.name, RPCFunctions));
 
         if (worker === this.MANAGERWORKERNAME) {
             // 执行未进行的linkTo task
@@ -483,11 +491,12 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        // console.log(this.name + " execute: ", worker, packet);
+        console.log(this.name + " execute: ", worker, method, context);
         if (!this.registry.has(worker)) {
             console.error("worker <" + worker + "> not registed");
             return;
         }
+        console.log(this.name + " registry: ", this.registry);
         const executor = this.registry.get(worker).find((x) => x.context === context &&
             x.method === method);
         if (!executor) {
@@ -619,6 +628,12 @@ export class RPCPeer extends RPCEmitter {
         this.registry.set(packet.serviceName, packet.executors);
         this.addRegistryProperty(packet);
 
+        // send GOT message
+        if (this.channels.has(packet.serviceName)) {
+            const port = this.channels.get(packet.serviceName);
+            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name, id: packet.id });
+        }
+
         this.updateLinkState(packet.serviceName);
 
         // add listeners while got registry firstly
@@ -633,9 +648,12 @@ export class RPCPeer extends RPCEmitter {
     }
     private onMessage_GotRegistry(ev: MessageEvent) {
         // console.log(this.name + " onMessage_GotRegistry:", ev.data);
-        const { worker } = ev.data;
+        const { worker, id } = ev.data;
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(worker);
+        }
+        if (this.syncRegistryListeners.has(id)) {
+            this.syncRegistryListeners.get(id).workerGotRegistry(worker);
         }
     }
     private onMessage_Execute(ev: MessageEvent) {
@@ -663,26 +681,13 @@ export class RPCPeer extends RPCEmitter {
             }
         }
         const result = this.executeFunctionByName(remoteExecutor.method, remoteExecutor.context, params);
-        let resultArr = [];
-        if (result) {
-            if (!Array.isArray(result)) {
-                resultArr = [result];
-            } else {
-                resultArr = result;
-            }
+        if (result instanceof Promise) {
+            result.then((val) => {
+                this.handlerExcuteResult(service, id, val);
+            });
+        } else {
+            this.handlerExcuteResult(service, id, result);
         }
-
-        const responseVals: RPCParam[] = [];
-        for (const oneVal of resultArr) {
-            const t = RPCParam.typeOf(oneVal);
-            // if (t === webworker_rpc.ParamType.UNKNOWN) {
-            //     console.warn("unknown param type: ", oneVal);
-            //     continue;
-            // }
-
-            responseVals.push(new RPCParam(t, oneVal));
-        }
-        this.respond(service, id, responseVals);
     }
     private onMessage_Respond(ev: MessageEvent) {
         const { dataResponse } = ev.data;
@@ -860,13 +865,32 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private updateLinkState(worker: string) {
-        if (this.channels.has(worker)) {
-            const port = this.channels.get(worker);
-            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name });
-        }
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(this.name);
         }
+    }
+
+    private handlerExcuteResult(service: string, id: number, result?: any) {
+        let resultArr = [];
+        if (result) {
+            if (!Array.isArray(result)) {
+                resultArr = [result];
+            } else {
+                resultArr = result;
+            }
+        }
+
+        const responseVals: RPCParam[] = [];
+        for (const oneVal of resultArr) {
+            const t = RPCParam.typeOf(oneVal);
+            // if (t === webworker_rpc.ParamType.UNKNOWN) {
+            //     console.warn("unknown param type: ", oneVal);
+            //     continue;
+            // }
+
+            responseVals.push(new RPCParam(t, oneVal));
+        }
+        this.respond(service, id, responseVals);
     }
 }
 
@@ -895,6 +919,48 @@ export class LinkListener {
         if (!this.port2Ready) this.port2Ready = this.port2 === port;
 
         if (this.port1Ready && this.port2Ready) {
+            if (this.readyFunc) {
+                this.readyFunc();
+                this.readyFunc = null;
+            }
+        }
+    }
+}
+
+export class SyncRegistryListener {
+    private readyFunc: () => any;
+    private workersState: Map<string, boolean>;
+
+    constructor(private id: number, workers: string[]) {
+        this.workersState = new Map();
+        for (const w of workers) {
+            this.workersState.set(w, false);
+        }
+    }
+
+    // 仅执行一次
+    public onceReady(f: () => any) {
+        this.readyFunc = f;
+    }
+
+    // TODO: 对外隐藏
+    public workerGotRegistry(worker: string) {
+        if (!this.workersState.has(worker)) {
+            return;
+        }
+
+        this.workersState.set(worker, true);
+
+        let allReady = true;
+        const workers = Array.from(this.workersState.keys());
+        for (const w of workers) {
+            if (!this.workersState.get(w)) {
+                allReady = false;
+                break;
+            }
+        }
+
+        if (allReady) {
             if (this.readyFunc) {
                 this.readyFunc();
                 this.readyFunc = null;

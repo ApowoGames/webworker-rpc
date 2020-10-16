@@ -562,6 +562,9 @@ declare module 'webworker-rpc/protocols' {
             /** Properties of a RegistryPacket. */
             interface IRegistryPacket {
     
+                    /** RegistryPacket id */
+                    id: number;
+    
                     /** RegistryPacket serviceName */
                     serviceName: string;
     
@@ -577,6 +580,9 @@ declare module 'webworker-rpc/protocols' {
                         * @param [properties] Properties to set
                         */
                     constructor(properties?: webworker_rpc.IRegistryPacket);
+    
+                    /** RegistryPacket id. */
+                    id: number;
     
                     /** RegistryPacket serviceName. */
                     serviceName: string;
@@ -793,12 +799,17 @@ declare module 'webworker-rpc/rpc.peer' {
         linkTo(workerName: string, workerUrl?: string): LinkListener;
         linkFinished(): void;
         destroy(): void;
-        exportProperty(attr: any, context: any): void;
+        exportProperty(attr: any, context: any): SyncRegistryListener;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);
         onceReady(f: () => any): void;
         setPortReady(port: string): void;
+    }
+    export class SyncRegistryListener {
+        constructor(id: number, workers: string[]);
+        onceReady(f: () => any): void;
+        workerGotRegistry(worker: string): void;
     }
 }
 
@@ -810,7 +821,7 @@ declare module 'webworker-rpc/rpc.message' {
     }
     export class RPCRegistryPacket extends webworker_rpc.RegistryPacket {
         static checkType(obj: any): boolean;
-        constructor(service: string, executors: webworker_rpc.Executor[]);
+        constructor(id: number, service: string, executors: webworker_rpc.Executor[]);
     }
     export class RPCExecutePacket extends webworker_rpc.ExecutePacket {
         static checkType(obj: any): boolean;

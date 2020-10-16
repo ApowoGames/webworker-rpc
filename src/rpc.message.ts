@@ -23,6 +23,7 @@ export class RPCMessage extends webworker_rpc.WebWorkerMessage {
 export class RPCRegistryPacket extends webworker_rpc.RegistryPacket {
     static checkType(obj) {
         if (!obj) return false;
+        if (!("id" in obj)) return false;
         if (!("serviceName" in obj)) return false;
         if ("executors" in obj) {
             if (!Array.isArray(obj["executors"])) return false;
@@ -36,8 +37,9 @@ export class RPCRegistryPacket extends webworker_rpc.RegistryPacket {
         return true;
     }
 
-    constructor(service: string, executors: webworker_rpc.Executor[]) {
+    constructor(id: number, service: string, executors: webworker_rpc.Executor[]) {
         super();
+        this.id = id;
         this.serviceName = service;
         this.executors = executors;
     }

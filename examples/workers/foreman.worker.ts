@@ -12,7 +12,7 @@ class ForemanContext extends RPCPeer {
     constructor() {
         super("foreman");
 
-        this.son = new ForemanSon();
+        // this.son = new ForemanSon();
         // ForemanContext.staticSon = new ForemanSon();
 
         this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
@@ -34,9 +34,21 @@ class ForemanContext extends RPCPeer {
     // }
 
     @Export()
-    public tryLinkToMain() {
-        this.linkTo("main").onceReady(() => {
-            console.log("link to main ready");
+    public tryLinkToMain(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.linkTo("main").onceReady(() => {
+                resolve("link to main ready");
+            });
+        });
+    }
+
+    @Export()
+    public createSon(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.son = new ForemanSon();
+            this.exportProperty(this.son, this).onceReady(() => {
+                resolve();
+            });
         });
     }
 

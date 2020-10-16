@@ -13,7 +13,7 @@ install
 * remote.xx.xx(): Promise
 * @Export/@ExportAll
 * @RemoteListener
-* rpcPeer.export()
+* rpcPeer.exportProperty().onceReady
 * rpcPeer.destroy()
 * **object** param (*transferable unsupported*)
 

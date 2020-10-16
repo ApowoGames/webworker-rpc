@@ -3,7 +3,9 @@ import { RPCPeer } from "../src/index";
 window.onload = () => {
   const peer = new RPCPeer("main");
   peer.linkTo("foreman", "/foremanWorker.js").onceReady(() => {
-    peer.remote.foreman.ForemanContext.tryLinkToMain();
+    peer.remote.foreman.ForemanContext.createSon().then(() => {
+      peer.remote.foreman.ForemanContext.son.foremanSonFunction();
+    });
     // peer.remote.foreman.ForemanContext.getValue().then((val) => {
     //   console.log("main got value: ", val);
     // });

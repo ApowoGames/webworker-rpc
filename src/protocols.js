@@ -1440,6 +1440,7 @@
              * Properties of a RegistryPacket.
              * @memberof webworker_rpc
              * @interface IRegistryPacket
+             * @property {number} id RegistryPacket id
              * @property {string} serviceName RegistryPacket serviceName
              * @property {Array.<webworker_rpc.IExecutor>|null} [executors] RegistryPacket executors
              */
@@ -1459,6 +1460,14 @@
                         if (properties[keys[i]] != null)
                             this[keys[i]] = properties[keys[i]];
             }
+    
+            /**
+             * RegistryPacket id.
+             * @member {number} id
+             * @memberof webworker_rpc.RegistryPacket
+             * @instance
+             */
+            RegistryPacket.prototype.id = 0;
     
             /**
              * RegistryPacket serviceName.
@@ -1500,10 +1509,11 @@
             RegistryPacket.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.serviceName);
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.serviceName);
                 if (message.executors != null && message.executors.length)
                     for (var i = 0; i < message.executors.length; ++i)
-                        $root.webworker_rpc.Executor.encode(message.executors[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                        $root.webworker_rpc.Executor.encode(message.executors[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 return writer;
             };
     
@@ -1539,9 +1549,12 @@
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
                     case 1:
-                        message.serviceName = reader.string();
+                        message.id = reader.int32();
                         break;
                     case 2:
+                        message.serviceName = reader.string();
+                        break;
+                    case 3:
                         if (!(message.executors && message.executors.length))
                             message.executors = [];
                         message.executors.push($root.webworker_rpc.Executor.decode(reader, reader.uint32()));
@@ -1551,6 +1564,8 @@
                         break;
                     }
                 }
+                if (!message.hasOwnProperty("id"))
+                    throw $util.ProtocolError("missing required 'id'", { instance: message });
                 if (!message.hasOwnProperty("serviceName"))
                     throw $util.ProtocolError("missing required 'serviceName'", { instance: message });
                 return message;
@@ -1583,6 +1598,8 @@
             RegistryPacket.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
+                if (!$util.isInteger(message.id))
+                    return "id: integer expected";
                 if (!$util.isString(message.serviceName))
                     return "serviceName: string expected";
                 if (message.executors != null && message.hasOwnProperty("executors")) {
@@ -1609,6 +1626,8 @@
                 if (object instanceof $root.webworker_rpc.RegistryPacket)
                     return object;
                 var message = new $root.webworker_rpc.RegistryPacket();
+                if (object.id != null)
+                    message.id = object.id | 0;
                 if (object.serviceName != null)
                     message.serviceName = String(object.serviceName);
                 if (object.executors) {
@@ -1639,8 +1658,12 @@
                 var object = {};
                 if (options.arrays || options.defaults)
                     object.executors = [];
-                if (options.defaults)
+                if (options.defaults) {
+                    object.id = 0;
                     object.serviceName = "";
+                }
+                if (message.id != null && message.hasOwnProperty("id"))
+                    object.id = message.id;
                 if (message.serviceName != null && message.hasOwnProperty("serviceName"))
                     object.serviceName = message.serviceName;
                 if (message.executors && message.executors.length) {
