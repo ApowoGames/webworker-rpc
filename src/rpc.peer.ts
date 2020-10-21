@@ -398,11 +398,8 @@ export class RPCPeer extends RPCEmitter {
         }
 
         if (context[attrName] !== attr) {
-            // defined name
-            // set new attribute
             if (context[attrName]) {
-                console.error(`${attrName} exit, set a new < attrName >`);
-                return;
+                console.warn(`${attrName} exit, replaced`);
             }
 
             context[attrName] = attr;

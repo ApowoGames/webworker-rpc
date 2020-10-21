@@ -45,14 +45,14 @@ class ForemanContext extends RPCPeer {
     @Export()
     public createSon(): Promise<any> {
         return new Promise((resolve, reject) => {
-            // this.son = new ForemanSon();
-            // this.exportProperty(this.son, this).onceReady(() => {
-            //     resolve();
-            // });
-            const son = new ForemanSon();
-            this.exportProperty(son, this, "son2").onceReady(() => {
-                resolve();
+            this.son = new ForemanSon();
+            this.exportProperty(this.son, this).onceReady(() => {
+                const son2 = new ForemanSon();
+                this.exportProperty(son2, this, "son2").onceReady(() => {
+                    resolve();
+                });
             });
+
         });
     }
 
