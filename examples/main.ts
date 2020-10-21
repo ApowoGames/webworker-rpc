@@ -5,7 +5,7 @@ window.onload = () => {
   peer.linkTo("foreman", "/foremanWorker.js").onceReady(() => {
     peer.remote.foreman.ForemanContext.createSon().then(() => {
       console.log("createSon then");
-      peer.remote.foreman.ForemanContext.son.foremanSonFunction();
+      peer.remote.foreman.ForemanContext.son2.foremanSonFunction();
     });
     // peer.remote.foreman.ForemanContext.getValue().then((val) => {
     //   console.log("main got value: ", val);

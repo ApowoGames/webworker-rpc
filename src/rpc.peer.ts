@@ -379,21 +379,33 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // 动态暴露属性
-    public exportProperty(attr: any, context: any): SyncRegistryListener {
+    public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
         // console.log(this.name + " export: ", attr, context);
-        let attrName = "";
-        for (const key in context) {
-            if (Object.prototype.hasOwnProperty.call(context, key)) {
-                const element = context[key];
-                if (element === attr) {
-                    attrName = key;
-                    // console.log("attrName: ", attrName);
+        if (!attrName) {
+            for (const key in context) {
+                if (Object.prototype.hasOwnProperty.call(context, key)) {
+                    const element = context[key];
+                    if (element === attr) {
+                        attrName = key;
+                        // console.log("attrName: ", attrName);
+                    }
                 }
             }
         }
         if (attrName.length === 0) {
             console.error(`${attr} is not in ${context}`);
             return;
+        }
+
+        if (context[attrName] !== attr) {
+            // defined name
+            // set new attribute
+            if (context[attrName]) {
+                console.error(`${attrName} exit, set a new < attrName >`);
+                return;
+            }
+
+            context[attrName] = attr;
         }
 
         let exitConName = "";

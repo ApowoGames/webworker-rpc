@@ -799,7 +799,7 @@ declare module 'webworker-rpc/rpc.peer' {
         linkTo(workerName: string, workerUrl?: string): LinkListener;
         linkFinished(): void;
         destroy(): void;
-        exportProperty(attr: any, context: any): SyncRegistryListener;
+        exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);
