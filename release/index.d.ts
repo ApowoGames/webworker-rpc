@@ -834,8 +834,8 @@ declare module 'webworker-rpc/rpc.message' {
     }
     export class RPCParam extends webworker_rpc.Param {
         static checkType(obj: any): boolean;
-        static typeOf(val: any): webworker_rpc.ParamType;
-        static getValue(param: RPCParam): any | null;
+        static getValue(param: RPCParam): any | undefined | null;
+        static createByValue(val: any): RPCParam;
         constructor(t: webworker_rpc.ParamType, val?: any);
     }
     export class RPCResponsePacket extends webworker_rpc.ResponesPacket {

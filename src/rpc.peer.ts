@@ -124,7 +124,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_RequestLink = (_ev: MessageEvent) => {
-        console.log("onMessage_RequestLink ", _ev.data);
+        // console.log("onMessage_RequestLink ", _ev.data);
         const { serviceName, workerName, workerUrl } = _ev.data;
         const service2TarChannel = new MessageChannel();
 
@@ -378,7 +378,7 @@ export class RPCPeer extends RPCEmitter {
         self.close();
     }
 
-    // 动态暴露属性
+    // 动态暴露属性 注意：若使用了自定义属性名attrName，需要自行管理暴露属性的内存释放(delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
         // console.log(this.name + " export: ", attr, context);
         if (!attrName) {
@@ -402,6 +402,7 @@ export class RPCPeer extends RPCEmitter {
                 console.warn(`${attrName} exit, replaced`);
             }
 
+            // TODO: 此处添加了引用，但是没有做释放相关操作
             context[attrName] = attr;
         }
 
@@ -500,7 +501,7 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        // console.log(this.name + " execute: ", worker, method, context);
+        // console.log(this.name + " execute: ", worker, method, context, params);
         if (!this.registry.has(worker)) {
             console.error("worker <" + worker + "> not registed");
             return;
@@ -690,7 +691,9 @@ export class RPCPeer extends RPCEmitter {
         if (remoteExecutor.params) {
             for (const param of remoteExecutor.params) {
                 const v = RPCParam.getValue(param as RPCParam);
-                if (v) params.push(v);
+                // console.log("RPCParam.getValue: ", param, v);
+                // 参数支持0 undefined
+                params.push(v);
             }
         }
         const result = this.executeFunctionByName(remoteExecutor.method, remoteExecutor.context, params);
@@ -850,12 +853,7 @@ export class RPCPeer extends RPCEmitter {
                 const params: RPCParam[] = [];
                 if (args) {
                     for (const arg of args) {
-                        const t = RPCParam.typeOf(arg);
-                        // if (t === webworker_rpc.ParamType.UNKNOWN) {
-                        //     console.warn("unknown param type: ", arg);
-                        //     continue;
-                        // }
-                        params.push(new RPCParam(t, arg));
+                        params.push(RPCParam.createByValue(arg));
                     }
                 }
                 // 此处不检测params，检测在typescript层执行
@@ -895,13 +893,7 @@ export class RPCPeer extends RPCEmitter {
 
         const responseVals: RPCParam[] = [];
         for (const oneVal of resultArr) {
-            const t = RPCParam.typeOf(oneVal);
-            // if (t === webworker_rpc.ParamType.UNKNOWN) {
-            //     console.warn("unknown param type: ", oneVal);
-            //     continue;
-            // }
-
-            responseVals.push(new RPCParam(t, oneVal));
+            responseVals.push(RPCParam.createByValue(oneVal));
         }
         this.respond(service, id, responseVals);
     }

@@ -116,23 +116,7 @@ export class RPCParam extends webworker_rpc.Param {
         return true;
     }
 
-    static typeOf(val): webworker_rpc.ParamType {
-        if (typeof val === "string") {
-            return webworker_rpc.ParamType.str;
-        } else if (typeof val === "boolean") {
-            return webworker_rpc.ParamType.boolean;
-        } else if (typeof val === "number") {
-            return webworker_rpc.ParamType.num;
-        } else if (val.constructor === Uint8Array) {
-            return webworker_rpc.ParamType.unit8array;
-        } else if (val instanceof webworker_rpc.Executor) {
-            return webworker_rpc.ParamType.executor;
-        }
-
-        return webworker_rpc.ParamType.UNKNOWN;
-    }
-
-    static getValue(param: RPCParam): any | null {
+    static getValue(param: RPCParam): any | undefined | null {
         switch (param.t) {
             case webworker_rpc.ParamType.UNKNOWN:
                 return param.valUnknown;
@@ -151,56 +135,52 @@ export class RPCParam extends webworker_rpc.Param {
         }
     }
 
+    static createByValue(val): RPCParam {
+        if (!val) {
+            return new RPCParam(webworker_rpc.ParamType.UNKNOWN, val);
+        } else if (typeof val === "string") {
+            return new RPCParam(webworker_rpc.ParamType.str, val);
+        } else if (typeof val === "boolean") {
+            return new RPCParam(webworker_rpc.ParamType.boolean, val);
+        } else if (typeof val === "number") {
+            return new RPCParam(webworker_rpc.ParamType.num, val);
+        } else if (val.constructor === Uint8Array) {
+            return new RPCParam(webworker_rpc.ParamType.unit8array, val);
+        } else if (val instanceof webworker_rpc.Executor) {
+            return new RPCParam(webworker_rpc.ParamType.executor, val);
+        }
+
+        return new RPCParam(webworker_rpc.ParamType.UNKNOWN, val);
+    }
+
     private valUnknown: any;
 
     constructor(t: webworker_rpc.ParamType, val?: any) {
         super();
 
         this.t = t;
-        if (val) {
-            switch (t) {
-                case webworker_rpc.ParamType.UNKNOWN:
-                    this.valUnknown = val;
-                    break;
-                case webworker_rpc.ParamType.str:
-                    if (typeof val !== "string") {
-                        console.error(`${val} is not type of string`);
-                        return;
-                    }
-                    this.valStr = val;
-                    break;
-                case webworker_rpc.ParamType.boolean:
-                    if (typeof val !== "boolean") {
-                        console.error(`${val} is not type of boolean`);
-                        return;
-                    }
-                    this.valBool = val;
-                    break;
-                case webworker_rpc.ParamType.num:
-                    if (typeof val !== "number") {
-                        console.error(`${val} is not type of number`);
-                        return;
-                    }
-                    this.valNum = val;
-                    break;
-                case webworker_rpc.ParamType.unit8array:
-                    if (val.constructor !== Uint8Array) {
-                        console.error(`${val} is not type of Uint8Array`);
-                        return;
-                    }
-                    this.valBytes = val;
-                    break;
-                case webworker_rpc.ParamType.executor:
-                    if (!(val instanceof webworker_rpc.Executor)) {
-                        console.error(`${val} is not type of Executor`);
-                        return;
-                    }
-                    this.valExecutor = val;
-                    break;
-                default:
-                    console.error("unkonw type : ", t);
-                    break;
-            }
+        switch (t) {
+            case webworker_rpc.ParamType.UNKNOWN:
+                this.valUnknown = val;
+                break;
+            case webworker_rpc.ParamType.str:
+                this.valStr = val;
+                break;
+            case webworker_rpc.ParamType.boolean:
+                this.valBool = val;
+                break;
+            case webworker_rpc.ParamType.num:
+                this.valNum = val;
+                break;
+            case webworker_rpc.ParamType.unit8array:
+                this.valBytes = val;
+                break;
+            case webworker_rpc.ParamType.executor:
+                this.valExecutor = val;
+                break;
+            default:
+                console.error("unkonw type : ", t);
+                break;
         }
     }
 }

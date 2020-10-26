@@ -15,15 +15,15 @@ class ForemanContext extends RPCPeer {
         // this.son = new ForemanSon();
         // ForemanContext.staticSon = new ForemanSon();
 
-        this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
-            this.remote.workerA.WorkerAContext.methodA(true);
-        });
-        this.linkTo("workerB", "/taskBWorker.js").onceReady(() => {
-            this.remote.workerB.WorkerBContext.methodB(333);
-        });
-        this.linkTo("workerC", "/taskCWorker.js").onceReady(() => {
-            this.remote.workerC.WorkerCContext.methodC("111");
-        });
+        // this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
+        //     this.remote.workerA.WorkerAContext.methodA(true);
+        // });
+        // this.linkTo("workerB", "/taskBWorker.js").onceReady(() => {
+        //     this.remote.workerB.WorkerBContext.methodB(333);
+        // });
+        // this.linkTo("workerC", "/taskCWorker.js").onceReady(() => {
+        //     this.remote.workerC.WorkerCContext.methodC("111");
+        // });
     }
 
     // @Export()
@@ -32,6 +32,11 @@ class ForemanContext extends RPCPeer {
     //     this.son = new ForemanSon();
     //     this.export(this.son, this);
     // }
+
+    @Export()
+    public multiParams(num: number, arr: [], obj: any) {
+        console.log("multiParams: ", num, arr, obj);
+    }
 
     @Export()
     public tryLinkToMain(): Promise<any> {
