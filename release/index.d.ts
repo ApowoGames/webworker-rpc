@@ -777,7 +777,6 @@ declare module 'webworker-rpc/protocols' {
 declare module 'webworker-rpc/rpc.peer' {
     import { webworker_rpc } from "webworker-rpc/protocols";
     import { RPCExecutor, RPCParam } from "webworker-rpc/rpc.message";
-    export function RPCContext(): (target: any) => void;
     export function ExportAll(): (target: any) => any;
     export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor?: any) => void;
     export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;

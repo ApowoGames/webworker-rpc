@@ -142,8 +142,8 @@ const MANAGERWORKERSPRITE = (ev) => {
                 return;
             }
 
-            // console.log(MANAGERWORKERNAME + " new worker: ", location, workerUrl, workerName);
             const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
+            console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
             const manager2TarChannel = new MessageChannel();
 
             tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
@@ -290,6 +290,14 @@ export class RPCPeer extends RPCEmitter {
 
     constructor(name: string) {
         super();
+        // check variables
+        if (typeof Worker === "undefined") {
+            console.error("Worker undefined");
+        }
+        if (typeof MessageChannel === "undefined") {
+            console.error("MessageChannel undefined");
+        }
+
         this.exportFunction("destroy");
 
         if (RPCPeer._instance) {
