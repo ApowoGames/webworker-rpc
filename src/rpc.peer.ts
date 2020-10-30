@@ -82,16 +82,27 @@ export function RemoteListener(worker: string, context: string, event: string, p
 const MANAGERWORKERNAME: string = "__MANAGER";
 // manager worker sprite
 const MANAGERWORKERSPRITE = (ev) => {
+    if (typeof MessageChannel === "undefined") {
+        console.error("MessageChannel undefined");
+        return;
+    }
+
     const MESSAGEKEY_LINK: string = "link";
     const MESSAGEKEY_REQUESTLINK: string = "requestLink";
+    const MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
     const MESSAGEKEY_UNLINK: string = "unlink";
     const MANAGERWORKERNAME: string = "__MANAGER";
 
     const channels: Map<string, MessagePort> = new Map();
+    let windowsPort: MessagePort = null;
 
     const addLink = (worker: string, port: MessagePort) => {
         if (channels.has(worker)) {
             return;
+        }
+        if (channels.size === 0) {
+            // 建立的第一个连接 必然是Windows发来的
+            windowsPort = port;
         }
         channels.set(worker, port);
         port.onmessage = (ev: MessageEvent) => {
@@ -142,11 +153,23 @@ const MANAGERWORKERSPRITE = (ev) => {
                 return;
             }
 
-            const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
-            console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
             const manager2TarChannel = new MessageChannel();
+            if (typeof Worker === "undefined") {
+                // ios worker中不能创建worker，转交Windows创建
+                if (!windowsPort) return;
 
-            tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
+                windowsPort.postMessage({
+                    key: MESSAGEKEY_PROXYCREATEWORKER,
+                    workerName: workerName,
+                    workerUrl: workerUrl,
+                    msg: { key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }
+                }, [manager2TarChannel.port2, service2TarChannel.port2]);
+            } else {
+                const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
+                console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
+
+                tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
+            }
             addLink(workerName, manager2TarChannel.port1);
         }
     }
@@ -272,6 +295,7 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_EXECUTE: string = "execute";
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
+    private readonly MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
 
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
@@ -290,12 +314,9 @@ export class RPCPeer extends RPCEmitter {
 
     constructor(name: string) {
         super();
-        // check variables
-        if (typeof Worker === "undefined") {
-            console.error("Worker undefined");
-        }
         if (typeof MessageChannel === "undefined") {
             console.error("MessageChannel undefined");
+            return;
         }
 
         this.exportFunction("destroy");
@@ -348,6 +369,10 @@ export class RPCPeer extends RPCEmitter {
                 return listener;
             }
 
+            if (typeof Worker === "undefined") {
+                console.error("Worker undefined! can not create manager worker.");
+                return;
+            }
             const managerWorkerURL = this.getManagerWorkerURL();
             // console.log(this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
             const managerWorker = new Worker(managerWorkerURL);
@@ -480,6 +505,9 @@ export class RPCPeer extends RPCEmitter {
                     break;
                 case this.MESSAGEKEY_UNLINK:
                     this.onMessage_Unlink(ev);
+                    break;
+                case this.MESSAGEKEY_PROXYCREATEWORKER:
+                    this.onMessage_ProxyCreateWorker(ev);
                     break;
                 default:
                     // console.warn("got message outof control: ", ev.data);
@@ -770,6 +798,23 @@ export class RPCPeer extends RPCEmitter {
         }
 
         // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
+    }
+    private onMessage_ProxyCreateWorker(ev: MessageEvent) {
+        const { workerName, workerUrl, msg } = ev.data;
+
+        if (typeof Worker === "undefined") {
+            console.error("Worker undefined! can not create worker");
+            return;
+        }
+
+        const path = location.origin + workerUrl;
+        const newWorker = new Worker(path, { name: workerName });
+        console.log(this.name + " create worker: ", path, workerName);
+        const ports = [];
+        for (const oneP of ev.ports) {
+            ports.push(oneP);
+        }
+        newWorker.postMessage(msg, ports);
     }
 
     private exportObject(obj: any, rootContext: string, recursion = true): RPCExecutor[] {
