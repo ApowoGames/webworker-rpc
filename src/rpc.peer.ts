@@ -194,19 +194,20 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 }
 
-const EXCEPTEDPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "getInstance", "_instance"];
+const EXCLUDEPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "getInstance", "_instance"];
+const INCLUDEPROPERTIES: string[] = ["destroy"];
 
 function ExceptClassProperties() {
     return (target, name, descriptor) => {
         for (const key in target) {
-            if (!EXCEPTEDPROPERTIES.includes(key)) {
-                EXCEPTEDPROPERTIES.push(key);
+            if (!EXCLUDEPROPERTIES.includes(key)) {
+                EXCLUDEPROPERTIES.push(key);
                 // console.log("ExceptProperty: ", key);
             }
         }
         for (const key of target.constructor) {
-            if (!EXCEPTEDPROPERTIES.includes(key)) {
-                EXCEPTEDPROPERTIES.push(key);
+            if (!EXCLUDEPROPERTIES.includes(key)) {
+                EXCLUDEPROPERTIES.push(key);
                 // console.log("ExceptProperty: ", key);
             }
         }
@@ -824,7 +825,7 @@ export class RPCPeer extends RPCEmitter {
         let addExecutors: RPCExecutor[] = [];
 
         for (const key in obj) {
-            if (EXCEPTEDPROPERTIES.includes(key)) continue;
+            if (EXCLUDEPROPERTIES.includes(key) && !INCLUDEPROPERTIES.includes(key)) continue;
 
             const element = obj[key];
             // console.log(this.name + " exportKey: " + key, element);

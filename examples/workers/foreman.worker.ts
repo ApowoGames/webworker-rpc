@@ -2,7 +2,7 @@ import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../..
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-// @ExportAll()
+@ExportAll()
 class ForemanContext extends RPCPeer {
     // @Export()
     public son: ForemanSon;
@@ -12,7 +12,7 @@ class ForemanContext extends RPCPeer {
     constructor() {
         super("foreman");
 
-        // this.son = new ForemanSon();
+        this.son = new ForemanSon();
         // ForemanContext.staticSon = new ForemanSon();
 
         // this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
@@ -120,6 +120,10 @@ class ForemanGrandson {
 
     private privateFunction() {
         console.log("privateFunction");
+    }
+
+    private destroy() {
+        console.log("destroy");
     }
 }
 
