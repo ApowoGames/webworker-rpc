@@ -319,18 +319,19 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        this.exportFunction("destroy");
+        if (!name) {
+            console.error("param <name> error");
+            return;
+        }
 
         if (RPCPeer._instance) {
             console.error("duplicate RPCPeer created");
             return;
         }
         RPCPeer._instance = this;
+        console.log("webworker-rpc: new peer: ", name);
 
-        if (!name) {
-            console.error("param <name> error");
-            return;
-        }
+        this.exportFunction("destroy");
 
         this.name = name;
         this.worker = self as any;
