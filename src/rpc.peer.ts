@@ -325,7 +325,7 @@ export class RPCPeer extends RPCEmitter {
         }
 
         if (RPCPeer._instance) {
-            console.error("duplicate RPCPeer created");
+            console.error("duplicate RPCPeer created: ", name);
             return;
         }
         RPCPeer._instance = this;
