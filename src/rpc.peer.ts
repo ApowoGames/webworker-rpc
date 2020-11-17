@@ -154,22 +154,22 @@ const MANAGERWORKERSPRITE = (ev) => {
             }
 
             const manager2TarChannel = new MessageChannel();
-            if (typeof Worker === "undefined") {
-                // ios worker中不能创建worker，转交Windows创建
-                if (!windowsPort) return;
+            // if (typeof Worker === "undefined") {
+            // ios worker中不能创建worker，转交Windows创建
+            if (!windowsPort) return;
 
-                windowsPort.postMessage({
-                    key: MESSAGEKEY_PROXYCREATEWORKER,
-                    workerName: workerName,
-                    workerUrl: workerUrl,
-                    msg: { key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }
-                }, [manager2TarChannel.port2, service2TarChannel.port2]);
-            } else {
-                const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
-                console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
+            windowsPort.postMessage({
+                key: MESSAGEKEY_PROXYCREATEWORKER,
+                workerName: workerName,
+                workerUrl: workerUrl,
+                msg: { key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }
+            }, [manager2TarChannel.port2, service2TarChannel.port2]);
+            // } else {
+            //     const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
+            //     console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
 
-                tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
-            }
+            //     tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
+            // }
             addLink(workerName, manager2TarChannel.port1);
         }
     }
