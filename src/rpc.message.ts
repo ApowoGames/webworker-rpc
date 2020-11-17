@@ -136,7 +136,7 @@ export class RPCParam extends webworker_rpc.Param {
     }
 
     static createByValue(val): RPCParam {
-        if (!val) {
+        if (val === null || undefined) {
             return new RPCParam(webworker_rpc.ParamType.UNKNOWN, val);
         } else if (typeof val === "string") {
             return new RPCParam(webworker_rpc.ParamType.str, val);
