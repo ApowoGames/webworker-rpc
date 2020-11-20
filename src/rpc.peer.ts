@@ -555,12 +555,12 @@ export class RPCPeer extends RPCEmitter {
         const regParams = executor.params;
         if (regParams && regParams.length > 0) {
             if (!params || params.length === 0) {
-                console.error("execute param error! ", "param.length = 0");
+                console.error("method <" + method + "> execute error! ", "param.length = 0");
                 return;
             }
 
             if (regParams.length > params.length) {
-                console.error("execute param error! ", "param not enough");
+                console.error("method <" + method + "> execute error! ", "param not enough");
                 return;
             }
 
@@ -568,7 +568,7 @@ export class RPCPeer extends RPCEmitter {
                 const regP = regParams[i];
                 const remoteP = params[i];
                 if (regP.t !== remoteP.t) {
-                    console.error("execute param error! ", "type not match, registry: <", regP.t, ">; execute: <", remoteP.t, ">");
+                    console.error("method <" + method + "> execute error! ", "param type not match, registry: <", webworker_rpc.ParamType[regP.t], ">; execute: <", webworker_rpc.ParamType[remoteP.t], ">");
                     return;
                 }
             }

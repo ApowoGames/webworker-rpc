@@ -2,7 +2,7 @@ import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../..
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-@ExportAll()
+// @ExportAll()
 class ForemanContext extends RPCPeer {
     // @Export()
     public son: ForemanSon;
@@ -33,7 +33,7 @@ class ForemanContext extends RPCPeer {
     //     this.export(this.son, this);
     // }
 
-    @Export()
+    @Export([webworker_rpc.ParamType.str])
     public multiParams(num: number, arr: [], obj: any) {
         console.log("multiParams: ", num, arr, obj);
     }
