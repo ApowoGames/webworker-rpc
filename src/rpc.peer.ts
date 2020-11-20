@@ -434,28 +434,28 @@ export class RPCPeer extends RPCEmitter {
 
         if (context[attrName] !== attr) {
             if (context[attrName]) {
-                console.warn(`${attrName} exit, replaced`);
+                console.warn(`${attrName} exist, replaced`);
             }
 
             // TODO: 此处添加了引用，但是没有做释放相关操作
             context[attrName] = attr;
         }
 
-        let exitConName = "";
-        const exitConNames = Array.from(RPCContexts.keys());
-        for (const oneName of exitConNames) {
+        let existConName = "";
+        const existConNames = Array.from(RPCContexts.keys());
+        for (const oneName of existConNames) {
             const oneCon = RPCContexts.get(oneName);
             if (oneCon === context) {
-                exitConName = oneName;
+                existConName = oneName;
                 break;
             }
         }
 
-        let conName = exitConName;
-        if (exitConName.length === 0) {
+        let conName = existConName;
+        if (existConName.length === 0) {
             conName = context.constructor.name;
             if (RPCContexts.has(conName)) {
-                console.error(`context name <${conName}> exit`);
+                console.error(`context name <${conName}> exist`);
                 return;
             }
             RPCContexts.set(conName, context);
@@ -853,6 +853,7 @@ export class RPCPeer extends RPCEmitter {
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
         const con = this.getContext(context);
         if (!con) {
+            console.error(`excute function <${functionName}> error, no context <${context}> exist`);
             return null;
         }
         return con[functionName].apply(con, args);
@@ -861,7 +862,7 @@ export class RPCPeer extends RPCEmitter {
     private getContext(path: string): any {
         const contexts = path.split(".");
         if (!RPCContexts.has(contexts[0])) {
-            console.error("no context exit: ", contexts[0]);
+            console.error("no context exist: ", contexts[0]);
             return null;
         }
 
@@ -1034,7 +1035,7 @@ export class SyncRegistryListener {
 
 function addProperty(obj: any, key: string, val: any) {
     if (key in obj) {
-        console.error("key exits, add property failed!", obj, key);
+        console.error("key exist, add property failed!", obj, key);
         return obj;
     }
     obj[key] = val;
