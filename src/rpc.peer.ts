@@ -809,6 +809,7 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
+        console.log("webworker-rpc ProxyCreateWorker: location: ", location);
         const path = location.origin + workerUrl;
         const newWorker = new Worker(path, { name: workerName });
         console.log(this.name + " create worker: ", path, workerName);
