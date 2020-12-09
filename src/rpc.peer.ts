@@ -10,7 +10,7 @@ const RPCAttributes: Map<string, string[]> = new Map();// 等待link之后，注
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
     const params: RPCParam[] = [];
-    if (paramTypes) {
+    if (paramTypes !== undefined && paramTypes !== null) {
         for (const pt of paramTypes) {
             params.push(new RPCParam(pt));
         }
@@ -47,7 +47,7 @@ export function ExportAll() {
 }
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor?) => {
-        if (descriptor)
+        if (descriptor !== undefined && descriptor !== null)
             ExportFunction(target, name, descriptor, paramTypes);
         else
             ExportAttribute(target, name);
@@ -60,7 +60,7 @@ export function RemoteListener(worker: string, context: string, event: string, p
 
         const executorContext = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
         const params: RPCParam[] = [];
-        if (paramTypes) {
+        if (paramTypes !== undefined && paramTypes !== null) {
             for (const pt of paramTypes) {
                 params.push(new RPCParam(pt));
             }
@@ -107,7 +107,7 @@ const MANAGERWORKERSPRITE = (ev) => {
         channels.set(worker, port);
         port.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
-            if (!key) {
+            if (key === undefined || key === null) {
                 return;
             }
             // TODO 使用map结构
@@ -148,7 +148,7 @@ const MANAGERWORKERSPRITE = (ev) => {
         if (channels.has(workerName)) {
             channels.get(workerName).postMessage({ key: MESSAGEKEY_LINK, workers: [serviceName] }, [service2TarChannel.port2]);
         } else {
-            if (!workerUrl) {
+            if (workerUrl === undefined || workerUrl === null) {
                 console.error("worker url undefined");
                 return;
             }
@@ -156,7 +156,7 @@ const MANAGERWORKERSPRITE = (ev) => {
             const manager2TarChannel = new MessageChannel();
             // if (typeof Worker === "undefined") {
             // ios worker中不能创建worker，转交Windows创建
-            if (!windowsPort) return;
+            if (windowsPort === undefined || windowsPort === null) return;
 
             windowsPort.postMessage({
                 key: MESSAGEKEY_PROXYCREATEWORKER,
@@ -320,7 +320,7 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        if (!name) {
+        if (name === undefined || name === null) {
             console.error("param <name> error");
             return;
         }
@@ -347,7 +347,7 @@ export class RPCPeer extends RPCEmitter {
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
             const { key } = ev.data;
-            if (key && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
+            if (key !== undefined && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
                 this.onMessage_Link(ev);
             }
         });
@@ -365,7 +365,7 @@ export class RPCPeer extends RPCEmitter {
 
         if (!this.channels.has(MANAGERWORKERNAME)) {
             const selfName = this.worker["name"];
-            if (selfName && selfName === this.name) {
+            if (selfName !== undefined && selfName === this.name) {
                 // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
                 this.linkTasks.push({ workerName, workerUrl });
                 return listener;
@@ -409,14 +409,14 @@ export class RPCPeer extends RPCEmitter {
             w.postMessage({ key: this.MESSAGEKEY_UNLINK, worker: this.name });
         }
 
-        if (RPCPeer._instance) RPCPeer._instance = null;
+        if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
         self.close();
     }
 
     // 动态暴露属性 注意：若使用了自定义属性名attrName，需要自行管理暴露属性的内存释放(delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
         // console.log(this.name + " export: ", attr, context);
-        if (!attrName) {
+        if (attrName === undefined || attrName === null) {
             for (const key in context) {
                 if (Object.prototype.hasOwnProperty.call(context, key)) {
                     const element = context[key];
@@ -433,7 +433,7 @@ export class RPCPeer extends RPCEmitter {
         }
 
         if (context[attrName] !== attr) {
-            if (context[attrName]) {
+            if (context[attrName] !== undefined && context[attrName] !== null) {
                 console.warn(`${attrName} exist, replaced`);
             }
 
@@ -484,7 +484,7 @@ export class RPCPeer extends RPCEmitter {
         // console.log(this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             const { key } = ev.data;
-            if (!key) {
+            if (key === undefined || key === null) {
                 // console.warn("<key> not in ev.data");
                 return;
             }
@@ -547,7 +547,7 @@ export class RPCPeer extends RPCEmitter {
         // console.log(this.name + " registry: ", this.registry);
         const executor = this.registry.get(worker).find((x) => x.context === context &&
             x.method === method);
-        if (!executor) {
+        if (executor === undefined || executor === null) {
             console.error("method <" + method + "> not registed");
             return;
         }
@@ -664,7 +664,7 @@ export class RPCPeer extends RPCEmitter {
     private onMessage_AddRegistry(ev: MessageEvent) {
         // console.log(this.name + " onMessage_AddRegistry:", ev.data);
         const { dataRegistry } = ev.data;
-        if (!dataRegistry) {
+        if (dataRegistry === undefined || dataRegistry === null) {
             console.warn("<data> not in ev.data");
             return;
         }
@@ -711,7 +711,7 @@ export class RPCPeer extends RPCEmitter {
     private onMessage_Execute(ev: MessageEvent) {
         // console.log(this.name + " onMessage_RunMethod:", ev.data);
         const { dataExecute } = ev.data;
-        if (!dataExecute) {
+        if (dataExecute === undefined || dataExecute === null) {
             console.warn("<data> not in ev.data");
             return;
         }
@@ -726,7 +726,7 @@ export class RPCPeer extends RPCEmitter {
         const remoteExecutor = packet.header.remoteExecutor;
 
         const params = [];
-        if (remoteExecutor.params) {
+        if (remoteExecutor.params !== undefined && remoteExecutor.params !== null) {
             for (const param of remoteExecutor.params) {
                 const v = RPCParam.getValue(param as RPCParam);
                 // console.log("RPCParam.getValue: ", param, v);
@@ -745,7 +745,7 @@ export class RPCPeer extends RPCEmitter {
     }
     private onMessage_Respond(ev: MessageEvent) {
         const { dataResponse } = ev.data;
-        if (!dataResponse) {
+        if (dataResponse === undefined || dataResponse === null) {
             console.warn("<data> not in ev.data");
             return;
         }
@@ -762,20 +762,20 @@ export class RPCPeer extends RPCEmitter {
 
         const resolver = this.resolvers.get(packet.id);
         this.resolvers.delete(packet.id);
-        if (packet.err) {
+        if (packet.err !== undefined && packet.err !== null) {
             console.error("get error response: ", packet.err);
             resolver.reject(packet.err);
             return;
         }
 
         const vals = packet.vals;
-        if (!vals || vals.length === 0) {
+        if (vals === undefined || vals === null || vals.length === 0) {
             resolver.resolve();
         } else {
             const result = [];
             for (const val of vals) {
                 const v = RPCParam.getValue(val as RPCParam);
-                if (v) result.push(v);
+                result.push(v);
             }
             if (result.length === 0) {
                 resolver.resolve();
@@ -795,7 +795,7 @@ export class RPCPeer extends RPCEmitter {
         if (this.registry.has(worker)) {
             this.registry.delete(worker);
         }
-        if (this.remote && (worker in this.remote)) {
+        if (this.remote !== undefined && this.remote !== null && (worker in this.remote)) {
             delete this.remote[worker];
         }
 
@@ -853,7 +853,7 @@ export class RPCPeer extends RPCEmitter {
 
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
         const con = this.getContext(context);
-        if (!con) {
+        if (con === undefined || con === null) {
             console.error(`excute function <${functionName}> error, no context <${context}> exist`);
             return null;
         }
@@ -880,7 +880,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private addRegistryProperty(packet: RPCRegistryPacket) {
-        if (!this.remote) this.remote = {};
+        if (this.remote === undefined || this.remote === null) this.remote = {};
 
         const service = packet.serviceName;
         const executors = packet.executors;
@@ -908,7 +908,7 @@ export class RPCPeer extends RPCEmitter {
             addProperty(methodCon, executor.method, (...args) => {
                 // console.log(this.name + " call property ", service, executor.method, executor.context);
                 const params: RPCParam[] = [];
-                if (args) {
+                if (args !== undefined && args !== null) {
                     for (const arg of args) {
                         params.push(RPCParam.createByValue(arg));
                     }
@@ -940,12 +940,10 @@ export class RPCPeer extends RPCEmitter {
 
     private handlerExcuteResult(service: string, id: number, result?: any) {
         let resultArr = [];
-        if (result) {
-            if (!Array.isArray(result)) {
-                resultArr = [result];
-            } else {
-                resultArr = result;
-            }
+        if (result !== undefined && result !== null && Array.isArray(result)) {
+            resultArr = result;
+        } else {
+            resultArr = [result];
         }
 
         const responseVals: RPCParam[] = [];

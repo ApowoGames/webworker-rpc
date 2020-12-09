@@ -33,6 +33,12 @@ class ForemanContext extends RPCPeer {
     //     this.export(this.son, this);
     // }
 
+    @Export()
+    public testSpecialParams(arg1, arg2, arg3, arg4) {
+        // return [arg1, arg2, arg3, arg4];
+        return arg3;
+    }
+
     @Export([webworker_rpc.ParamType.str])
     public multiParams(num: number, arr: [], obj: any) {
         console.log("multiParams: ", num, arr, obj);

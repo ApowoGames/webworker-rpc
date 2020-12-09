@@ -16,7 +16,7 @@ install
 * rpcPeer.exportProperty().onceReady
 * rpcPeer.destroy()
 * **object** param (*transferable unsupported*)
-* special param (undefined, null)
+* special param (undefined, null, 0, false)
 
 ## Examples
 

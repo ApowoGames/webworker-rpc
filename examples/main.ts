@@ -3,8 +3,12 @@ import { RPCPeer } from "../src/index";
 window.onload = () => {
   const peer = new RPCPeer("main");
   peer.linkTo("foreman", "/foremanWorker.js").onceReady(() => {
+    peer.remote.foreman.ForemanContext.testSpecialParams(0, false, undefined, null).then((val) => {
+      console.log("result: ", val);
+    });
+
     // peer.remote.foreman.ForemanContext.son.grandSon.destroy();
-    peer.remote.foreman.ForemanContext.multiParams(0, undefined, { x: 1 });
+    // peer.remote.foreman.ForemanContext.multiParams(0, undefined, { x: 1 });
     // peer.remote.foreman.ForemanContext.createSon().then(() => {
     //   console.log("createSon then");
     //   peer.remote.foreman.ForemanContext.son.foremanSonFunction();
