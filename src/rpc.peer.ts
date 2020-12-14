@@ -591,8 +591,8 @@ export class RPCPeer extends RPCEmitter {
             }
         });
     }
-    private respond(worker: string, id: number, vals?: RPCParam[], err?: string) {
-        const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, vals, err));
+    private respond(worker: string, id: number, val?: RPCParam, err?: string) {
+        const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, val, err));
         if (messageData.encodeable) {
             const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
             if (this.channels.has(worker)) {
@@ -768,23 +768,7 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        const vals = packet.vals;
-        if (vals === undefined || vals === null || vals.length === 0) {
-            resolver.resolve();
-        } else {
-            const result = [];
-            for (const val of vals) {
-                const v = RPCParam.getValue(val as RPCParam);
-                result.push(v);
-            }
-            if (result.length === 0) {
-                resolver.resolve();
-            } else if (result.length === 1) {
-                resolver.resolve(result[0]);
-            } else {
-                resolver.resolve(result);
-            }
-        }
+        resolver.resolve(RPCParam.getValue(packet.val as RPCParam));
     }
     private onMessage_Unlink(ev: MessageEvent) {
         const { worker } = ev.data;
@@ -939,18 +923,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private handlerExcuteResult(service: string, id: number, result?: any) {
-        let resultArr = [];
-        if (result !== undefined && result !== null && Array.isArray(result)) {
-            resultArr = result;
-        } else {
-            resultArr = [result];
-        }
-
-        const responseVals: RPCParam[] = [];
-        for (const oneVal of resultArr) {
-            responseVals.push(RPCParam.createByValue(oneVal));
-        }
-        this.respond(service, id, responseVals);
+        this.respond(service, id, RPCParam.createByValue(result));
     }
 }
 

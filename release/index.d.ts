@@ -463,8 +463,8 @@ declare module 'webworker-rpc/protocols' {
                     /** ResponesPacket id */
                     id: number;
     
-                    /** ResponesPacket vals */
-                    vals?: (webworker_rpc.IParam[]|null);
+                    /** ResponesPacket val */
+                    val?: (webworker_rpc.IParam|null);
     
                     /** ResponesPacket err */
                     err?: (string|null);
@@ -482,8 +482,8 @@ declare module 'webworker-rpc/protocols' {
                     /** ResponesPacket id. */
                     id: number;
     
-                    /** ResponesPacket vals. */
-                    vals: webworker_rpc.IParam[];
+                    /** ResponesPacket val. */
+                    val?: (webworker_rpc.IParam|null);
     
                     /** ResponesPacket err. */
                     err: string;
@@ -841,7 +841,7 @@ declare module 'webworker-rpc/rpc.message' {
     export class RPCResponsePacket extends webworker_rpc.ResponesPacket {
         static checkType(obj: any): boolean;
         hasUnknownParam: boolean;
-        constructor(id: number, vals?: RPCParam[], err?: string);
+        constructor(id: number, val?: RPCParam, err?: string);
     }
 }
 

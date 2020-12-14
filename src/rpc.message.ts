@@ -203,17 +203,14 @@ export class RPCResponsePacket extends webworker_rpc.ResponesPacket {
 
     public hasUnknownParam: boolean = false;
 
-    constructor(id: number, vals?: RPCParam[], err?: string) {
+    constructor(id: number, val?: RPCParam, err?: string) {
         super();
 
         this.id = id;
-        if (vals) {
-            this.vals = vals;
-            for (const p of vals) {
-                if (p.t === webworker_rpc.ParamType.UNKNOWN) {
-                    this.hasUnknownParam = true;
-                    break;
-                }
+        if (val) {
+            this.val = val;
+            if (val.t === webworker_rpc.ParamType.UNKNOWN) {
+                this.hasUnknownParam = true;
             }
         }
         if (err) this.err = err;

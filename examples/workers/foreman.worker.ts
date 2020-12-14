@@ -36,7 +36,7 @@ class ForemanContext extends RPCPeer {
     @Export()
     public testSpecialParams(arg1, arg2, arg3, arg4) {
         // return [arg1, arg2, arg3, arg4];
-        return arg3;
+        // return arg1;
     }
 
     @Export([webworker_rpc.ParamType.str])

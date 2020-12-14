@@ -3,7 +3,7 @@ import { RPCPeer } from "../src/index";
 window.onload = () => {
   const peer = new RPCPeer("main");
   peer.linkTo("foreman", "/foremanWorker.js").onceReady(() => {
-    peer.remote.foreman.ForemanContext.testSpecialParams(0, false, undefined, null).then((val) => {
+    peer.remote.foreman.ForemanContext.testSpecialParams([0], false, undefined, null).then((val) => {
       console.log("result: ", val);
     });
 

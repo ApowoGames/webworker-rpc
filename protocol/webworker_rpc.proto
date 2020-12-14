@@ -48,7 +48,7 @@ message ExecutePacket {
 
 message ResponesPacket {
     required int32 id = 1;
-    repeated Param vals = 2;
+    optional Param val = 2;
     optional string err = 3;
 }
 

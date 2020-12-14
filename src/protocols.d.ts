@@ -452,8 +452,8 @@ export namespace webworker_rpc {
         /** ResponesPacket id */
         id: number;
 
-        /** ResponesPacket vals */
-        vals?: (webworker_rpc.IParam[]|null);
+        /** ResponesPacket val */
+        val?: (webworker_rpc.IParam|null);
 
         /** ResponesPacket err */
         err?: (string|null);
@@ -471,8 +471,8 @@ export namespace webworker_rpc {
         /** ResponesPacket id. */
         public id: number;
 
-        /** ResponesPacket vals. */
-        public vals: webworker_rpc.IParam[];
+        /** ResponesPacket val. */
+        public val?: (webworker_rpc.IParam|null);
 
         /** ResponesPacket err. */
         public err: string;

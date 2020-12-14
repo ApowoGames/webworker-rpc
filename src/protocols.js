@@ -1187,7 +1187,7 @@
              * @memberof webworker_rpc
              * @interface IResponesPacket
              * @property {number} id ResponesPacket id
-             * @property {Array.<webworker_rpc.IParam>|null} [vals] ResponesPacket vals
+             * @property {webworker_rpc.IParam|null} [val] ResponesPacket val
              * @property {string|null} [err] ResponesPacket err
              */
     
@@ -1200,7 +1200,6 @@
              * @param {webworker_rpc.IResponesPacket=} [properties] Properties to set
              */
             function ResponesPacket(properties) {
-                this.vals = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -1216,12 +1215,12 @@
             ResponesPacket.prototype.id = 0;
     
             /**
-             * ResponesPacket vals.
-             * @member {Array.<webworker_rpc.IParam>} vals
+             * ResponesPacket val.
+             * @member {webworker_rpc.IParam|null|undefined} val
              * @memberof webworker_rpc.ResponesPacket
              * @instance
              */
-            ResponesPacket.prototype.vals = $util.emptyArray;
+            ResponesPacket.prototype.val = null;
     
             /**
              * ResponesPacket err.
@@ -1256,9 +1255,8 @@
                 if (!writer)
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
-                if (message.vals != null && message.vals.length)
-                    for (var i = 0; i < message.vals.length; ++i)
-                        $root.webworker_rpc.Param.encode(message.vals[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.val != null && Object.hasOwnProperty.call(message, "val"))
+                    $root.webworker_rpc.Param.encode(message.val, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 if (message.err != null && Object.hasOwnProperty.call(message, "err"))
                     writer.uint32(/* id 3, wireType 2 =*/26).string(message.err);
                 return writer;
@@ -1299,9 +1297,7 @@
                         message.id = reader.int32();
                         break;
                     case 2:
-                        if (!(message.vals && message.vals.length))
-                            message.vals = [];
-                        message.vals.push($root.webworker_rpc.Param.decode(reader, reader.uint32()));
+                        message.val = $root.webworker_rpc.Param.decode(reader, reader.uint32());
                         break;
                     case 3:
                         message.err = reader.string();
@@ -1345,14 +1341,10 @@
                     return "object expected";
                 if (!$util.isInteger(message.id))
                     return "id: integer expected";
-                if (message.vals != null && message.hasOwnProperty("vals")) {
-                    if (!Array.isArray(message.vals))
-                        return "vals: array expected";
-                    for (var i = 0; i < message.vals.length; ++i) {
-                        var error = $root.webworker_rpc.Param.verify(message.vals[i]);
-                        if (error)
-                            return "vals." + error;
-                    }
+                if (message.val != null && message.hasOwnProperty("val")) {
+                    var error = $root.webworker_rpc.Param.verify(message.val);
+                    if (error)
+                        return "val." + error;
                 }
                 if (message.err != null && message.hasOwnProperty("err"))
                     if (!$util.isString(message.err))
@@ -1374,15 +1366,10 @@
                 var message = new $root.webworker_rpc.ResponesPacket();
                 if (object.id != null)
                     message.id = object.id | 0;
-                if (object.vals) {
-                    if (!Array.isArray(object.vals))
-                        throw TypeError(".webworker_rpc.ResponesPacket.vals: array expected");
-                    message.vals = [];
-                    for (var i = 0; i < object.vals.length; ++i) {
-                        if (typeof object.vals[i] !== "object")
-                            throw TypeError(".webworker_rpc.ResponesPacket.vals: object expected");
-                        message.vals[i] = $root.webworker_rpc.Param.fromObject(object.vals[i]);
-                    }
+                if (object.val != null) {
+                    if (typeof object.val !== "object")
+                        throw TypeError(".webworker_rpc.ResponesPacket.val: object expected");
+                    message.val = $root.webworker_rpc.Param.fromObject(object.val);
                 }
                 if (object.err != null)
                     message.err = String(object.err);
@@ -1402,19 +1389,15 @@
                 if (!options)
                     options = {};
                 var object = {};
-                if (options.arrays || options.defaults)
-                    object.vals = [];
                 if (options.defaults) {
                     object.id = 0;
+                    object.val = null;
                     object.err = "";
                 }
                 if (message.id != null && message.hasOwnProperty("id"))
                     object.id = message.id;
-                if (message.vals && message.vals.length) {
-                    object.vals = [];
-                    for (var j = 0; j < message.vals.length; ++j)
-                        object.vals[j] = $root.webworker_rpc.Param.toObject(message.vals[j], options);
-                }
+                if (message.val != null && message.hasOwnProperty("val"))
+                    object.val = $root.webworker_rpc.Param.toObject(message.val, options);
                 if (message.err != null && message.hasOwnProperty("err"))
                     object.err = message.err;
                 return object;
