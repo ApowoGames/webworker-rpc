@@ -768,7 +768,11 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        resolver.resolve(RPCParam.getValue(packet.val as RPCParam));
+        if (packet.val === undefined || packet.val === null) {
+            resolver.resolve();
+        } else {
+            resolver.resolve(RPCParam.getValue(packet.val as RPCParam));
+        }
     }
     private onMessage_Unlink(ev: MessageEvent) {
         const { worker } = ev.data;
