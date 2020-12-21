@@ -799,13 +799,16 @@ export class RPCPeer extends RPCEmitter {
 
         console.log("webworker-rpc ProxyCreateWorker: location: ", location);
         let pathRoot = location.origin + location.pathname;
+        console.log("webworker-rpc ProxyCreateWorker: pathRoot-1: ", pathRoot);
         // 兼容ios打包
         if (pathRoot.endsWith("index.html")) {
             pathRoot = pathRoot.slice(0, -10);
         } else if (pathRoot.endsWith("index.html/")) {
             pathRoot = pathRoot.slice(0, -11) + "/";
         }
+        console.log("webworker-rpc ProxyCreateWorker: pathRoot-2: ", pathRoot);
         const path = pathRoot + workerUrl;
+        console.log("webworker-rpc ProxyCreateWorker: workerUrl: ", workerUrl);
         const newWorker = new Worker(path, { name: workerName });
         console.log(this.name + " create worker: ", path, workerName);
         const ports = [];
