@@ -1,6 +1,6 @@
-import { ValueResolver } from "./promise";
-import { webworker_rpc } from "./protocols";
-import { RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket, RPCResponsePacket } from "./rpc.message";
+import {ValueResolver} from "./promise";
+import {webworker_rpc} from "./protocols";
+import {RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket, RPCResponsePacket} from "./rpc.message";
 
 // decorator
 const RPCFunctions: RPCExecutor[] = [];
@@ -39,12 +39,14 @@ const AddRPCFunction = (executor: RPCExecutor) => {
     }
     return false;
 }
+
 export function ExportAll() {
     return (target) => {
         RPCClasses.push(target.name);
         return target;
     }
 }
+
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor?) => {
         if (descriptor !== undefined && descriptor !== null)
@@ -53,7 +55,9 @@ export function Export(paramTypes?: webworker_rpc.ParamType[]) {
             ExportAttribute(target, name);
     }
 }
+
 const RPCListeners: Map<string, { context: string, event: string, executor: RPCExecutor }[]> = new Map();
+
 export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]) {
     return (target, name, descriptor) => {
         ExportFunction(target, name, descriptor, paramTypes);
@@ -75,7 +79,7 @@ export function RemoteListener(worker: string, context: string, event: string, p
         if (!RPCListeners.has(worker)) {
             RPCListeners.set(worker, []);
         }
-        RPCListeners.get(worker).push({ context, event, executor });
+        RPCListeners.get(worker).push({context, event, executor});
     }
 }
 
@@ -91,6 +95,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     const MESSAGEKEY_REQUESTLINK: string = "requestLink";
     const MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
     const MESSAGEKEY_UNLINK: string = "unlink";
+    const MESSAGEKEY_DESTROYMANAGER: string = "destroyManager";
     const MANAGERWORKERNAME: string = "__MANAGER";
 
     const channels: Map<string, MessagePort> = new Map();
@@ -106,7 +111,7 @@ const MANAGERWORKERSPRITE = (ev) => {
         }
         channels.set(worker, port);
         port.onmessage = (ev: MessageEvent) => {
-            const { key } = ev.data;
+            const {key} = ev.data;
             if (key === undefined || key === null) {
                 return;
             }
@@ -118,6 +123,9 @@ const MANAGERWORKERSPRITE = (ev) => {
                 case MESSAGEKEY_UNLINK:
                     onMessage_Unlink(ev);
                     break;
+                case MESSAGEKEY_DESTROYMANAGER:
+                    onMessage_Destroy(ev);
+                    break;
                 default:
                     break;
             }
@@ -125,7 +133,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_Link = (_ev: MessageEvent) => {
-        const { workers } = _ev.data;
+        const {workers} = _ev.data;
         const ports = _ev.ports;
         for (let i = 0; i < ports.length; i++) {
             const onePort = ports[i];
@@ -136,17 +144,23 @@ const MANAGERWORKERSPRITE = (ev) => {
 
     const onMessage_RequestLink = (_ev: MessageEvent) => {
         // console.log("onMessage_RequestLink ", _ev.data);
-        const { serviceName, workerName, workerUrl } = _ev.data;
+        const {serviceName, workerName, workerUrl} = _ev.data;
         const service2TarChannel = new MessageChannel();
 
         if (!channels.has(serviceName)) {
             console.error(MANAGERWORKERNAME + " not yet link to " + serviceName);
             return;
         }
-        channels.get(serviceName).postMessage({ key: MESSAGEKEY_LINK, workers: [workerName] }, [service2TarChannel.port1]);
+        channels.get(serviceName).postMessage({
+            key: MESSAGEKEY_LINK,
+            workers: [workerName]
+        }, [service2TarChannel.port1]);
 
         if (channels.has(workerName)) {
-            channels.get(workerName).postMessage({ key: MESSAGEKEY_LINK, workers: [serviceName] }, [service2TarChannel.port2]);
+            channels.get(workerName).postMessage({
+                key: MESSAGEKEY_LINK,
+                workers: [serviceName]
+            }, [service2TarChannel.port2]);
         } else {
             if (workerUrl === undefined || workerUrl === null) {
                 console.error("worker url undefined");
@@ -162,7 +176,7 @@ const MANAGERWORKERSPRITE = (ev) => {
                 key: MESSAGEKEY_PROXYCREATEWORKER,
                 workerName: workerName,
                 workerUrl: workerUrl,
-                msg: { key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }
+                msg: {key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName]}
             }, [manager2TarChannel.port2, service2TarChannel.port2]);
             // } else {
             //     const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
@@ -175,7 +189,7 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_Unlink = (_ev: MessageEvent) => {
-        const { worker } = _ev.data;
+        const {worker} = _ev.data;
         if (channels.has(worker)) {
             channels.delete(worker);
         }
@@ -183,7 +197,16 @@ const MANAGERWORKERSPRITE = (ev) => {
         // console.log(MANAGERWORKERNAME + " unlink: ", channels);
     }
 
-    const { key } = ev.data;
+    const onMessage_Destroy = (_ev: MessageEvent) => {
+        const linkedNames = Array.from(channels.keys());
+        for (const oneName of linkedNames) {
+            const w = channels.get(oneName);
+            w.postMessage({key: MESSAGEKEY_UNLINK, worker: MANAGERWORKERNAME});
+        }
+        self.close();
+    }
+
+    const {key} = ev.data;
     switch (key) {
         case MESSAGEKEY_LINK:
             onMessage_Link(ev);
@@ -238,7 +261,7 @@ export class RPCEmitter {
             this.emitFunctions.set(event, []);
         }
 
-        this.emitFunctions.get(event).push({ worker: worker, executor: executor });
+        this.emitFunctions.get(event).push({worker: worker, executor: executor});
     }
 
     // @Export([webworker_rpc.ParamType.str])
@@ -297,6 +320,7 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
     private readonly MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
+    private readonly MESSAGEKEY_DESTROYMANAGER: string = "destroyManager";
 
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
@@ -346,7 +370,7 @@ export class RPCPeer extends RPCEmitter {
         this.syncRegistryListeners = new Map();
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
-            const { key } = ev.data;
+            const {key} = ev.data;
             if (key !== undefined && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
                 this.onMessage_Link(ev);
             }
@@ -367,7 +391,7 @@ export class RPCPeer extends RPCEmitter {
             const selfName = this.worker["name"];
             if (selfName !== undefined && selfName === this.name) {
                 // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
-                this.linkTasks.push({ workerName, workerUrl });
+                this.linkTasks.push({workerName, workerUrl});
                 return listener;
             }
 
@@ -380,17 +404,24 @@ export class RPCPeer extends RPCEmitter {
             const managerWorker = new Worker(managerWorkerURL);
             const managerChannel = new MessageChannel();
 
-            managerWorker.postMessage({ key: this.MESSAGEKEY_LINK, workers: [this.name] }, [managerChannel.port2]);
+            managerWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [managerChannel.port2]);
             this.addLink(MANAGERWORKERNAME, managerChannel.port1);
         }
 
-        this.channels.get(MANAGERWORKERNAME).postMessage({ key: this.MESSAGEKEY_REQUESTLINK, serviceName: this.name, workerName, workerUrl });
+        this.channels.get(MANAGERWORKERNAME).postMessage({
+            key: this.MESSAGEKEY_REQUESTLINK,
+            serviceName: this.name,
+            workerName,
+            workerUrl
+        });
 
         return listener;
     }
 
-    public linkFinished() {
-        // TODO: 所有连接建立完毕 关闭ManagerWorker
+    public destroyManagerWorker() {
+        if (!this.channels.has(MANAGERWORKERNAME)) return;
+        const w = this.channels.get(MANAGERWORKERNAME);
+        w.postMessage({key: this.MESSAGEKEY_DESTROYMANAGER});
     }
 
     public destroy() {
@@ -406,7 +437,7 @@ export class RPCPeer extends RPCEmitter {
 
             // unlink: remove channel, remove registry
             const w = this.channels.get(oneName);
-            w.postMessage({ key: this.MESSAGEKEY_UNLINK, worker: this.name });
+            w.postMessage({key: this.MESSAGEKEY_UNLINK, worker: this.name});
         }
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
@@ -483,7 +514,7 @@ export class RPCPeer extends RPCEmitter {
         this.channels.set(worker, port);
         // console.log(this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
-            const { key } = ev.data;
+            const {key} = ev.data;
             if (key === undefined || key === null) {
                 // console.warn("<key> not in ev.data");
                 return;
@@ -591,6 +622,7 @@ export class RPCPeer extends RPCEmitter {
             }
         });
     }
+
     private respond(worker: string, id: number, val?: RPCParam, err?: string) {
         const messageData = new RPCMessage(this.MESSAGEKEY_RESPOND, new RPCResponsePacket(id, val, err));
         if (messageData.encodeable) {
@@ -604,6 +636,7 @@ export class RPCPeer extends RPCEmitter {
             }
         }
     }
+
     private updateRegistry() {
         if (this.exported) return;
         this.exported = true;
@@ -639,6 +672,7 @@ export class RPCPeer extends RPCEmitter {
             }
         }
     }
+
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: RPCRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
@@ -651,9 +685,10 @@ export class RPCPeer extends RPCEmitter {
             port.postMessage(messageData, [].concat(buf.slice(0)));
         }
     }
+
     private onMessage_Link(ev: MessageEvent) {
         // console.log(this.name + " onMessage_Link: ", ev);
-        const { workers } = ev.data;
+        const {workers} = ev.data;
         const ports = ev.ports;
         for (let i = 0; i < ports.length; i++) {
             const onePort = ports[i];
@@ -661,9 +696,10 @@ export class RPCPeer extends RPCEmitter {
             this.addLink(oneWorker, onePort);
         }
     }
+
     private onMessage_AddRegistry(ev: MessageEvent) {
         // console.log(this.name + " onMessage_AddRegistry:", ev.data);
-        const { dataRegistry } = ev.data;
+        const {dataRegistry} = ev.data;
         if (dataRegistry === undefined || dataRegistry === null) {
             console.warn("<data> not in ev.data");
             return;
@@ -683,7 +719,7 @@ export class RPCPeer extends RPCEmitter {
         // send GOT message
         if (this.channels.has(packet.serviceName)) {
             const port = this.channels.get(packet.serviceName);
-            port.postMessage({ key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name, id: packet.id });
+            port.postMessage({key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name, id: packet.id});
         }
 
         this.updateLinkState(packet.serviceName);
@@ -698,9 +734,10 @@ export class RPCPeer extends RPCEmitter {
             RPCListeners.delete(packet.serviceName);
         }
     }
+
     private onMessage_GotRegistry(ev: MessageEvent) {
         // console.log(this.name + " onMessage_GotRegistry:", ev.data, this.syncRegistryListeners);
-        const { worker, id } = ev.data;
+        const {worker, id} = ev.data;
         if (this.linkListeners.has(worker)) {
             this.linkListeners.get(worker).setPortReady(worker);
         }
@@ -708,9 +745,10 @@ export class RPCPeer extends RPCEmitter {
             this.syncRegistryListeners.get(id).workerGotRegistry(worker);
         }
     }
+
     private onMessage_Execute(ev: MessageEvent) {
         // console.log(this.name + " onMessage_RunMethod:", ev.data);
-        const { dataExecute } = ev.data;
+        const {dataExecute} = ev.data;
         if (dataExecute === undefined || dataExecute === null) {
             console.warn("<data> not in ev.data");
             return;
@@ -743,8 +781,9 @@ export class RPCPeer extends RPCEmitter {
             this.handlerExcuteResult(service, id, result);
         }
     }
+
     private onMessage_Respond(ev: MessageEvent) {
-        const { dataResponse } = ev.data;
+        const {dataResponse} = ev.data;
         if (dataResponse === undefined || dataResponse === null) {
             console.warn("<data> not in ev.data");
             return;
@@ -774,8 +813,9 @@ export class RPCPeer extends RPCEmitter {
             resolver.resolve(RPCParam.getValue(packet.val as RPCParam));
         }
     }
+
     private onMessage_Unlink(ev: MessageEvent) {
-        const { worker } = ev.data;
+        const {worker} = ev.data;
 
         if (this.channels.has(worker)) {
             this.channels.delete(worker);
@@ -789,8 +829,9 @@ export class RPCPeer extends RPCEmitter {
 
         // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
     }
+
     private onMessage_ProxyCreateWorker(ev: MessageEvent) {
-        const { workerName, workerUrl, msg } = ev.data;
+        const {workerName, workerUrl, msg} = ev.data;
 
         if (typeof Worker === "undefined") {
             console.error("Worker undefined! can not create worker");
@@ -809,7 +850,7 @@ export class RPCPeer extends RPCEmitter {
         // console.log("webworker-rpc ProxyCreateWorker: pathRoot-2: ", pathRoot);
         const path = pathRoot + workerUrl;
         // console.log("webworker-rpc ProxyCreateWorker: workerUrl: ", workerUrl);
-        const newWorker = new Worker(path, { name: workerName });
+        const newWorker = new Worker(path, {name: workerName});
         console.log(this.name + " create worker: ", path, workerName);
         const ports = [];
         for (const oneP of ev.ports) {
@@ -926,7 +967,7 @@ export class RPCPeer extends RPCEmitter {
                 ((${resolveString})(e));
             });
         `;
-        const blob = new Blob([webWorkerTemplate], { type: 'text/javascript' });
+        const blob = new Blob([webWorkerTemplate], {type: 'text/javascript'});
         return URL.createObjectURL(blob);
     }
 
