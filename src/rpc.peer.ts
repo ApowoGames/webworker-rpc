@@ -203,6 +203,7 @@ const MANAGERWORKERSPRITE = (ev) => {
             const w = channels.get(oneName);
             w.postMessage({key: MESSAGEKEY_UNLINK, worker: MANAGERWORKERNAME});
         }
+        console.log("webworker-rpc: close manager worker");
         self.close();
     }
 
@@ -441,6 +442,8 @@ export class RPCPeer extends RPCEmitter {
         }
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
+
+        console.log("webworker-rpc: close " + this.name);
         self.close();
     }
 
