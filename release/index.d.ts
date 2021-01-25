@@ -800,6 +800,7 @@ declare module 'webworker-rpc/rpc.peer' {
         destroyManagerWorker(): void;
         destroy(): void;
         exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;
+        protected onWorkerUnlinked(worker: string): void;
     }
     export class LinkListener {
         constructor(port1: string, port2: string);

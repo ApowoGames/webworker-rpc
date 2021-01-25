@@ -506,6 +506,10 @@ export class RPCPeer extends RPCEmitter {
         return listener;
     }
 
+    protected onWorkerUnlinked(worker: string) {
+        console.log(this.name + " onWorkerUnlinked: ", worker);
+    }
+
     // 增加worker之间的通道联系
     private addLink(worker: string, port: MessagePort) {
         if (this.channels.has(worker)) {
@@ -829,6 +833,8 @@ export class RPCPeer extends RPCEmitter {
         if (this.remote !== undefined && this.remote !== null && (worker in this.remote)) {
             delete this.remote[worker];
         }
+
+        this.onWorkerUnlinked(worker);
 
         // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
     }
