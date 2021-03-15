@@ -805,7 +805,7 @@ declare module 'webworker-rpc/rpc.peer' {
     export class LinkListener {
         constructor(port1: string, port2: string);
         onceReady(f: () => any): void;
-        setPortReady(port: string): void;
+        setPortReady(port: string): boolean;
     }
     export class SyncRegistryListener {
         constructor(id: number, workers: string[]);

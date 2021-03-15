@@ -746,7 +746,10 @@ export class RPCPeer extends RPCEmitter {
         // console.log(this.name + " onMessage_GotRegistry:", ev.data, this.syncRegistryListeners);
         const {worker, id} = ev.data;
         if (this.linkListeners.has(worker)) {
-            this.linkListeners.get(worker).setPortReady(worker);
+            const allReady = this.linkListeners.get(worker).setPortReady(worker);
+            if (allReady) {
+                this.linkListeners.delete(worker);
+            }
         }
         if (this.syncRegistryListeners.has(id)) {
             this.syncRegistryListeners.get(id).workerGotRegistry(worker);
@@ -982,7 +985,10 @@ export class RPCPeer extends RPCEmitter {
 
     private updateLinkState(worker: string) {
         if (this.linkListeners.has(worker)) {
-            this.linkListeners.get(worker).setPortReady(this.name);
+            const allReady = this.linkListeners.get(worker).setPortReady(this.name);
+            if (allReady) {
+                this.linkListeners.delete(worker);
+            }
         }
     }
 
@@ -1009,8 +1015,8 @@ export class LinkListener {
     }
 
     // TODO: 对外隐藏
-    public setPortReady(port: string) {
-        if (this.port1 !== port && this.port2 !== port) return;
+    public setPortReady(port: string): boolean {
+        if (this.port1 !== port && this.port2 !== port) return false;
 
         if (!this.port1Ready) this.port1Ready = this.port1 === port;
         if (!this.port2Ready) this.port2Ready = this.port2 === port;
@@ -1020,7 +1026,10 @@ export class LinkListener {
                 this.readyFunc();
                 this.readyFunc = null;
             }
+            return true;
         }
+
+        return false;
     }
 }
 
