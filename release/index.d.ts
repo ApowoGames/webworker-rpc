@@ -5,7 +5,6 @@
 declare module 'webworker-rpc' {
     export { webworker_rpc } from "webworker-rpc/protocols";
     export { RPCEmitter, RPCPeer, LinkListener, ExportAll, Export, RemoteListener, } from "webworker-rpc/rpc.peer";
-    export { RPCMessage, RPCRegistryPacket, RPCExecutePacket, RPCResponsePacket, RPCExecutor, RPCParam, } from "webworker-rpc/rpc.message";
 }
 
 declare module 'webworker-rpc/protocols' {
