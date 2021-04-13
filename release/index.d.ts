@@ -4,7 +4,7 @@
 
 declare module 'webworker-rpc' {
     export { webworker_rpc } from "webworker-rpc/protocols";
-    export { RPCEmitter, RPCPeer, LinkListener, ExportAll, Export, RemoteListener, } from "webworker-rpc/rpc.peer";
+    export { RPCEmitter, RPCPeer, LinkListener, Export, RemoteListener, } from "webworker-rpc/rpc.peer";
 }
 
 declare module 'webworker-rpc/protocols' {
@@ -775,16 +775,14 @@ declare module 'webworker-rpc/protocols' {
 
 declare module 'webworker-rpc/rpc.peer' {
     import { webworker_rpc } from "webworker-rpc/protocols";
-    import { RPCExecutor, RPCParam } from "webworker-rpc/rpc.message";
-    export function ExportAll(): (target: any) => any;
-    export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor?: any) => void;
+    import { RPCExecutor } from "webworker-rpc/rpc.message";
+    export function Export(paramTypes?: webworker_rpc.ParamType[]): (target: any, name?: any, descriptor?: any) => void;
     export function RemoteListener(worker: string, context: string, event: string, paramTypes?: webworker_rpc.ParamType[]): (target: any, name: any, descriptor: any) => void;
     export class RPCEmitter {
         constructor();
         on(event: string, executor: RPCExecutor, worker: string): void;
         off(event: string, executor?: RPCExecutor, worker?: string): void;
         emit(event: string, ...args: any[]): void;
-        protected exportFunction(funcName: string, params?: RPCParam[]): boolean;
     }
     export class RPCPeer extends RPCEmitter {
         ["remote"]: {

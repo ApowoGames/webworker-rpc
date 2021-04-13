@@ -1,18 +1,18 @@
-import { RPCPeer, Export, RemoteListener, webworker_rpc, ExportAll } from "../../src/index";
+import { RPCPeer, Export, RemoteListener, webworker_rpc } from "../../src/index";
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
-// @ExportAll()
+// @Export()
 class ForemanContext extends RPCPeer {
-    // @Export()
-    public son: ForemanSon;
+    @Export()
+    public attr1: ForemanAttribute;
     // @Export()
     // public static staticSon: ForemanSon;
 
     constructor() {
         super("foreman");
 
-        this.son = new ForemanSon();
+        this.attr1 = new ForemanAttribute();
         // ForemanContext.staticSon = new ForemanSon();
 
         // this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
@@ -57,9 +57,9 @@ class ForemanContext extends RPCPeer {
     @Export()
     public createSon(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.son = new ForemanSon();
-            this.exportProperty(this.son, this).onceReady(() => {
-                const son2 = new ForemanSon();
+            this.attr1 = new ForemanAttribute();
+            this.exportProperty(this.attr1, this).onceReady(() => {
+                const son2 = new ForemanAttribute();
                 this.exportProperty(son2, this, "son2").onceReady(() => {
                     resolve();
                 });
@@ -74,7 +74,7 @@ class ForemanContext extends RPCPeer {
     }
 
     @Export()
-    public setValue(obj: { "posX": number, "posY": number, "flipX": boolean }) {
+    public static setValue(obj: { "posX": number, "posY": number, "flipX": boolean }) {
         console.log("foreman got value: ", obj);
     }
 
@@ -94,13 +94,13 @@ class ForemanContext extends RPCPeer {
     }
 }
 
-class ForemanSon {
-    public grandSon: ForemanGrandson;
-    public static staticGrandson: ForemanGrandson;
+class ForemanAttribute {
+    public attr2: ForemanAttributeAttribute;
+    public static staticAttr2: ForemanAttributeAttribute;
 
     constructor() {
-        this.grandSon = new ForemanGrandson();
-        ForemanSon.staticGrandson = new ForemanGrandson();
+        this.attr2 = new ForemanAttributeAttribute();
+        ForemanAttribute.staticAttr2 = new ForemanAttributeAttribute();
     }
 
     public foremanSonFunction() {
@@ -116,7 +116,7 @@ class ForemanSon {
     }
 }
 
-class ForemanGrandson {
+class ForemanAttributeAttribute {
 
     constructor() {
     }
@@ -134,4 +134,12 @@ class ForemanGrandson {
     }
 }
 
-const context: ForemanContext = new ForemanContext();
+class ForemanChild extends ForemanContext {
+
+    @Export()
+    public childFunc() {
+
+    }
+}
+
+const context: ForemanChild = new ForemanChild();

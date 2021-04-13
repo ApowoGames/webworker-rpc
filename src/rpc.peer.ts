@@ -3,7 +3,7 @@ import {webworker_rpc} from "./protocols";
 import {RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket, RPCResponsePacket} from "./rpc.message";
 
 // decorator
-const RPCFunctions: RPCExecutor[] = [];
+const RPCFunctions: Map<string, RPCExecutor[]> = new Map();
 const RPCContexts: Map<string, any> = new Map();
 const RPCClasses: string[] = [];// 等待link之后，递归注册其所有function
 const RPCAttributes: Map<string, string[]> = new Map();// 等待link之后，注册其所有function
@@ -29,30 +29,31 @@ const ExportAttribute = (target, name) => {
 
     RPCAttributes.get(context).push(name);
 }
+const ExportClass = (target) => {
+    RPCClasses.push(target.name);
+    return target;
+}
 const AddRPCFunction = (executor: RPCExecutor) => {
-    // TODO: 优化push效率
-    const idx = RPCFunctions.findIndex((x) => x.method === executor.method && x.context === executor.context);
+    if (!RPCFunctions.has(executor.context)) {
+        RPCFunctions.set(executor.context, []);
+    }
+    const arr = RPCFunctions.get(executor.context);
+    const idx = arr.findIndex((x) => x.method === executor.method);
     if (idx < 0) {
-        RPCFunctions.push(executor);
-        // console.log("AddRPCFunction", executor);
+        arr.push(executor);
         return true;
     }
     return false;
 }
 
-export function ExportAll() {
-    return (target) => {
-        RPCClasses.push(target.name);
-        return target;
-    }
-}
-
 export function Export(paramTypes?: webworker_rpc.ParamType[]) {
-    return (target, name, descriptor?) => {
+    return (target, name?, descriptor?) => {
         if (descriptor !== undefined && descriptor !== null)
             ExportFunction(target, name, descriptor, paramTypes);
-        else
+        else if (name !== undefined && name !== null)
             ExportAttribute(target, name);
+        else
+            ExportClass(target);
     }
 }
 
@@ -218,20 +219,20 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 }
 
-const EXCLUDEPROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "getInstance", "_instance"];
-const INCLUDEPROPERTIES: string[] = ["destroy"];
+const EXCLUDE_PROPERTIES: string[] = ["prototype", "__proto__", "self", "worker", "remote", "getInstance", "_instance"];
+const INCLUDE_PROPERTIES: string[] = ["destroy"];
 
 function ExceptClassProperties() {
     return (target, name, descriptor) => {
         for (const key in target) {
-            if (!EXCLUDEPROPERTIES.includes(key)) {
-                EXCLUDEPROPERTIES.push(key);
+            if (!EXCLUDE_PROPERTIES.includes(key)) {
+                EXCLUDE_PROPERTIES.push(key);
                 // console.log("ExceptProperty: ", key);
             }
         }
         for (const key of target.constructor) {
-            if (!EXCLUDEPROPERTIES.includes(key)) {
-                EXCLUDEPROPERTIES.push(key);
+            if (!EXCLUDE_PROPERTIES.includes(key)) {
+                EXCLUDE_PROPERTIES.push(key);
                 // console.log("ExceptProperty: ", key);
             }
         }
@@ -247,13 +248,10 @@ export class RPCEmitter {
         // console.log("Emitter constructor: ", this);
 
         RPCContexts.set(this.constructor.name, this);
-        this.exportFunction("on",
-            [new RPCParam(webworker_rpc.ParamType.str), new RPCParam(webworker_rpc.ParamType.executor), new RPCParam(webworker_rpc.ParamType.str)]);
-        this.exportFunction("off",
-            [new RPCParam(webworker_rpc.ParamType.str)]);
+        this.checkSuperExport();
     }
 
-    // @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
+    @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
     @ExceptClassProperties()
     public on(event: string, executor: RPCExecutor, worker: string) {
         // console.log("on", event, executor, worker, this);
@@ -265,7 +263,7 @@ export class RPCEmitter {
         this.emitFunctions.get(event).push({worker: worker, executor: executor});
     }
 
-    // @Export([webworker_rpc.ParamType.str])
+    @Export([webworker_rpc.ParamType.str])
     public off(event: string, executor?: RPCExecutor, worker?: string) {
         if (!this.emitFunctions.has(event)) return;
 
@@ -295,9 +293,62 @@ export class RPCEmitter {
         }
     }
 
-    // 用于基类构造中暴露方法
-    protected exportFunction(funcName: string, params?: RPCParam[]): boolean {
-        return AddRPCFunction(new RPCExecutor(funcName, this.constructor.name, params));
+    // 父类暴露方法放回子类
+    private checkSuperExport() {
+        const mClassName = this.constructor.name;
+        const mStaticName = mClassName + ".constructor";
+        let superObj = Object.getPrototypeOf(this);
+        let superClassName = Object.getPrototypeOf(superObj).constructor.name;
+        let superStaticName = superClassName + ".constructor";
+        while (superClassName !== "Object") {
+            // functions
+            if (RPCFunctions.has(superClassName)) {
+                const exe = RPCFunctions.get(superClassName);
+                for (const oneExe of exe) {
+                    oneExe.context = mClassName;
+                }
+                RPCFunctions.delete(superClassName);
+                const preExes = RPCFunctions.get(mClassName) || [];
+                RPCFunctions.set(mClassName, preExes.concat(exe));
+            }
+            if (RPCFunctions.has(superStaticName)) {
+                const exe = RPCFunctions.get(superStaticName);
+                for (const oneExe of exe) {
+                    oneExe.context = mStaticName;
+                }
+                RPCFunctions.delete(superStaticName);
+                const preExes = RPCFunctions.get(mStaticName) || [];
+                RPCFunctions.set(mStaticName, preExes.concat(exe));
+            }
+            // attributes
+            if (RPCAttributes.has(superClassName)) {
+                const attrs = RPCAttributes.get(superClassName);
+                RPCAttributes.delete(superClassName);
+                const preAttrs = RPCAttributes.get(mClassName) || [];
+                RPCAttributes.set(mClassName, preAttrs.concat(attrs));
+            }
+            if (RPCAttributes.has(superStaticName)) {
+                const attrs = RPCAttributes.get(superStaticName);
+                RPCAttributes.delete(superStaticName);
+                const preAttrs = RPCAttributes.get(mStaticName) || [];
+                RPCAttributes.set(mStaticName, preAttrs.concat(attrs));
+            }
+            // classes
+            const classIdx = RPCClasses.indexOf(superClassName);
+            if (classIdx >= 0) {
+                RPCClasses.splice(classIdx, 1);
+                RPCClasses.push(mClassName);
+            }
+            const staticIdx = RPCClasses.indexOf(superStaticName);
+            if (staticIdx >= 0) {
+                RPCClasses.splice(staticIdx, 1);
+                RPCClasses.push(mStaticName);
+            }
+
+            superObj = Object.getPrototypeOf(superObj);
+            superClassName = Object.getPrototypeOf(superObj).constructor.name;
+            superStaticName = superClassName + ".constructor";
+        }
     }
 }
 
@@ -356,8 +407,6 @@ export class RPCPeer extends RPCEmitter {
         }
         RPCPeer._instance = this;
         console.log("webworker-rpc: new peer: ", name);
-
-        this.exportFunction("destroy");
 
         this.name = name;
         this.worker = self as any;
@@ -425,6 +474,7 @@ export class RPCPeer extends RPCEmitter {
         w.postMessage({key: this.MESSAGEKEY_DESTROYMANAGER});
     }
 
+    @Export()
     public destroy() {
         const linkedNames = Array.from(this.channels.keys());
         for (const oneName of linkedNames) {
@@ -558,7 +608,11 @@ export class RPCPeer extends RPCEmitter {
         this.updateRegistry();
 
         // post registry
-        this.postRegistry(worker, new RPCRegistryPacket(this.registryPackID, this.name, RPCFunctions));
+        let allRegistry = [];
+        RPCFunctions.forEach((exe, con) => {
+            allRegistry = allRegistry.concat(exe);
+        })
+        this.postRegistry(worker, new RPCRegistryPacket(this.registryPackID, this.name, allRegistry));
 
         if (worker === MANAGERWORKERNAME) {
             // 执行未进行的linkTo task
@@ -877,7 +931,7 @@ export class RPCPeer extends RPCEmitter {
         let addExecutors: RPCExecutor[] = [];
 
         for (const key in obj) {
-            if (EXCLUDEPROPERTIES.includes(key) && !INCLUDEPROPERTIES.includes(key)) continue;
+            if (EXCLUDE_PROPERTIES.includes(key) && !INCLUDE_PROPERTIES.includes(key)) continue;
 
             const element = obj[key];
             // console.log(this.name + " exportKey: " + key, element);
