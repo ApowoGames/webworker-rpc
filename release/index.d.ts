@@ -793,7 +793,7 @@ declare module 'webworker-rpc/rpc.peer' {
         name: string;
         static getInstance(): RPCPeer;
         constructor(name: string);
-        linkTo(workerName: string, workerUrl?: string): LinkListener;
+        linkTo(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener;
         destroyManagerWorker(): void;
         destroy(): void;
         exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;

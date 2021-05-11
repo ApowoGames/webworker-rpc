@@ -428,42 +428,71 @@ export class RPCPeer extends RPCEmitter {
     }
 
     @ExceptClassProperties()
-    public linkTo(workerName: string, workerUrl?: string): LinkListener {
+    public linkTo(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
+        if (onlyOneWorker === undefined) {
+            onlyOneWorker = false;
+        }
         if (this.linkListeners.has(workerName)) {
             console.warn("already requested link to " + workerName);
             return this.linkListeners.get(workerName);
         }
-
         const listener = new LinkListener(this.name, workerName);
-        this.linkListeners.set(workerName, listener);
 
-        if (!this.channels.has(MANAGERWORKERNAME)) {
-            const selfName = this.worker["name"];
-            if (selfName !== undefined && selfName === this.name) {
-                // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
-                this.linkTasks.push({workerName, workerUrl});
+        if (onlyOneWorker) {
+            if (this.channels.has(workerName)) {
+                console.error("ONLY_ONE_WORKER mode, already linked " + workerName + ".");
                 return listener;
             }
-
-            if (typeof Worker === "undefined") {
-                console.error("Worker undefined! can not create manager worker.");
-                return;
+            if (this.channels.size > 0) {
+                console.error("ONLY_ONE_WORKER mode cannot create another worker. ", this.channels);
+                return listener;
             }
-            const managerWorkerURL = this.getManagerWorkerURL();
-            // console.log(this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
-            const managerWorker = new Worker(managerWorkerURL);
-            const managerChannel = new MessageChannel();
+            if (typeof Worker === "undefined") {
+                console.error(this.name + " cannot create worker.");
+                return listener;
+            }
+            if (workerUrl === undefined || workerUrl.length === 0) {
+                console.error("ONLY_ONE_WORKER mode not support undefined workerUrl (besides windows).");
+                return listener;
+            }
+            this.linkListeners.set(workerName, listener);
 
-            managerWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [managerChannel.port2]);
-            this.addLink(MANAGERWORKERNAME, managerChannel.port1);
+            const newWorker = new Worker(workerUrl);
+            const newChannel = new MessageChannel();
+
+            newWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [newChannel.port2]);
+            this.addLink(workerName, newChannel.port1);
+        } else {
+            this.linkListeners.set(workerName, listener);
+
+            if (!this.channels.has(MANAGERWORKERNAME)) {
+                const selfName = this.worker["name"];
+                if (selfName !== undefined && selfName === this.name) {
+                    // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
+                    this.linkTasks.push({workerName, workerUrl});
+                    return listener;
+                }
+
+                if (typeof Worker === "undefined") {
+                    console.error("Worker undefined! can not create manager worker.");
+                    return;
+                }
+                const managerWorkerURL = this.getManagerWorkerURL();
+                // console.log(this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
+                const managerWorker = new Worker(managerWorkerURL);
+                const managerChannel = new MessageChannel();
+
+                managerWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [managerChannel.port2]);
+                this.addLink(MANAGERWORKERNAME, managerChannel.port1);
+            }
+
+            this.channels.get(MANAGERWORKERNAME).postMessage({
+                key: this.MESSAGEKEY_REQUESTLINK,
+                serviceName: this.name,
+                workerName,
+                workerUrl
+            });
         }
-
-        this.channels.get(MANAGERWORKERNAME).postMessage({
-            key: this.MESSAGEKEY_REQUESTLINK,
-            serviceName: this.name,
-            workerName,
-            workerUrl
-        });
 
         return listener;
     }

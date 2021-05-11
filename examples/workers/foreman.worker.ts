@@ -92,6 +92,11 @@ class ForemanContext extends RPCPeer {
     public foremanListen2C(val: string) {
         console.log("foremanListen2C: ", val);
     }
+
+    @Export()
+    public testExtends() {
+        console.log("testExtends: parent");
+    }
 }
 
 class ForemanAttribute {
@@ -136,9 +141,10 @@ class ForemanAttributeAttribute {
 
 class ForemanChild extends ForemanContext {
 
-    @Export()
-    public childFunc() {
-
+    // @Export()
+    public testExtends() {
+        super.testExtends();
+        console.log("testExtends: child");
     }
 }
 
