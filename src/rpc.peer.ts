@@ -1051,8 +1051,6 @@ export class RPCPeer extends RPCEmitter {
                 return this.execute(service, executor.method, executor.context, params);
             });
         }
-
-        console.log(this.name + ".remote: ", this.remote);
     }
 
     private getManagerWorkerURL(): string {
