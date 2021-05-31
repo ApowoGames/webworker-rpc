@@ -18,9 +18,11 @@ install
 * special param (undefined, null, 0, false)
 
 ## Usage
-* RPCPeer.create()
-* RPCPeer.attach
-* 
+* @Export()
+* RPCPeer.create(<peerName>)
+* RPCPeer.attach()
+* RPCPeer.remote.<peerName>.<className>.<functionName>()
+* RPCPeer.destroy()
 
 ## Examples
 

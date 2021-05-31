@@ -1,6 +1,13 @@
 import {ValueResolver} from "./promise";
 import {webworker_rpc} from "./protocols";
-import {RPCMessage, RPCExecutor, RPCExecutePacket, RPCParam, RPCRegistryPacket, RPCResponsePacket} from "./rpc.message";
+import {
+    RPCMessage,
+    RPCExecutor,
+    RPCExecutePacket,
+    RPCParam,
+    RPCRegistryPacket,
+    RPCResponsePacket,
+} from "./rpc.message";
 
 // decorator
 const RPCFunctions: Map<string, RPCExecutor[]> = new Map();
@@ -400,6 +407,14 @@ export class RPCPeer extends RPCEmitter {
             return null;
         }
         return RPCPeer._instance.attach(workerName, workerUrl, onlyOneWorker);
+    }
+
+    static get remote() {
+        if (!RPCPeer._instance) {
+            console.error("RPCPeer not created");
+            return null;
+        }
+        return RPCPeer._instance.remote;
     }
 
     static exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {

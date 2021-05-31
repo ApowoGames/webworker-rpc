@@ -4,8 +4,8 @@ window.onload = () => {
     RPCPeer.create("main");
     RPCPeer.attach("foreman", "/foremanWorker.js", true).onceReady(() => {
         console.log("ready link to foreman");
-        RPCPeer.getInstance().remote.foreman.ForemanChild.testExtends();
-        RPCPeer.getInstance().remote.foreman.ForemanChild.testSpecialParams("1").then(() => {
+        RPCPeer.remote.foreman.ForemanChild.testExtends();
+        RPCPeer.remote.foreman.ForemanChild.testSpecialParams("1").then(() => {
             console.log("test then");
         });
         // peer.remote.foreman.ForemanContext.destroy();
