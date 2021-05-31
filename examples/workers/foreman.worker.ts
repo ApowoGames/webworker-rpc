@@ -48,7 +48,7 @@ class ForemanContext extends RPCPeer {
     @Export()
     public tryLinkToMain(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.linkTo("main").onceReady(() => {
+            this.attach("main").onceReady(() => {
                 resolve("link to main ready");
             });
         });

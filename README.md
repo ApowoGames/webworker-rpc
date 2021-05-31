@@ -15,8 +15,12 @@ install
 * @RemoteListener
 * rpcPeer.exportProperty().onceReady
 * rpcPeer.destroy()
-* **object** param (*transferable unsupported*)
 * special param (undefined, null, 0, false)
+
+## Usage
+* RPCPeer.create()
+* RPCPeer.attach
+* 
 
 ## Examples
 

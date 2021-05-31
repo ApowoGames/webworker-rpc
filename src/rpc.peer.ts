@@ -385,8 +385,37 @@ export class RPCPeer extends RPCEmitter {
     private resolverID: number;
     private syncRegistryListeners: Map<number, SyncRegistryListener>;
 
+    static create(name: string): RPCPeer {
+        RPCPeer._instance = new RPCPeer(name);
+        return RPCPeer._instance;
+    }
+
     static getInstance() {
         return RPCPeer._instance;
+    }
+
+    static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
+        if (!RPCPeer._instance) {
+            console.error("RPCPeer not created");
+            return null;
+        }
+        return RPCPeer._instance.attach(workerName, workerUrl, onlyOneWorker);
+    }
+
+    static exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
+        if (!RPCPeer._instance) {
+            console.error("RPCPeer not created");
+            return null;
+        }
+        return RPCPeer._instance.exportProperty(attr, context, attrName);
+    }
+
+    static destroy() {
+        if (!RPCPeer._instance) {
+            console.error("RPCPeer not created");
+            return null;
+        }
+        return RPCPeer._instance.destroy();
     }
 
     constructor(name: string) {
@@ -428,7 +457,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     @ExceptClassProperties()
-    public linkTo(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
+    public attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
         if (onlyOneWorker === undefined) {
             onlyOneWorker = false;
         }

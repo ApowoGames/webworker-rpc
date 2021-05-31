@@ -1,11 +1,11 @@
 import {RPCPeer} from "../src/index";
 
 window.onload = () => {
-    const peer = new RPCPeer("main");
-    peer.linkTo("foreman", "/foremanWorker.js", true).onceReady(() => {
+    RPCPeer.create("main");
+    RPCPeer.attach("foreman", "/foremanWorker.js", true).onceReady(() => {
         console.log("ready link to foreman");
-        peer.remote.foreman.ForemanChild.testExtends();
-        peer.remote.foreman.ForemanChild.testSpecialParams("1").then(() => {
+        RPCPeer.getInstance().remote.foreman.ForemanChild.testExtends();
+        RPCPeer.getInstance().remote.foreman.ForemanChild.testSpecialParams("1").then(() => {
             console.log("test then");
         });
         // peer.remote.foreman.ForemanContext.destroy();
@@ -29,7 +29,7 @@ window.onload = () => {
         // peer.remote.foreman.ForemanContext.staticSon.foremanSonFunction();
         // peer.remote.foreman.ForemanContext.staticSon.staticGrandson.foremanGrandsonFunction();
     });
-    peer.linkTo("workerA", "/taskAWorker.js", true).onceReady(() => {
-        console.log("ready link to workerA");
-    });
+    // RPCPeer.attach("workerA", "/taskAWorker.js", true).onceReady(() => {
+    //     console.log("ready link to workerA");
+    // });
 };
