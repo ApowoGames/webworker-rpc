@@ -730,10 +730,9 @@ export class RPCPeer extends RPCEmitter {
     private updateRegistry() {
         if (this.exported) return;
         this.exported = true;
-        // console.log(this.name + " checkedExportAll");
         for (const context of RPCClasses) {
             if (!RPCContexts.has(context)) {
-                console.error("ExportAll only decorate Emitter!");
+                console.error("Export only decorate Emitter!");
                 continue;
             }
 
@@ -988,7 +987,7 @@ export class RPCPeer extends RPCEmitter {
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
         const con = this.getContext(context);
         if (con === undefined || con === null) {
-            console.error(`excute function <${functionName}> error, no context <${context}> exist`);
+            console.warn(`excute function <${functionName}> error, no context <${context}> exist`);
             return null;
         }
         return con[functionName].apply(con, args);
@@ -1005,7 +1004,7 @@ export class RPCPeer extends RPCEmitter {
         for (let i = 1; i < contexts.length; i++) {
             const context = contexts[i];
             if (!(context in resultCon)) {
-                console.error(`${context} is undefined in `, resultCon);
+                console.warn(`${context} is undefined in `, resultCon);
                 return null;
             }
             resultCon = resultCon[context];
@@ -1161,7 +1160,7 @@ export class SyncRegistryListener {
 
 function addProperty(obj: any, key: string, val: any) {
     if (key in obj) {
-        console.error("key exist, add property failed!", obj, key);
+        console.warn("key exist, add property failed!", obj, key);
         return obj;
     }
     obj[key] = val;

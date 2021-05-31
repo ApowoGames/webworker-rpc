@@ -11,7 +11,7 @@ install
 
 ## Features
 * remote.xx.xx(): Promise
-* @Export/@ExportAll
+* @Export
 * @RemoteListener
 * rpcPeer.exportProperty().onceReady
 * rpcPeer.destroy()
