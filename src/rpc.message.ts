@@ -3,7 +3,7 @@ import {webworker_rpc} from "./protocols";
 export class RPCParam {
     static createByValue(val): RPCParam {
         if (val === null || val === undefined) {
-            return new RPCParam({t: webworker_rpc.ParamType.custom, className: val === null ? "null": "undefined"});
+            return new RPCParam({t: webworker_rpc.ParamType.custom, className: val === null ? "null" : "undefined"});
         } else if (typeof val === "string") {
             return new RPCParam({t: webworker_rpc.ParamType.str, valStr: val});
         } else if (typeof val === "boolean") {
@@ -57,21 +57,25 @@ export class RPCParam {
 
 const RPCCustomDataClasses: Map<string, any> = new Map();
 
+/*
+    装饰自定义传输数据类型。
+    使用**静态**encode/decode方法（可覆写）序列化/反序列化数据。
+*/
 export function RPCData() {
     return (target) => {
         if (!target.encode) {
-            target.encode = RPCCustomData.encode;
+            target.encode = TemplateData.encode;
         }
         if (!target.decode) {
-            target.decode = RPCCustomData.decode;
+            target.decode = TemplateData.decode;
         }
         RPCCustomDataClasses.set(target.name, target);
         return target;
     }
 }
 
-class RPCCustomData {
-    static encode(obj: RPCCustomData): string {
+class TemplateData {
+    static encode(obj: TemplateData): string {
         return JSON.stringify(obj);
     }
 
