@@ -35,8 +35,7 @@ class ForemanContext extends RPCPeer {
 
     @Export()
     public testSpecialParams(arg1, arg2, arg3, arg4) {
-        // return [arg1, arg2, arg3, arg4];
-        console.log(arg1);
+        console.log("", arg1, arg2, arg3, arg4);
         return arg1;
     }
 

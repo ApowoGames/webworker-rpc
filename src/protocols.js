@@ -303,6 +303,7 @@
              * @property {number|null} [valNum] Param valNum
              * @property {Uint8Array|null} [valBytes] Param valBytes
              * @property {webworker_rpc.IExecutor|null} [valExecutor] Param valExecutor
+             * @property {string|null} [className] Param className
              */
     
             /**
@@ -326,7 +327,7 @@
              * @memberof webworker_rpc.Param
              * @instance
              */
-            Param.prototype.t = 0;
+            Param.prototype.t = 1;
     
             /**
              * Param valStr.
@@ -367,6 +368,14 @@
              * @instance
              */
             Param.prototype.valExecutor = null;
+    
+            /**
+             * Param className.
+             * @member {string} className
+             * @memberof webworker_rpc.Param
+             * @instance
+             */
+            Param.prototype.className = "";
     
             // OneOf field names bound to virtual getters and setters
             var $oneOfFields;
@@ -417,6 +426,8 @@
                     writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.valBytes);
                 if (message.valExecutor != null && Object.hasOwnProperty.call(message, "valExecutor"))
                     $root.webworker_rpc.Executor.encode(message.valExecutor, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                if (message.className != null && Object.hasOwnProperty.call(message, "className"))
+                    writer.uint32(/* id 7, wireType 2 =*/58).string(message.className);
                 return writer;
             };
     
@@ -469,6 +480,9 @@
                     case 6:
                         message.valExecutor = $root.webworker_rpc.Executor.decode(reader, reader.uint32());
                         break;
+                    case 7:
+                        message.className = reader.string();
+                        break;
                     default:
                         reader.skipType(tag & 7);
                         break;
@@ -510,12 +524,12 @@
                 switch (message.t) {
                 default:
                     return "t: enum value expected";
-                case 0:
                 case 1:
                 case 2:
                 case 3:
                 case 4:
                 case 5:
+                case 6:
                     break;
                 }
                 if (message.valStr != null && message.hasOwnProperty("valStr")) {
@@ -554,6 +568,9 @@
                             return "valExecutor." + error;
                     }
                 }
+                if (message.className != null && message.hasOwnProperty("className"))
+                    if (!$util.isString(message.className))
+                        return "className: string expected";
                 return null;
             };
     
@@ -570,10 +587,6 @@
                     return object;
                 var message = new $root.webworker_rpc.Param();
                 switch (object.t) {
-                case "UNKNOWN":
-                case 0:
-                    message.t = 0;
-                    break;
                 case "str":
                 case 1:
                     message.t = 1;
@@ -594,6 +607,10 @@
                 case 5:
                     message.t = 5;
                     break;
+                case "custom":
+                case 6:
+                    message.t = 6;
+                    break;
                 }
                 if (object.valStr != null)
                     message.valStr = String(object.valStr);
@@ -611,6 +628,8 @@
                         throw TypeError(".webworker_rpc.Param.valExecutor: object expected");
                     message.valExecutor = $root.webworker_rpc.Executor.fromObject(object.valExecutor);
                 }
+                if (object.className != null)
+                    message.className = String(object.className);
                 return message;
             };
     
@@ -627,8 +646,10 @@
                 if (!options)
                     options = {};
                 var object = {};
-                if (options.defaults)
-                    object.t = options.enums === String ? "UNKNOWN" : 0;
+                if (options.defaults) {
+                    object.t = options.enums === String ? "str" : 1;
+                    object.className = "";
+                }
                 if (message.t != null && message.hasOwnProperty("t"))
                     object.t = options.enums === String ? $root.webworker_rpc.ParamType[message.t] : message.t;
                 if (message.valStr != null && message.hasOwnProperty("valStr")) {
@@ -656,6 +677,8 @@
                     if (options.oneofs)
                         object.val = "valExecutor";
                 }
+                if (message.className != null && message.hasOwnProperty("className"))
+                    object.className = message.className;
                 return object;
             };
     
@@ -677,21 +700,21 @@
          * ParamType enum.
          * @name webworker_rpc.ParamType
          * @enum {number}
-         * @property {number} UNKNOWN=0 UNKNOWN value
          * @property {number} str=1 str value
          * @property {number} boolean=2 boolean value
          * @property {number} num=3 num value
          * @property {number} unit8array=4 unit8array value
          * @property {number} executor=5 executor value
+         * @property {number} custom=6 custom value
          */
         webworker_rpc.ParamType = (function() {
             var valuesById = {}, values = Object.create(valuesById);
-            values[valuesById[0] = "UNKNOWN"] = 0;
             values[valuesById[1] = "str"] = 1;
             values[valuesById[2] = "boolean"] = 2;
             values[valuesById[3] = "num"] = 3;
             values[valuesById[4] = "unit8array"] = 4;
             values[valuesById[5] = "executor"] = 5;
+            values[valuesById[6] = "custom"] = 6;
             return values;
         })();
     

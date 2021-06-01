@@ -22,16 +22,16 @@ message Param {
         bytes val_bytes = 5;
         Executor val_executor = 6;
     }
+    optional string className = 7;
 }
 
 enum ParamType{
-    UNKNOWN = 0;
-
     str = 1;
     boolean = 2;
     num = 3;
     unit8array = 4;
     executor = 5;
+    custom = 6;
 }
 
 message Header {

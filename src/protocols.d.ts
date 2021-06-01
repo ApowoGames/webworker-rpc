@@ -129,6 +129,9 @@ export namespace webworker_rpc {
 
         /** Param valExecutor */
         valExecutor?: (webworker_rpc.IExecutor|null);
+
+        /** Param className */
+        className?: (string|null);
     }
 
     /** Represents a Param. */
@@ -157,6 +160,9 @@ export namespace webworker_rpc {
 
         /** Param valExecutor. */
         public valExecutor?: (webworker_rpc.IExecutor|null);
+
+        /** Param className. */
+        public className: string;
 
         /** Param val. */
         public val?: ("valStr"|"valBool"|"valNum"|"valBytes"|"valExecutor");
@@ -234,12 +240,12 @@ export namespace webworker_rpc {
 
     /** ParamType enum. */
     enum ParamType {
-        UNKNOWN = 0,
         str = 1,
         boolean = 2,
         num = 3,
         unit8array = 4,
-        executor = 5
+        executor = 5,
+        custom = 6
     }
 
     /** Properties of a Header. */
