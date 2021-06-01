@@ -7,3 +7,7 @@ export {
     Export,
     RemoteListener,
 } from "./rpc.peer";
+
+export {
+    RPCData
+} from "./rpc.message";

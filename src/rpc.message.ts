@@ -16,9 +16,14 @@ export class RPCParam {
             return new RPCParam({t: webworker_rpc.ParamType.executor, valExecutor: val});
         }
 
-        const customData = val as IRPCCustomData;
-        const bytes = customData.encode();
-        return new RPCParam({t: webworker_rpc.ParamType.custom, valBytes: bytes, className: val.constructor.name});
+        const constructorName = val.constructor.name;
+        if (!RPCCustomDataClasses.has(constructorName)) {
+            console.error(constructorName + " not use @RPCData");
+            return new RPCParam({t: webworker_rpc.ParamType.custom, className: "null"});
+        }
+        const customClass = RPCCustomDataClasses.get(constructorName);
+        const str = customClass.encode(val);
+        return new RPCParam({t: webworker_rpc.ParamType.custom, valStr: str, className: constructorName});
     }
 
     public data: webworker_rpc.Param;
@@ -36,12 +41,12 @@ export class RPCParam {
                 if (this.data.className === "undefined") {
                     return undefined;
                 }
-                if (!RPCCustomClasses.has(this.data.className)) {
-                    console.error(this.data.className + " not recorded");
+                if (!RPCCustomDataClasses.has(this.data.className)) {
+                    console.error(this.data.className + " not use @RPCData");
                     return null;
                 }
-                const customClass = RPCCustomClasses.get(this.data.className);
-                return customClass.decode(this.data.valBytes);
+                const customClass = RPCCustomDataClasses.get(this.data.className);
+                return customClass.decode(this.data.valStr);
             }
             default: {
                 return this.data[this.data.val];
@@ -50,29 +55,27 @@ export class RPCParam {
     }
 }
 
-const RPCCustomClasses: Map<string, RPCCustomData> = new Map();
+const RPCCustomDataClasses: Map<string, any> = new Map();
 
-export function RecordCustomClass() {
-    return (target, name, descriptor) => {
-        RPCCustomClasses.set(target.constructor.name, target);
+export function RPCData() {
+    return (target) => {
+        if (!target.encode) {
+            target.encode = RPCCustomData.encode;
+        }
+        if (!target.decode) {
+            target.decode = RPCCustomData.decode;
+        }
+        RPCCustomDataClasses.set(target.name, target);
         return target;
     }
 }
 
-interface IRPCCustomData {
-    encode(): Uint8Array;
-
-    decode(data: Uint8Array): IRPCCustomData;
-}
-
-export class RPCCustomData implements IRPCCustomData {
-
-    @RecordCustomClass()
-    public encode(): Uint8Array {
-        return null;
+class RPCCustomData {
+    static encode(obj: RPCCustomData): string {
+        return JSON.stringify(obj);
     }
 
-    public decode(data: Uint8Array): RPCCustomData {
-        return this;
+    static decode(data: string) {
+        return JSON.parse(data);
     }
 }

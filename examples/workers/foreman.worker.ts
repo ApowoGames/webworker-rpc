@@ -1,4 +1,5 @@
-import { RPCPeer, Export, RemoteListener, webworker_rpc } from "../../src/index";
+import {RPCPeer, Export, RemoteListener, webworker_rpc} from "../../src/index";
+import {CustomData} from "../custom.data";
 
 // 主worker 创建子worker 并创建连接
 // worker对应的实体，用于注册worker之间的回调，方法
@@ -36,7 +37,7 @@ class ForemanContext extends RPCPeer {
     @Export()
     public testSpecialParams(arg1, arg2, arg3, arg4) {
         console.log("", arg1, arg2, arg3, arg4);
-        return arg1;
+        return new CustomData(arg1, arg2, arg3);
     }
 
     @Export([webworker_rpc.ParamType.str])
@@ -69,7 +70,7 @@ class ForemanContext extends RPCPeer {
 
     @Export()
     public getValue() {
-        return [1, true, "sss", { "posX": 10, "posY": 15, "flipX": true }];
+        return [1, true, "sss", {"posX": 10, "posY": 15, "flipX": true}];
     }
 
     @Export()

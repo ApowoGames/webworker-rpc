@@ -1,11 +1,13 @@
-import {RPCPeer} from "../src/index";
+import {RPCPeer, RPCData} from "../src/index";
+import {CustomData} from "./custom.data";
 
 window.onload = () => {
     RPCPeer.create("main");
     RPCPeer.attach("foreman", "/foremanWorker.js", true).onceReady(() => {
         console.log("ready link to foreman");
         RPCPeer.remote.foreman.ForemanChild.testExtends();
-        RPCPeer.remote.foreman.ForemanChild.testSpecialParams(false, null, undefined, 0).then((data) => {
+        const importedData = new CustomData("1", true, 1);
+        RPCPeer.remote.foreman.ForemanChild.testSpecialParams("s", true, null, {x: 1, y: 2}).then((data) => {
             console.log("test then ", data);
         });
         // peer.remote.foreman.ForemanContext.destroy();
