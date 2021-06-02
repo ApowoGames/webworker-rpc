@@ -554,103 +554,103 @@ export namespace webworker_rpc {
         public toJSON(): { [k: string]: any };
     }
 
-    /** Properties of a RegistryPacket. */
-    interface IRegistryPacket {
+    /** Properties of an AddRegistryPacket. */
+    interface IAddRegistryPacket {
 
-        /** RegistryPacket id */
+        /** AddRegistryPacket id */
         id: number;
 
-        /** RegistryPacket serviceName */
+        /** AddRegistryPacket serviceName */
         serviceName: string;
 
-        /** RegistryPacket executors */
+        /** AddRegistryPacket executors */
         executors?: (webworker_rpc.IExecutor[]|null);
     }
 
-    /** Represents a RegistryPacket. */
-    class RegistryPacket implements IRegistryPacket {
+    /** Represents an AddRegistryPacket. */
+    class AddRegistryPacket implements IAddRegistryPacket {
 
         /**
-         * Constructs a new RegistryPacket.
+         * Constructs a new AddRegistryPacket.
          * @param [properties] Properties to set
          */
-        constructor(properties?: webworker_rpc.IRegistryPacket);
+        constructor(properties?: webworker_rpc.IAddRegistryPacket);
 
-        /** RegistryPacket id. */
+        /** AddRegistryPacket id. */
         public id: number;
 
-        /** RegistryPacket serviceName. */
+        /** AddRegistryPacket serviceName. */
         public serviceName: string;
 
-        /** RegistryPacket executors. */
+        /** AddRegistryPacket executors. */
         public executors: webworker_rpc.IExecutor[];
 
         /**
-         * Creates a new RegistryPacket instance using the specified properties.
+         * Creates a new AddRegistryPacket instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns RegistryPacket instance
+         * @returns AddRegistryPacket instance
          */
-        public static create(properties?: webworker_rpc.IRegistryPacket): webworker_rpc.RegistryPacket;
+        public static create(properties?: webworker_rpc.IAddRegistryPacket): webworker_rpc.AddRegistryPacket;
 
         /**
-         * Encodes the specified RegistryPacket message. Does not implicitly {@link webworker_rpc.RegistryPacket.verify|verify} messages.
-         * @param message RegistryPacket message or plain object to encode
+         * Encodes the specified AddRegistryPacket message. Does not implicitly {@link webworker_rpc.AddRegistryPacket.verify|verify} messages.
+         * @param message AddRegistryPacket message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: webworker_rpc.IRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: webworker_rpc.IAddRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified RegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.RegistryPacket.verify|verify} messages.
-         * @param message RegistryPacket message or plain object to encode
+         * Encodes the specified AddRegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.AddRegistryPacket.verify|verify} messages.
+         * @param message AddRegistryPacket message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: webworker_rpc.IRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: webworker_rpc.IAddRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a RegistryPacket message from the specified reader or buffer.
+         * Decodes an AddRegistryPacket message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns RegistryPacket
+         * @returns AddRegistryPacket
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.RegistryPacket;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.AddRegistryPacket;
 
         /**
-         * Decodes a RegistryPacket message from the specified reader or buffer, length delimited.
+         * Decodes an AddRegistryPacket message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns RegistryPacket
+         * @returns AddRegistryPacket
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.RegistryPacket;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.AddRegistryPacket;
 
         /**
-         * Verifies a RegistryPacket message.
+         * Verifies an AddRegistryPacket message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a RegistryPacket message from a plain object. Also converts values to their respective internal types.
+         * Creates an AddRegistryPacket message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns RegistryPacket
+         * @returns AddRegistryPacket
          */
-        public static fromObject(object: { [k: string]: any }): webworker_rpc.RegistryPacket;
+        public static fromObject(object: { [k: string]: any }): webworker_rpc.AddRegistryPacket;
 
         /**
-         * Creates a plain object from a RegistryPacket message. Also converts values to other types if specified.
-         * @param message RegistryPacket
+         * Creates a plain object from an AddRegistryPacket message. Also converts values to other types if specified.
+         * @param message AddRegistryPacket
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: webworker_rpc.RegistryPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: webworker_rpc.AddRegistryPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this RegistryPacket to JSON.
+         * Converts this AddRegistryPacket to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
@@ -662,8 +662,8 @@ export namespace webworker_rpc {
         /** WebWorkerMessage key */
         key: string;
 
-        /** WebWorkerMessage dataRegistry */
-        dataRegistry?: (webworker_rpc.IRegistryPacket|null);
+        /** WebWorkerMessage dataAddRegistry */
+        dataAddRegistry?: (webworker_rpc.IAddRegistryPacket|null);
 
         /** WebWorkerMessage dataExecute */
         dataExecute?: (webworker_rpc.IExecutePacket|null);
@@ -684,8 +684,8 @@ export namespace webworker_rpc {
         /** WebWorkerMessage key. */
         public key: string;
 
-        /** WebWorkerMessage dataRegistry. */
-        public dataRegistry?: (webworker_rpc.IRegistryPacket|null);
+        /** WebWorkerMessage dataAddRegistry. */
+        public dataAddRegistry?: (webworker_rpc.IAddRegistryPacket|null);
 
         /** WebWorkerMessage dataExecute. */
         public dataExecute?: (webworker_rpc.IExecutePacket|null);
@@ -694,7 +694,7 @@ export namespace webworker_rpc {
         public dataResponse?: (webworker_rpc.IResponesPacket|null);
 
         /** WebWorkerMessage data. */
-        public data?: ("dataRegistry"|"dataExecute"|"dataResponse");
+        public data?: ("dataAddRegistry"|"dataExecute"|"dataResponse");
 
         /**
          * Creates a new WebWorkerMessage instance using the specified properties.

@@ -1440,26 +1440,26 @@
             return ResponesPacket;
         })();
     
-        webworker_rpc.RegistryPacket = (function() {
+        webworker_rpc.AddRegistryPacket = (function() {
     
             /**
-             * Properties of a RegistryPacket.
+             * Properties of an AddRegistryPacket.
              * @memberof webworker_rpc
-             * @interface IRegistryPacket
-             * @property {number} id RegistryPacket id
-             * @property {string} serviceName RegistryPacket serviceName
-             * @property {Array.<webworker_rpc.IExecutor>|null} [executors] RegistryPacket executors
+             * @interface IAddRegistryPacket
+             * @property {number} id AddRegistryPacket id
+             * @property {string} serviceName AddRegistryPacket serviceName
+             * @property {Array.<webworker_rpc.IExecutor>|null} [executors] AddRegistryPacket executors
              */
     
             /**
-             * Constructs a new RegistryPacket.
+             * Constructs a new AddRegistryPacket.
              * @memberof webworker_rpc
-             * @classdesc Represents a RegistryPacket.
-             * @implements IRegistryPacket
+             * @classdesc Represents an AddRegistryPacket.
+             * @implements IAddRegistryPacket
              * @constructor
-             * @param {webworker_rpc.IRegistryPacket=} [properties] Properties to set
+             * @param {webworker_rpc.IAddRegistryPacket=} [properties] Properties to set
              */
-            function RegistryPacket(properties) {
+            function AddRegistryPacket(properties) {
                 this.executors = [];
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
@@ -1468,51 +1468,51 @@
             }
     
             /**
-             * RegistryPacket id.
+             * AddRegistryPacket id.
              * @member {number} id
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @instance
              */
-            RegistryPacket.prototype.id = 0;
+            AddRegistryPacket.prototype.id = 0;
     
             /**
-             * RegistryPacket serviceName.
+             * AddRegistryPacket serviceName.
              * @member {string} serviceName
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @instance
              */
-            RegistryPacket.prototype.serviceName = "";
+            AddRegistryPacket.prototype.serviceName = "";
     
             /**
-             * RegistryPacket executors.
+             * AddRegistryPacket executors.
              * @member {Array.<webworker_rpc.IExecutor>} executors
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @instance
              */
-            RegistryPacket.prototype.executors = $util.emptyArray;
+            AddRegistryPacket.prototype.executors = $util.emptyArray;
     
             /**
-             * Creates a new RegistryPacket instance using the specified properties.
+             * Creates a new AddRegistryPacket instance using the specified properties.
              * @function create
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
-             * @param {webworker_rpc.IRegistryPacket=} [properties] Properties to set
-             * @returns {webworker_rpc.RegistryPacket} RegistryPacket instance
+             * @param {webworker_rpc.IAddRegistryPacket=} [properties] Properties to set
+             * @returns {webworker_rpc.AddRegistryPacket} AddRegistryPacket instance
              */
-            RegistryPacket.create = function create(properties) {
-                return new RegistryPacket(properties);
+            AddRegistryPacket.create = function create(properties) {
+                return new AddRegistryPacket(properties);
             };
     
             /**
-             * Encodes the specified RegistryPacket message. Does not implicitly {@link webworker_rpc.RegistryPacket.verify|verify} messages.
+             * Encodes the specified AddRegistryPacket message. Does not implicitly {@link webworker_rpc.AddRegistryPacket.verify|verify} messages.
              * @function encode
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
-             * @param {webworker_rpc.IRegistryPacket} message RegistryPacket message or plain object to encode
+             * @param {webworker_rpc.IAddRegistryPacket} message AddRegistryPacket message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            RegistryPacket.encode = function encode(message, writer) {
+            AddRegistryPacket.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
@@ -1524,33 +1524,33 @@
             };
     
             /**
-             * Encodes the specified RegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.RegistryPacket.verify|verify} messages.
+             * Encodes the specified AddRegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.AddRegistryPacket.verify|verify} messages.
              * @function encodeDelimited
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
-             * @param {webworker_rpc.IRegistryPacket} message RegistryPacket message or plain object to encode
+             * @param {webworker_rpc.IAddRegistryPacket} message AddRegistryPacket message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            RegistryPacket.encodeDelimited = function encodeDelimited(message, writer) {
+            AddRegistryPacket.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
     
             /**
-             * Decodes a RegistryPacket message from the specified reader or buffer.
+             * Decodes an AddRegistryPacket message from the specified reader or buffer.
              * @function decode
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {webworker_rpc.RegistryPacket} RegistryPacket
+             * @returns {webworker_rpc.AddRegistryPacket} AddRegistryPacket
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            RegistryPacket.decode = function decode(reader, length) {
+            AddRegistryPacket.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.RegistryPacket();
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.AddRegistryPacket();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -1578,30 +1578,30 @@
             };
     
             /**
-             * Decodes a RegistryPacket message from the specified reader or buffer, length delimited.
+             * Decodes an AddRegistryPacket message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {webworker_rpc.RegistryPacket} RegistryPacket
+             * @returns {webworker_rpc.AddRegistryPacket} AddRegistryPacket
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            RegistryPacket.decodeDelimited = function decodeDelimited(reader) {
+            AddRegistryPacket.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
     
             /**
-             * Verifies a RegistryPacket message.
+             * Verifies an AddRegistryPacket message.
              * @function verify
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            RegistryPacket.verify = function verify(message) {
+            AddRegistryPacket.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
                 if (!$util.isInteger(message.id))
@@ -1621,28 +1621,28 @@
             };
     
             /**
-             * Creates a RegistryPacket message from a plain object. Also converts values to their respective internal types.
+             * Creates an AddRegistryPacket message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
              * @param {Object.<string,*>} object Plain object
-             * @returns {webworker_rpc.RegistryPacket} RegistryPacket
+             * @returns {webworker_rpc.AddRegistryPacket} AddRegistryPacket
              */
-            RegistryPacket.fromObject = function fromObject(object) {
-                if (object instanceof $root.webworker_rpc.RegistryPacket)
+            AddRegistryPacket.fromObject = function fromObject(object) {
+                if (object instanceof $root.webworker_rpc.AddRegistryPacket)
                     return object;
-                var message = new $root.webworker_rpc.RegistryPacket();
+                var message = new $root.webworker_rpc.AddRegistryPacket();
                 if (object.id != null)
                     message.id = object.id | 0;
                 if (object.serviceName != null)
                     message.serviceName = String(object.serviceName);
                 if (object.executors) {
                     if (!Array.isArray(object.executors))
-                        throw TypeError(".webworker_rpc.RegistryPacket.executors: array expected");
+                        throw TypeError(".webworker_rpc.AddRegistryPacket.executors: array expected");
                     message.executors = [];
                     for (var i = 0; i < object.executors.length; ++i) {
                         if (typeof object.executors[i] !== "object")
-                            throw TypeError(".webworker_rpc.RegistryPacket.executors: object expected");
+                            throw TypeError(".webworker_rpc.AddRegistryPacket.executors: object expected");
                         message.executors[i] = $root.webworker_rpc.Executor.fromObject(object.executors[i]);
                     }
                 }
@@ -1650,15 +1650,15 @@
             };
     
             /**
-             * Creates a plain object from a RegistryPacket message. Also converts values to other types if specified.
+             * Creates a plain object from an AddRegistryPacket message. Also converts values to other types if specified.
              * @function toObject
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @static
-             * @param {webworker_rpc.RegistryPacket} message RegistryPacket
+             * @param {webworker_rpc.AddRegistryPacket} message AddRegistryPacket
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            RegistryPacket.toObject = function toObject(message, options) {
+            AddRegistryPacket.toObject = function toObject(message, options) {
                 if (!options)
                     options = {};
                 var object = {};
@@ -1681,17 +1681,17 @@
             };
     
             /**
-             * Converts this RegistryPacket to JSON.
+             * Converts this AddRegistryPacket to JSON.
              * @function toJSON
-             * @memberof webworker_rpc.RegistryPacket
+             * @memberof webworker_rpc.AddRegistryPacket
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            RegistryPacket.prototype.toJSON = function toJSON() {
+            AddRegistryPacket.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
     
-            return RegistryPacket;
+            return AddRegistryPacket;
         })();
     
         webworker_rpc.WebWorkerMessage = (function() {
@@ -1701,7 +1701,7 @@
              * @memberof webworker_rpc
              * @interface IWebWorkerMessage
              * @property {string} key WebWorkerMessage key
-             * @property {webworker_rpc.IRegistryPacket|null} [dataRegistry] WebWorkerMessage dataRegistry
+             * @property {webworker_rpc.IAddRegistryPacket|null} [dataAddRegistry] WebWorkerMessage dataAddRegistry
              * @property {webworker_rpc.IExecutePacket|null} [dataExecute] WebWorkerMessage dataExecute
              * @property {webworker_rpc.IResponesPacket|null} [dataResponse] WebWorkerMessage dataResponse
              */
@@ -1730,12 +1730,12 @@
             WebWorkerMessage.prototype.key = "";
     
             /**
-             * WebWorkerMessage dataRegistry.
-             * @member {webworker_rpc.IRegistryPacket|null|undefined} dataRegistry
+             * WebWorkerMessage dataAddRegistry.
+             * @member {webworker_rpc.IAddRegistryPacket|null|undefined} dataAddRegistry
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
-            WebWorkerMessage.prototype.dataRegistry = null;
+            WebWorkerMessage.prototype.dataAddRegistry = null;
     
             /**
              * WebWorkerMessage dataExecute.
@@ -1758,12 +1758,12 @@
     
             /**
              * WebWorkerMessage data.
-             * @member {"dataRegistry"|"dataExecute"|"dataResponse"|undefined} data
+             * @member {"dataAddRegistry"|"dataExecute"|"dataResponse"|undefined} data
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
             Object.defineProperty(WebWorkerMessage.prototype, "data", {
-                get: $util.oneOfGetter($oneOfFields = ["dataRegistry", "dataExecute", "dataResponse"]),
+                get: $util.oneOfGetter($oneOfFields = ["dataAddRegistry", "dataExecute", "dataResponse"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
     
@@ -1792,8 +1792,8 @@
                 if (!writer)
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.key);
-                if (message.dataRegistry != null && Object.hasOwnProperty.call(message, "dataRegistry"))
-                    $root.webworker_rpc.RegistryPacket.encode(message.dataRegistry, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.dataAddRegistry != null && Object.hasOwnProperty.call(message, "dataAddRegistry"))
+                    $root.webworker_rpc.AddRegistryPacket.encode(message.dataAddRegistry, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 if (message.dataExecute != null && Object.hasOwnProperty.call(message, "dataExecute"))
                     $root.webworker_rpc.ExecutePacket.encode(message.dataExecute, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
                 if (message.dataResponse != null && Object.hasOwnProperty.call(message, "dataResponse"))
@@ -1836,7 +1836,7 @@
                         message.key = reader.string();
                         break;
                     case 2:
-                        message.dataRegistry = $root.webworker_rpc.RegistryPacket.decode(reader, reader.uint32());
+                        message.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.decode(reader, reader.uint32());
                         break;
                     case 3:
                         message.dataExecute = $root.webworker_rpc.ExecutePacket.decode(reader, reader.uint32());
@@ -1884,12 +1884,12 @@
                 var properties = {};
                 if (!$util.isString(message.key))
                     return "key: string expected";
-                if (message.dataRegistry != null && message.hasOwnProperty("dataRegistry")) {
+                if (message.dataAddRegistry != null && message.hasOwnProperty("dataAddRegistry")) {
                     properties.data = 1;
                     {
-                        var error = $root.webworker_rpc.RegistryPacket.verify(message.dataRegistry);
+                        var error = $root.webworker_rpc.AddRegistryPacket.verify(message.dataAddRegistry);
                         if (error)
-                            return "dataRegistry." + error;
+                            return "dataAddRegistry." + error;
                     }
                 }
                 if (message.dataExecute != null && message.hasOwnProperty("dataExecute")) {
@@ -1929,10 +1929,10 @@
                 var message = new $root.webworker_rpc.WebWorkerMessage();
                 if (object.key != null)
                     message.key = String(object.key);
-                if (object.dataRegistry != null) {
-                    if (typeof object.dataRegistry !== "object")
-                        throw TypeError(".webworker_rpc.WebWorkerMessage.dataRegistry: object expected");
-                    message.dataRegistry = $root.webworker_rpc.RegistryPacket.fromObject(object.dataRegistry);
+                if (object.dataAddRegistry != null) {
+                    if (typeof object.dataAddRegistry !== "object")
+                        throw TypeError(".webworker_rpc.WebWorkerMessage.dataAddRegistry: object expected");
+                    message.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.fromObject(object.dataAddRegistry);
                 }
                 if (object.dataExecute != null) {
                     if (typeof object.dataExecute !== "object")
@@ -1964,10 +1964,10 @@
                     object.key = "";
                 if (message.key != null && message.hasOwnProperty("key"))
                     object.key = message.key;
-                if (message.dataRegistry != null && message.hasOwnProperty("dataRegistry")) {
-                    object.dataRegistry = $root.webworker_rpc.RegistryPacket.toObject(message.dataRegistry, options);
+                if (message.dataAddRegistry != null && message.hasOwnProperty("dataAddRegistry")) {
+                    object.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.toObject(message.dataAddRegistry, options);
                     if (options.oneofs)
-                        object.data = "dataRegistry";
+                        object.data = "dataAddRegistry";
                 }
                 if (message.dataExecute != null && message.hasOwnProperty("dataExecute")) {
                     object.dataExecute = $root.webworker_rpc.ExecutePacket.toObject(message.dataExecute, options);

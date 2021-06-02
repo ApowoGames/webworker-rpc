@@ -86,7 +86,7 @@ export function RemoteListener(worker: string, context: string, event: string, p
     }
 }
 
-const MANAGERWORKERNAME: string = "__MANAGER";
+const MANAGER_WORKER_NAME: string = "__MANAGER";
 // manager worker sprite
 const MANAGERWORKERSPRITE = (ev) => {
     if (typeof MessageChannel === "undefined") {
@@ -95,11 +95,11 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const MESSAGEKEY_LINK: string = "link";
-    const MESSAGEKEY_REQUESTLINK: string = "requestLink";
-    const MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
+    const MESSAGEKEY_REQUEST_LINK: string = "requestLink";
+    const MESSAGEKEY_PROXY_CREATE_WORKER: string = "proxyCreateWorker";
     const MESSAGEKEY_UNLINK: string = "unlink";
-    const MESSAGEKEY_DESTROYMANAGER: string = "destroyManager";
-    const MANAGERWORKERNAME: string = "__MANAGER";
+    const MESSAGEKEY_DESTROY_MANAGER: string = "destroyManager";
+    const MANAGER_WORKER_NAME: string = "__MANAGER";
 
     const channels: Map<string, MessagePort> = new Map();
     let windowsPort: MessagePort = null;
@@ -119,13 +119,13 @@ const MANAGERWORKERSPRITE = (ev) => {
                 return;
             }
             switch (key) {
-                case MESSAGEKEY_REQUESTLINK:
+                case MESSAGEKEY_REQUEST_LINK:
                     onMessage_RequestLink(ev);
                     break;
                 case MESSAGEKEY_UNLINK:
                     onMessage_Unlink(ev);
                     break;
-                case MESSAGEKEY_DESTROYMANAGER:
+                case MESSAGEKEY_DESTROY_MANAGER:
                     onMessage_Destroy(ev);
                     break;
                 default:
@@ -150,7 +150,7 @@ const MANAGERWORKERSPRITE = (ev) => {
         const service2TarChannel = new MessageChannel();
 
         if (!channels.has(serviceName)) {
-            console.error(MANAGERWORKERNAME + " not yet link to " + serviceName);
+            console.error(MANAGER_WORKER_NAME + " not yet link to " + serviceName);
             return;
         }
         channels.get(serviceName).postMessage({
@@ -175,10 +175,10 @@ const MANAGERWORKERSPRITE = (ev) => {
             if (windowsPort === undefined || windowsPort === null) return;
 
             windowsPort.postMessage({
-                key: MESSAGEKEY_PROXYCREATEWORKER,
+                key: MESSAGEKEY_PROXY_CREATE_WORKER,
                 workerName: workerName,
                 workerUrl: workerUrl,
-                msg: {key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName]}
+                msg: {key: MESSAGEKEY_LINK, workers: [MANAGER_WORKER_NAME, serviceName]}
             }, [manager2TarChannel.port2, service2TarChannel.port2]);
             // } else {
             //     const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
@@ -203,7 +203,7 @@ const MANAGERWORKERSPRITE = (ev) => {
         const linkedNames = Array.from(channels.keys());
         for (const oneName of linkedNames) {
             const w = channels.get(oneName);
-            w.postMessage({key: MESSAGEKEY_UNLINK, worker: MANAGERWORKERNAME});
+            w.postMessage({key: MESSAGEKEY_UNLINK, worker: MANAGER_WORKER_NAME});
         }
         console.log("webworker-rpc: close manager worker");
         self.close();
@@ -366,14 +366,14 @@ export class RPCPeer extends RPCEmitter {
     private static _instance: RPCPeer;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
-    private readonly MESSAGEKEY_REQUESTLINK: string = "requestLink"; // TODO: define type of data
-    private readonly MESSAGEKEY_ADDREGISTRY: string = "addRegistry";
-    private readonly MESSAGEKEY_GOTREGISTRY: string = "gotRegistry";
+    private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
+    private readonly MESSAGEKEY_ADD_REGISTRY: string = "addRegistry";
+    private readonly MESSAGEKEY_GOT_REGISTRY: string = "gotRegistry";
     private readonly MESSAGEKEY_EXECUTE: string = "execute";
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
-    private readonly MESSAGEKEY_PROXYCREATEWORKER: string = "proxyCreateWorker";
-    private readonly MESSAGEKEY_DESTROYMANAGER: string = "destroyManager";
+    private readonly MESSAGEKEY_PROXY_CREATE_WORKER: string = "proxyCreateWorker";
+    private readonly MESSAGEKEY_DESTROY_MANAGER: string = "destroyManager";
 
     private worker: Worker;
     private registry: Map<string, webworker_rpc.IExecutor[]>;
@@ -499,11 +499,11 @@ export class RPCPeer extends RPCEmitter {
             const newChannel = new MessageChannel();
 
             newWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [newChannel.port2]);
-            this.addLink(workerName, newChannel.port1);
+            this.addChannel(workerName, newChannel.port1);
         } else {
             this.linkListeners.set(workerName, listener);
 
-            if (!this.channels.has(MANAGERWORKERNAME)) {
+            if (!this.channels.has(MANAGER_WORKER_NAME)) {
                 const selfName = this.worker["name"];
                 if (selfName !== undefined && selfName === this.name) {
                     // 这是由ManagerWorker创建的worker，需要等待和ManagerWorker连接完成后再进行linkTo操作
@@ -521,11 +521,11 @@ export class RPCPeer extends RPCEmitter {
                 const managerChannel = new MessageChannel();
 
                 managerWorker.postMessage({key: this.MESSAGEKEY_LINK, workers: [this.name]}, [managerChannel.port2]);
-                this.addLink(MANAGERWORKERNAME, managerChannel.port1);
+                this.addChannel(MANAGER_WORKER_NAME, managerChannel.port1);
             }
 
-            this.channels.get(MANAGERWORKERNAME).postMessage({
-                key: this.MESSAGEKEY_REQUESTLINK,
+            this.channels.get(MANAGER_WORKER_NAME).postMessage({
+                key: this.MESSAGEKEY_REQUEST_LINK,
                 serviceName: this.name,
                 workerName,
                 workerUrl
@@ -536,9 +536,9 @@ export class RPCPeer extends RPCEmitter {
     }
 
     public destroyManagerWorker() {
-        if (!this.channels.has(MANAGERWORKERNAME)) return;
-        const w = this.channels.get(MANAGERWORKERNAME);
-        w.postMessage({key: this.MESSAGEKEY_DESTROYMANAGER});
+        if (!this.channels.has(MANAGER_WORKER_NAME)) return;
+        const w = this.channels.get(MANAGER_WORKER_NAME);
+        w.postMessage({key: this.MESSAGEKEY_DESTROY_MANAGER});
     }
 
     @Export()
@@ -618,7 +618,7 @@ export class RPCPeer extends RPCEmitter {
         const listener = new SyncRegistryListener(this.registryPackID, linkedNames);
         this.syncRegistryListeners.set(this.registryPackID, listener);
         for (const oneName of linkedNames) {
-            this.postRegistry(oneName, new webworker_rpc.RegistryPacket({
+            this.postRegistry(oneName, new webworker_rpc.AddRegistryPacket({
                 id: this.registryPackID,
                 serviceName: this.name,
                 executors: addExecutors
@@ -631,8 +631,16 @@ export class RPCPeer extends RPCEmitter {
         console.log(this.name + " onWorkerUnlinked: ", worker);
     }
 
+    private postMessage(msg: webworker_rpc.IWebWorkerMessage, target: string) {
+        const buf = webworker_rpc.WebWorkerMessage.encode(msg).finish().buffer;
+        const ab = buf.slice(0);
+        if (this.channels.has(target)) {
+            this.channels.get(target).postMessage(msg, [].concat(ab));
+        }
+    }
+
     // 增加worker之间的通道联系
-    private addLink(worker: string, port: MessagePort) {
+    private addChannel(worker: string, port: MessagePort) {
         if (this.channels.has(worker)) {
             if (this.registry.has(worker)) {
                 this.updateLinkState(worker);
@@ -652,10 +660,10 @@ export class RPCPeer extends RPCEmitter {
                 case this.MESSAGEKEY_LINK:// 通过port接收到的信息，即ManagerWorker发送的消息
                     this.onMessage_Link(ev);
                     break;
-                case this.MESSAGEKEY_ADDREGISTRY:
+                case this.MESSAGEKEY_ADD_REGISTRY:
                     this.onMessage_AddRegistry(ev);
                     break;
-                case this.MESSAGEKEY_GOTREGISTRY:
+                case this.MESSAGEKEY_GOT_REGISTRY:
                     this.onMessage_GotRegistry(ev);
                     break;
                 case this.MESSAGEKEY_EXECUTE:
@@ -667,7 +675,7 @@ export class RPCPeer extends RPCEmitter {
                 case this.MESSAGEKEY_UNLINK:
                     this.onMessage_Unlink(ev);
                     break;
-                case this.MESSAGEKEY_PROXYCREATEWORKER:
+                case this.MESSAGEKEY_PROXY_CREATE_WORKER:
                     this.onMessage_ProxyCreateWorker(ev);
                     break;
                 default:
@@ -685,19 +693,19 @@ export class RPCPeer extends RPCEmitter {
                 allRegistry.push(rpcExecutor);
             }
         })
-        this.postRegistry(worker, new webworker_rpc.RegistryPacket({
+        this.postRegistry(worker, new webworker_rpc.AddRegistryPacket({
             id: this.registryPackID,
             serviceName: this.name,
             executors: allRegistry
         }));
 
-        if (worker === MANAGERWORKERNAME) {
-            // 执行未进行的linkTo task
+        if (worker === MANAGER_WORKER_NAME) {
+            // 执行未进行的attach task
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
-                this.channels.get(MANAGERWORKERNAME).postMessage({
-                    key: this.MESSAGEKEY_REQUESTLINK,
+                this.channels.get(MANAGER_WORKER_NAME).postMessage({
+                    key: this.MESSAGEKEY_REQUEST_LINK,
                     serviceName: this.name,
                     workerName: task.workerName,
                     workerUrl: task.workerUrl
@@ -761,10 +769,8 @@ export class RPCPeer extends RPCEmitter {
                     })
                 })
             });
-            const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
-            if (this.channels.has(worker)) {
-                this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
-            }
+
+            this.postMessage(messageData, worker);
         });
     }
 
@@ -773,10 +779,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_RESPOND,
             dataResponse: new webworker_rpc.ResponesPacket({id, val: val.data, err})
         });
-        const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
-        if (this.channels.has(worker)) {
-            this.channels.get(worker).postMessage(messageData, [].concat(buf.slice(0)));
-        }
+        this.postMessage(messageData, worker);
     }
 
     private updateRegistry() {
@@ -815,16 +818,15 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // 通知其他worker添加回调注册表
-    private postRegistry(worker: string, registry: webworker_rpc.IRegistryPacket) {
+    private postRegistry(worker: string, registry: webworker_rpc.IAddRegistryPacket) {
         // console.log(this.name + " postRegistry: ", worker, registry);
-        if (worker === MANAGERWORKERNAME) return;
+        if (worker === MANAGER_WORKER_NAME) return;
 
-        const messageData = new webworker_rpc.WebWorkerMessage({key: this.MESSAGEKEY_ADDREGISTRY, dataRegistry: registry});
-        const buf = webworker_rpc.WebWorkerMessage.encode(messageData).finish().buffer;
-        if (this.channels.has(worker)) {
-            const port = this.channels.get(worker);
-            port.postMessage(messageData, [].concat(buf.slice(0)));
-        }
+        const messageData = new webworker_rpc.WebWorkerMessage({
+            key: this.MESSAGEKEY_ADD_REGISTRY,
+            dataAddRegistry: registry
+        });
+        this.postMessage(messageData, worker);
     }
 
     private onMessage_Link(ev: MessageEvent) {
@@ -834,18 +836,13 @@ export class RPCPeer extends RPCEmitter {
         for (let i = 0; i < ports.length; i++) {
             const onePort = ports[i];
             const oneWorker = workers[i];
-            this.addLink(oneWorker, onePort);
+            this.addChannel(oneWorker, onePort);
         }
     }
 
     private onMessage_AddRegistry(ev: MessageEvent) {
         // console.log(this.name + " onMessage_AddRegistry:", ev.data);
-        const {dataRegistry} = ev.data;
-        if (dataRegistry === undefined || dataRegistry === null) {
-            console.warn("<data> not in ev.data");
-            return;
-        }
-        const packet: webworker_rpc.RegistryPacket = new webworker_rpc.RegistryPacket(dataRegistry);
+        const packet: webworker_rpc.IAddRegistryPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataAddRegistry;
         if (!this.registry.has(packet.serviceName)) {
             this.registry.set(packet.serviceName, []);
         }
@@ -856,7 +853,7 @@ export class RPCPeer extends RPCEmitter {
         // send GOT message
         if (this.channels.has(packet.serviceName)) {
             const port = this.channels.get(packet.serviceName);
-            port.postMessage({key: this.MESSAGEKEY_GOTREGISTRY, worker: this.name, id: packet.id});
+            port.postMessage({key: this.MESSAGEKEY_GOT_REGISTRY, worker: this.name, id: packet.id});
         }
 
         this.updateLinkState(packet.serviceName);
@@ -873,7 +870,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_GotRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_GotRegistry:", ev.data, this.syncRegistryListeners);
+        // console.log(this.name + " onMessage_GotRegistry:", ev.data);
         const {worker, id} = ev.data;
         if (this.linkListeners.has(worker)) {
             const allReady = this.linkListeners.get(worker).setPortReady(worker);
@@ -887,13 +884,8 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Execute(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_RunMethod:", ev.data);
-        const {dataExecute} = ev.data;
-        if (dataExecute === undefined || dataExecute === null) {
-            console.warn("<data> not in ev.data");
-            return;
-        }
-        const packet: webworker_rpc.ExecutePacket = new webworker_rpc.ExecutePacket(dataExecute);
+        // console.log(this.name + " onMessage_Execute:", ev.data);
+        const packet: webworker_rpc.IExecutePacket = new webworker_rpc.WebWorkerMessage(ev.data).dataExecute;
 
         const id = packet.id;
         const service = packet.header.serviceName;
@@ -919,12 +911,8 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Respond(ev: MessageEvent) {
-        const {dataResponse} = ev.data;
-        if (dataResponse === undefined || dataResponse === null) {
-            console.warn("<data> not in ev.data");
-            return;
-        }
-        const packet: webworker_rpc.ResponesPacket = new webworker_rpc.ResponesPacket(dataResponse);
+        // console.log(this.name + " onMessage_Respond:", ev.data);
+        const packet: webworker_rpc.IResponesPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataResponse;
 
         if (!this.resolvers.has(packet.id)) {
             console.error("respones.id undefined: ", packet.id);
@@ -972,18 +960,7 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        // console.log("webworker-rpc ProxyCreateWorker: location: ", location);
-        // let pathRoot = location.origin + location.pathname;
-        // // console.log("webworker-rpc ProxyCreateWorker: pathRoot-1: ", pathRoot);
-        // // 兼容ios打包
-        // if (pathRoot.endsWith("index.html")) {
-        //     pathRoot = pathRoot.slice(0, -10);
-        // } else if (pathRoot.endsWith("index.html/")) {
-        //     pathRoot = pathRoot.slice(0, -11) + "/";
-        // }
-        // console.log("webworker-rpc ProxyCreateWorker: pathRoot-2: ", pathRoot);
         const path = workerUrl;
-        // console.log("webworker-rpc ProxyCreateWorker: workerUrl: ", workerUrl);
         const newWorker = new Worker(path, {name: workerName});
         console.log(this.name + " create worker: ", path, workerName);
         const ports = [];
@@ -995,7 +972,6 @@ export class RPCPeer extends RPCEmitter {
 
     private exportObject(obj: any, rootContext: string, recursion = true): webworker_rpc.Executor[] {
         // console.log(this.name + " exportObject: " + rootContext, obj);
-        // if (RPCFunctions.length > 40) return;
         let addExecutors: webworker_rpc.Executor[] = [];
 
         for (const key in obj) {
@@ -1052,7 +1028,7 @@ export class RPCPeer extends RPCEmitter {
         return resultCon;
     }
 
-    private addRegistryProperty(packet: webworker_rpc.IRegistryPacket) {
+    private addRegistryProperty(packet: webworker_rpc.IAddRegistryPacket) {
         if (this.remote === undefined || this.remote === null) this.remote = {};
 
         const service = packet.serviceName;
@@ -1160,7 +1136,7 @@ export class SyncRegistryListener {
     constructor(private id: number, workers: string[]) {
         this.workersState = new Map();
         for (const w of workers) {
-            if (w === MANAGERWORKERNAME) {
+            if (w === MANAGER_WORKER_NAME) {
                 continue;
             }
             this.workersState.set(w, false);

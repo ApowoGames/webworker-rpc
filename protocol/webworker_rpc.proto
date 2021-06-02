@@ -52,7 +52,7 @@ message ResponesPacket {
     optional string err = 3;
 }
 
-message RegistryPacket {
+message AddRegistryPacket {
     required int32 id = 1;
     required string service_name = 2;// 发送者(worker)名称
     repeated Executor executors = 3;// 发送者可调用方法
@@ -61,7 +61,7 @@ message RegistryPacket {
 message WebWorkerMessage {
     required string key = 1;
     oneof data {
-        RegistryPacket data_registry = 2;
+        AddRegistryPacket data_add_registry = 2;
         ExecutePacket data_execute = 3;
         ResponesPacket data_response = 4; 
     }
