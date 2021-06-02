@@ -5,10 +5,10 @@ import {
 } from "./rpc.message";
 
 // decorator
-const RPCFunctions: Map<string, webworker_rpc.IExecutor[]> = new Map();
-const RPCContexts: Map<string, any> = new Map();
-const RPCClasses: string[] = [];// 等待link之后，递归注册其所有function
-const RPCAttributes: Map<string, string[]> = new Map();// 等待link之后，注册其所有function
+const ExportedFunctions: Map<string, webworker_rpc.IExecutor[]> = new Map();
+const ExportedContexts: Map<string, any> = new Map();
+const ExportedClasses: string[] = [];// 等待link之后，递归注册其所有function
+const ExportedAttributes: Map<string, string[]> = new Map();// 等待link之后，注册其所有function
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
     const params: webworker_rpc.Param[] = [];
@@ -25,21 +25,21 @@ const ExportAttribute = (target, name) => {
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
     // console.log("ExportAttribute: ", context, name, target);
 
-    if (!RPCAttributes.has(context)) {
-        RPCAttributes.set(context, []);
+    if (!ExportedAttributes.has(context)) {
+        ExportedAttributes.set(context, []);
     }
 
-    RPCAttributes.get(context).push(name);
+    ExportedAttributes.get(context).push(name);
 }
 const ExportClass = (target) => {
-    RPCClasses.push(target.name);
+    ExportedClasses.push(target.name);
     return target;
 }
 const AddRPCFunction = (executor: webworker_rpc.IExecutor) => {
-    if (!RPCFunctions.has(executor.context)) {
-        RPCFunctions.set(executor.context, []);
+    if (!ExportedFunctions.has(executor.context)) {
+        ExportedFunctions.set(executor.context, []);
     }
-    const arr = RPCFunctions.get(executor.context);
+    const arr = ExportedFunctions.get(executor.context);
     const idx = arr.findIndex((x) => x.method === executor.method);
     if (idx < 0) {
         arr.push(executor);
@@ -118,7 +118,6 @@ const MANAGERWORKERSPRITE = (ev) => {
             if (key === undefined || key === null) {
                 return;
             }
-            // TODO 使用map结构
             switch (key) {
                 case MESSAGEKEY_REQUESTLINK:
                     onMessage_RequestLink(ev);
@@ -249,7 +248,7 @@ export class RPCEmitter {
 
         // console.log("Emitter constructor: ", this);
 
-        RPCContexts.set(this.constructor.name, this);
+        ExportedContexts.set(this.constructor.name, this);
         this.checkSuperExport();
     }
 
@@ -304,47 +303,47 @@ export class RPCEmitter {
         let superStaticName = superClassName + ".constructor";
         while (superClassName !== "Object") {
             // functions
-            if (RPCFunctions.has(superClassName)) {
-                const exe = RPCFunctions.get(superClassName);
+            if (ExportedFunctions.has(superClassName)) {
+                const exe = ExportedFunctions.get(superClassName);
                 for (const oneExe of exe) {
                     oneExe.context = mClassName;
                 }
-                RPCFunctions.delete(superClassName);
-                const preExes = RPCFunctions.get(mClassName) || [];
-                RPCFunctions.set(mClassName, preExes.concat(exe));
+                ExportedFunctions.delete(superClassName);
+                const preExes = ExportedFunctions.get(mClassName) || [];
+                ExportedFunctions.set(mClassName, preExes.concat(exe));
             }
-            if (RPCFunctions.has(superStaticName)) {
-                const exe = RPCFunctions.get(superStaticName);
+            if (ExportedFunctions.has(superStaticName)) {
+                const exe = ExportedFunctions.get(superStaticName);
                 for (const oneExe of exe) {
                     oneExe.context = mStaticName;
                 }
-                RPCFunctions.delete(superStaticName);
-                const preExes = RPCFunctions.get(mStaticName) || [];
-                RPCFunctions.set(mStaticName, preExes.concat(exe));
+                ExportedFunctions.delete(superStaticName);
+                const preExes = ExportedFunctions.get(mStaticName) || [];
+                ExportedFunctions.set(mStaticName, preExes.concat(exe));
             }
             // attributes
-            if (RPCAttributes.has(superClassName)) {
-                const attrs = RPCAttributes.get(superClassName);
-                RPCAttributes.delete(superClassName);
-                const preAttrs = RPCAttributes.get(mClassName) || [];
-                RPCAttributes.set(mClassName, preAttrs.concat(attrs));
+            if (ExportedAttributes.has(superClassName)) {
+                const attrs = ExportedAttributes.get(superClassName);
+                ExportedAttributes.delete(superClassName);
+                const preAttrs = ExportedAttributes.get(mClassName) || [];
+                ExportedAttributes.set(mClassName, preAttrs.concat(attrs));
             }
-            if (RPCAttributes.has(superStaticName)) {
-                const attrs = RPCAttributes.get(superStaticName);
-                RPCAttributes.delete(superStaticName);
-                const preAttrs = RPCAttributes.get(mStaticName) || [];
-                RPCAttributes.set(mStaticName, preAttrs.concat(attrs));
+            if (ExportedAttributes.has(superStaticName)) {
+                const attrs = ExportedAttributes.get(superStaticName);
+                ExportedAttributes.delete(superStaticName);
+                const preAttrs = ExportedAttributes.get(mStaticName) || [];
+                ExportedAttributes.set(mStaticName, preAttrs.concat(attrs));
             }
             // classes
-            const classIdx = RPCClasses.indexOf(superClassName);
+            const classIdx = ExportedClasses.indexOf(superClassName);
             if (classIdx >= 0) {
-                RPCClasses.splice(classIdx, 1);
-                RPCClasses.push(mClassName);
+                ExportedClasses.splice(classIdx, 1);
+                ExportedClasses.push(mClassName);
             }
-            const staticIdx = RPCClasses.indexOf(superStaticName);
+            const staticIdx = ExportedClasses.indexOf(superStaticName);
             if (staticIdx >= 0) {
-                RPCClasses.splice(staticIdx, 1);
-                RPCClasses.push(mStaticName);
+                ExportedClasses.splice(staticIdx, 1);
+                ExportedClasses.push(mStaticName);
             }
 
             superObj = Object.getPrototypeOf(superObj);
@@ -594,9 +593,9 @@ export class RPCPeer extends RPCEmitter {
         }
 
         let existConName = "";
-        const existConNames = Array.from(RPCContexts.keys());
+        const existConNames = Array.from(ExportedContexts.keys());
         for (const oneName of existConNames) {
-            const oneCon = RPCContexts.get(oneName);
+            const oneCon = ExportedContexts.get(oneName);
             if (oneCon === context) {
                 existConName = oneName;
                 break;
@@ -606,11 +605,11 @@ export class RPCPeer extends RPCEmitter {
         let conName = existConName;
         if (existConName.length === 0) {
             conName = context.constructor.name;
-            if (RPCContexts.has(conName)) {
+            if (ExportedContexts.has(conName)) {
                 console.error(`context name <${conName}> exist`);
                 return;
             }
-            RPCContexts.set(conName, context);
+            ExportedContexts.set(conName, context);
         }
 
         const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
@@ -681,7 +680,7 @@ export class RPCPeer extends RPCEmitter {
 
         // post registry
         let allRegistry: webworker_rpc.IExecutor[] = [];
-        RPCFunctions.forEach((exe, con) => {
+        ExportedFunctions.forEach((exe, con) => {
             for (const rpcExecutor of exe) {
                 allRegistry.push(rpcExecutor);
             }
@@ -783,25 +782,25 @@ export class RPCPeer extends RPCEmitter {
     private updateRegistry() {
         if (this.exported) return;
         this.exported = true;
-        for (const context of RPCClasses) {
-            if (!RPCContexts.has(context)) {
+        for (const context of ExportedClasses) {
+            if (!ExportedContexts.has(context)) {
                 console.error("Export only decorate Emitter!");
                 continue;
             }
 
-            this.exportObject(RPCContexts.get(context), context);
+            this.exportObject(ExportedContexts.get(context), context);
         }
 
-        const attributeKeys = Array.from(RPCAttributes.keys());
+        const attributeKeys = Array.from(ExportedAttributes.keys());
         for (const oneKey of attributeKeys) {
             const keyPath = oneKey.split(".");
             const contextStr = keyPath[0];
-            if (!RPCContexts.has(contextStr)) {
+            if (!ExportedContexts.has(contextStr)) {
                 console.error("Export only decorate Emitter!");
                 continue;
             }
-            for (const attr of RPCAttributes.get(oneKey)) {
-                let conObj = RPCContexts.get(contextStr);
+            for (const attr of ExportedAttributes.get(oneKey)) {
+                let conObj = ExportedContexts.get(contextStr);
                 for (let i = 1; i < keyPath.length; i++) {
                     const p = keyPath[i];
                     conObj = conObj[p];
@@ -1036,12 +1035,12 @@ export class RPCPeer extends RPCEmitter {
 
     private getContext(path: string): any {
         const contexts = path.split(".");
-        if (!RPCContexts.has(contexts[0])) {
+        if (!ExportedContexts.has(contexts[0])) {
             console.error("no context exist: ", contexts[0]);
             return null;
         }
 
-        let resultCon = RPCContexts.get(contexts[0]);
+        let resultCon = ExportedContexts.get(contexts[0]);
         for (let i = 1; i < contexts.length; i++) {
             const context = contexts[i];
             if (!(context in resultCon)) {

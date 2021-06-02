@@ -17,11 +17,11 @@ export class RPCParam {
         }
 
         const constructorName = val.constructor.name;
-        if (!RPCCustomDataClasses.has(constructorName)) {
+        if (!CustomDataClasses.has(constructorName)) {
             console.error(constructorName + " not use @RPCData");
             return new RPCParam({t: webworker_rpc.ParamType.custom, className: "null"});
         }
-        const customClass = RPCCustomDataClasses.get(constructorName);
+        const customClass = CustomDataClasses.get(constructorName);
         const str = customClass.encode(val);
         return new RPCParam({t: webworker_rpc.ParamType.custom, valStr: str, className: constructorName});
     }
@@ -41,11 +41,11 @@ export class RPCParam {
                 if (this.data.className === "undefined") {
                     return undefined;
                 }
-                if (!RPCCustomDataClasses.has(this.data.className)) {
+                if (!CustomDataClasses.has(this.data.className)) {
                     console.error(this.data.className + " not use @RPCData");
                     return null;
                 }
-                const customClass = RPCCustomDataClasses.get(this.data.className);
+                const customClass = CustomDataClasses.get(this.data.className);
                 return customClass.decode(this.data.valStr);
             }
             default: {
@@ -55,7 +55,7 @@ export class RPCParam {
     }
 }
 
-const RPCCustomDataClasses: Map<string, any> = new Map();
+const CustomDataClasses: Map<string, any> = new Map();
 
 /*
     装饰自定义传输数据类型。
@@ -69,7 +69,7 @@ export function RPCData() {
         if (!target.decode) {
             target.decode = TemplateData.decode;
         }
-        RPCCustomDataClasses.set(target.name, target);
+        CustomDataClasses.set(target.name, target);
         return target;
     }
 }
