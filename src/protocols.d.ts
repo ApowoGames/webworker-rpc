@@ -452,103 +452,103 @@ export namespace webworker_rpc {
         public toJSON(): { [k: string]: any };
     }
 
-    /** Properties of a ResponesPacket. */
-    interface IResponesPacket {
+    /** Properties of a ResponsePacket. */
+    interface IResponsePacket {
 
-        /** ResponesPacket id */
+        /** ResponsePacket id */
         id: number;
 
-        /** ResponesPacket val */
+        /** ResponsePacket val */
         val?: (webworker_rpc.IParam|null);
 
-        /** ResponesPacket err */
+        /** ResponsePacket err */
         err?: (string|null);
     }
 
-    /** Represents a ResponesPacket. */
-    class ResponesPacket implements IResponesPacket {
+    /** Represents a ResponsePacket. */
+    class ResponsePacket implements IResponsePacket {
 
         /**
-         * Constructs a new ResponesPacket.
+         * Constructs a new ResponsePacket.
          * @param [properties] Properties to set
          */
-        constructor(properties?: webworker_rpc.IResponesPacket);
+        constructor(properties?: webworker_rpc.IResponsePacket);
 
-        /** ResponesPacket id. */
+        /** ResponsePacket id. */
         public id: number;
 
-        /** ResponesPacket val. */
+        /** ResponsePacket val. */
         public val?: (webworker_rpc.IParam|null);
 
-        /** ResponesPacket err. */
+        /** ResponsePacket err. */
         public err: string;
 
         /**
-         * Creates a new ResponesPacket instance using the specified properties.
+         * Creates a new ResponsePacket instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns ResponesPacket instance
+         * @returns ResponsePacket instance
          */
-        public static create(properties?: webworker_rpc.IResponesPacket): webworker_rpc.ResponesPacket;
+        public static create(properties?: webworker_rpc.IResponsePacket): webworker_rpc.ResponsePacket;
 
         /**
-         * Encodes the specified ResponesPacket message. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
-         * @param message ResponesPacket message or plain object to encode
+         * Encodes the specified ResponsePacket message. Does not implicitly {@link webworker_rpc.ResponsePacket.verify|verify} messages.
+         * @param message ResponsePacket message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: webworker_rpc.IResponesPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: webworker_rpc.IResponsePacket, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified ResponesPacket message, length delimited. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
-         * @param message ResponesPacket message or plain object to encode
+         * Encodes the specified ResponsePacket message, length delimited. Does not implicitly {@link webworker_rpc.ResponsePacket.verify|verify} messages.
+         * @param message ResponsePacket message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: webworker_rpc.IResponesPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: webworker_rpc.IResponsePacket, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a ResponesPacket message from the specified reader or buffer.
+         * Decodes a ResponsePacket message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns ResponesPacket
+         * @returns ResponsePacket
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.ResponesPacket;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.ResponsePacket;
 
         /**
-         * Decodes a ResponesPacket message from the specified reader or buffer, length delimited.
+         * Decodes a ResponsePacket message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns ResponesPacket
+         * @returns ResponsePacket
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.ResponesPacket;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.ResponsePacket;
 
         /**
-         * Verifies a ResponesPacket message.
+         * Verifies a ResponsePacket message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a ResponesPacket message from a plain object. Also converts values to their respective internal types.
+         * Creates a ResponsePacket message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns ResponesPacket
+         * @returns ResponsePacket
          */
-        public static fromObject(object: { [k: string]: any }): webworker_rpc.ResponesPacket;
+        public static fromObject(object: { [k: string]: any }): webworker_rpc.ResponsePacket;
 
         /**
-         * Creates a plain object from a ResponesPacket message. Also converts values to other types if specified.
-         * @param message ResponesPacket
+         * Creates a plain object from a ResponsePacket message. Also converts values to other types if specified.
+         * @param message ResponsePacket
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: webworker_rpc.ResponesPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: webworker_rpc.ResponsePacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this ResponesPacket to JSON.
+         * Converts this ResponsePacket to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
@@ -1034,14 +1034,212 @@ export namespace webworker_rpc {
         public toJSON(): { [k: string]: any };
     }
 
+    /** Properties of a LinkPacket. */
+    interface ILinkPacket {
+
+        /** LinkPacket workers */
+        workers?: (string[]|null);
+    }
+
+    /** Represents a LinkPacket. */
+    class LinkPacket implements ILinkPacket {
+
+        /**
+         * Constructs a new LinkPacket.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: webworker_rpc.ILinkPacket);
+
+        /** LinkPacket workers. */
+        public workers: string[];
+
+        /**
+         * Creates a new LinkPacket instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns LinkPacket instance
+         */
+        public static create(properties?: webworker_rpc.ILinkPacket): webworker_rpc.LinkPacket;
+
+        /**
+         * Encodes the specified LinkPacket message. Does not implicitly {@link webworker_rpc.LinkPacket.verify|verify} messages.
+         * @param message LinkPacket message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: webworker_rpc.ILinkPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified LinkPacket message, length delimited. Does not implicitly {@link webworker_rpc.LinkPacket.verify|verify} messages.
+         * @param message LinkPacket message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: webworker_rpc.ILinkPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a LinkPacket message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns LinkPacket
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.LinkPacket;
+
+        /**
+         * Decodes a LinkPacket message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns LinkPacket
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.LinkPacket;
+
+        /**
+         * Verifies a LinkPacket message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a LinkPacket message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns LinkPacket
+         */
+        public static fromObject(object: { [k: string]: any }): webworker_rpc.LinkPacket;
+
+        /**
+         * Creates a plain object from a LinkPacket message. Also converts values to other types if specified.
+         * @param message LinkPacket
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: webworker_rpc.LinkPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this LinkPacket to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a ProxyCreateWorkerPacket. */
+    interface IProxyCreateWorkerPacket {
+
+        /** ProxyCreateWorkerPacket workerName */
+        workerName: string;
+
+        /** ProxyCreateWorkerPacket workerUrl */
+        workerUrl: string;
+
+        /** ProxyCreateWorkerPacket msg */
+        msg: webworker_rpc.IWebWorkerMessage;
+    }
+
+    /** Represents a ProxyCreateWorkerPacket. */
+    class ProxyCreateWorkerPacket implements IProxyCreateWorkerPacket {
+
+        /**
+         * Constructs a new ProxyCreateWorkerPacket.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: webworker_rpc.IProxyCreateWorkerPacket);
+
+        /** ProxyCreateWorkerPacket workerName. */
+        public workerName: string;
+
+        /** ProxyCreateWorkerPacket workerUrl. */
+        public workerUrl: string;
+
+        /** ProxyCreateWorkerPacket msg. */
+        public msg: webworker_rpc.IWebWorkerMessage;
+
+        /**
+         * Creates a new ProxyCreateWorkerPacket instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ProxyCreateWorkerPacket instance
+         */
+        public static create(properties?: webworker_rpc.IProxyCreateWorkerPacket): webworker_rpc.ProxyCreateWorkerPacket;
+
+        /**
+         * Encodes the specified ProxyCreateWorkerPacket message. Does not implicitly {@link webworker_rpc.ProxyCreateWorkerPacket.verify|verify} messages.
+         * @param message ProxyCreateWorkerPacket message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: webworker_rpc.IProxyCreateWorkerPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ProxyCreateWorkerPacket message, length delimited. Does not implicitly {@link webworker_rpc.ProxyCreateWorkerPacket.verify|verify} messages.
+         * @param message ProxyCreateWorkerPacket message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: webworker_rpc.IProxyCreateWorkerPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ProxyCreateWorkerPacket message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ProxyCreateWorkerPacket
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.ProxyCreateWorkerPacket;
+
+        /**
+         * Decodes a ProxyCreateWorkerPacket message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ProxyCreateWorkerPacket
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.ProxyCreateWorkerPacket;
+
+        /**
+         * Verifies a ProxyCreateWorkerPacket message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ProxyCreateWorkerPacket message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ProxyCreateWorkerPacket
+         */
+        public static fromObject(object: { [k: string]: any }): webworker_rpc.ProxyCreateWorkerPacket;
+
+        /**
+         * Creates a plain object from a ProxyCreateWorkerPacket message. Also converts values to other types if specified.
+         * @param message ProxyCreateWorkerPacket
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: webworker_rpc.ProxyCreateWorkerPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ProxyCreateWorkerPacket to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Properties of a WebWorkerMessage. */
     interface IWebWorkerMessage {
 
         /** WebWorkerMessage key */
         key: string;
 
+        /** WebWorkerMessage dataLink */
+        dataLink?: (webworker_rpc.ILinkPacket|null);
+
         /** WebWorkerMessage dataRequestLink */
         dataRequestLink?: (webworker_rpc.IRequestLinkPacket|null);
+
+        /** WebWorkerMessage dataProxyCreateWorker */
+        dataProxyCreateWorker?: (webworker_rpc.IProxyCreateWorkerPacket|null);
 
         /** WebWorkerMessage dataAddRegistry */
         dataAddRegistry?: (webworker_rpc.IAddRegistryPacket|null);
@@ -1053,7 +1251,7 @@ export namespace webworker_rpc {
         dataExecute?: (webworker_rpc.IExecutePacket|null);
 
         /** WebWorkerMessage dataResponse */
-        dataResponse?: (webworker_rpc.IResponesPacket|null);
+        dataResponse?: (webworker_rpc.IResponsePacket|null);
 
         /** WebWorkerMessage dataUnlink */
         dataUnlink?: (webworker_rpc.IUnlinkPacket|null);
@@ -1074,8 +1272,14 @@ export namespace webworker_rpc {
         /** WebWorkerMessage key. */
         public key: string;
 
+        /** WebWorkerMessage dataLink. */
+        public dataLink?: (webworker_rpc.ILinkPacket|null);
+
         /** WebWorkerMessage dataRequestLink. */
         public dataRequestLink?: (webworker_rpc.IRequestLinkPacket|null);
+
+        /** WebWorkerMessage dataProxyCreateWorker. */
+        public dataProxyCreateWorker?: (webworker_rpc.IProxyCreateWorkerPacket|null);
 
         /** WebWorkerMessage dataAddRegistry. */
         public dataAddRegistry?: (webworker_rpc.IAddRegistryPacket|null);
@@ -1087,7 +1291,7 @@ export namespace webworker_rpc {
         public dataExecute?: (webworker_rpc.IExecutePacket|null);
 
         /** WebWorkerMessage dataResponse. */
-        public dataResponse?: (webworker_rpc.IResponesPacket|null);
+        public dataResponse?: (webworker_rpc.IResponsePacket|null);
 
         /** WebWorkerMessage dataUnlink. */
         public dataUnlink?: (webworker_rpc.IUnlinkPacket|null);
@@ -1096,7 +1300,7 @@ export namespace webworker_rpc {
         public dataDestroyManager?: (webworker_rpc.IDestroyManagerPacket|null);
 
         /** WebWorkerMessage data. */
-        public data?: ("dataRequestLink"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager");
+        public data?: ("dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager");
 
         /**
          * Creates a new WebWorkerMessage instance using the specified properties.

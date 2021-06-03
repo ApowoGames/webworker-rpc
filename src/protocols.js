@@ -1203,26 +1203,26 @@
             return ExecutePacket;
         })();
     
-        webworker_rpc.ResponesPacket = (function() {
+        webworker_rpc.ResponsePacket = (function() {
     
             /**
-             * Properties of a ResponesPacket.
+             * Properties of a ResponsePacket.
              * @memberof webworker_rpc
-             * @interface IResponesPacket
-             * @property {number} id ResponesPacket id
-             * @property {webworker_rpc.IParam|null} [val] ResponesPacket val
-             * @property {string|null} [err] ResponesPacket err
+             * @interface IResponsePacket
+             * @property {number} id ResponsePacket id
+             * @property {webworker_rpc.IParam|null} [val] ResponsePacket val
+             * @property {string|null} [err] ResponsePacket err
              */
     
             /**
-             * Constructs a new ResponesPacket.
+             * Constructs a new ResponsePacket.
              * @memberof webworker_rpc
-             * @classdesc Represents a ResponesPacket.
-             * @implements IResponesPacket
+             * @classdesc Represents a ResponsePacket.
+             * @implements IResponsePacket
              * @constructor
-             * @param {webworker_rpc.IResponesPacket=} [properties] Properties to set
+             * @param {webworker_rpc.IResponsePacket=} [properties] Properties to set
              */
-            function ResponesPacket(properties) {
+            function ResponsePacket(properties) {
                 if (properties)
                     for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                         if (properties[keys[i]] != null)
@@ -1230,51 +1230,51 @@
             }
     
             /**
-             * ResponesPacket id.
+             * ResponsePacket id.
              * @member {number} id
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @instance
              */
-            ResponesPacket.prototype.id = 0;
+            ResponsePacket.prototype.id = 0;
     
             /**
-             * ResponesPacket val.
+             * ResponsePacket val.
              * @member {webworker_rpc.IParam|null|undefined} val
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @instance
              */
-            ResponesPacket.prototype.val = null;
+            ResponsePacket.prototype.val = null;
     
             /**
-             * ResponesPacket err.
+             * ResponsePacket err.
              * @member {string} err
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @instance
              */
-            ResponesPacket.prototype.err = "";
+            ResponsePacket.prototype.err = "";
     
             /**
-             * Creates a new ResponesPacket instance using the specified properties.
+             * Creates a new ResponsePacket instance using the specified properties.
              * @function create
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
-             * @param {webworker_rpc.IResponesPacket=} [properties] Properties to set
-             * @returns {webworker_rpc.ResponesPacket} ResponesPacket instance
+             * @param {webworker_rpc.IResponsePacket=} [properties] Properties to set
+             * @returns {webworker_rpc.ResponsePacket} ResponsePacket instance
              */
-            ResponesPacket.create = function create(properties) {
-                return new ResponesPacket(properties);
+            ResponsePacket.create = function create(properties) {
+                return new ResponsePacket(properties);
             };
     
             /**
-             * Encodes the specified ResponesPacket message. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
+             * Encodes the specified ResponsePacket message. Does not implicitly {@link webworker_rpc.ResponsePacket.verify|verify} messages.
              * @function encode
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
-             * @param {webworker_rpc.IResponesPacket} message ResponesPacket message or plain object to encode
+             * @param {webworker_rpc.IResponsePacket} message ResponsePacket message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ResponesPacket.encode = function encode(message, writer) {
+            ResponsePacket.encode = function encode(message, writer) {
                 if (!writer)
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.id);
@@ -1286,33 +1286,33 @@
             };
     
             /**
-             * Encodes the specified ResponesPacket message, length delimited. Does not implicitly {@link webworker_rpc.ResponesPacket.verify|verify} messages.
+             * Encodes the specified ResponsePacket message, length delimited. Does not implicitly {@link webworker_rpc.ResponsePacket.verify|verify} messages.
              * @function encodeDelimited
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
-             * @param {webworker_rpc.IResponesPacket} message ResponesPacket message or plain object to encode
+             * @param {webworker_rpc.IResponsePacket} message ResponsePacket message or plain object to encode
              * @param {$protobuf.Writer} [writer] Writer to encode to
              * @returns {$protobuf.Writer} Writer
              */
-            ResponesPacket.encodeDelimited = function encodeDelimited(message, writer) {
+            ResponsePacket.encodeDelimited = function encodeDelimited(message, writer) {
                 return this.encode(message, writer).ldelim();
             };
     
             /**
-             * Decodes a ResponesPacket message from the specified reader or buffer.
+             * Decodes a ResponsePacket message from the specified reader or buffer.
              * @function decode
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
              * @param {number} [length] Message length if known beforehand
-             * @returns {webworker_rpc.ResponesPacket} ResponesPacket
+             * @returns {webworker_rpc.ResponsePacket} ResponsePacket
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ResponesPacket.decode = function decode(reader, length) {
+            ResponsePacket.decode = function decode(reader, length) {
                 if (!(reader instanceof $Reader))
                     reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.ResponesPacket();
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.ResponsePacket();
                 while (reader.pos < end) {
                     var tag = reader.uint32();
                     switch (tag >>> 3) {
@@ -1336,30 +1336,30 @@
             };
     
             /**
-             * Decodes a ResponesPacket message from the specified reader or buffer, length delimited.
+             * Decodes a ResponsePacket message from the specified reader or buffer, length delimited.
              * @function decodeDelimited
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
              * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {webworker_rpc.ResponesPacket} ResponesPacket
+             * @returns {webworker_rpc.ResponsePacket} ResponsePacket
              * @throws {Error} If the payload is not a reader or valid buffer
              * @throws {$protobuf.util.ProtocolError} If required fields are missing
              */
-            ResponesPacket.decodeDelimited = function decodeDelimited(reader) {
+            ResponsePacket.decodeDelimited = function decodeDelimited(reader) {
                 if (!(reader instanceof $Reader))
                     reader = new $Reader(reader);
                 return this.decode(reader, reader.uint32());
             };
     
             /**
-             * Verifies a ResponesPacket message.
+             * Verifies a ResponsePacket message.
              * @function verify
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
              * @param {Object.<string,*>} message Plain object to verify
              * @returns {string|null} `null` if valid, otherwise the reason why it is not
              */
-            ResponesPacket.verify = function verify(message) {
+            ResponsePacket.verify = function verify(message) {
                 if (typeof message !== "object" || message === null)
                     return "object expected";
                 if (!$util.isInteger(message.id))
@@ -1376,22 +1376,22 @@
             };
     
             /**
-             * Creates a ResponesPacket message from a plain object. Also converts values to their respective internal types.
+             * Creates a ResponsePacket message from a plain object. Also converts values to their respective internal types.
              * @function fromObject
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
              * @param {Object.<string,*>} object Plain object
-             * @returns {webworker_rpc.ResponesPacket} ResponesPacket
+             * @returns {webworker_rpc.ResponsePacket} ResponsePacket
              */
-            ResponesPacket.fromObject = function fromObject(object) {
-                if (object instanceof $root.webworker_rpc.ResponesPacket)
+            ResponsePacket.fromObject = function fromObject(object) {
+                if (object instanceof $root.webworker_rpc.ResponsePacket)
                     return object;
-                var message = new $root.webworker_rpc.ResponesPacket();
+                var message = new $root.webworker_rpc.ResponsePacket();
                 if (object.id != null)
                     message.id = object.id | 0;
                 if (object.val != null) {
                     if (typeof object.val !== "object")
-                        throw TypeError(".webworker_rpc.ResponesPacket.val: object expected");
+                        throw TypeError(".webworker_rpc.ResponsePacket.val: object expected");
                     message.val = $root.webworker_rpc.Param.fromObject(object.val);
                 }
                 if (object.err != null)
@@ -1400,15 +1400,15 @@
             };
     
             /**
-             * Creates a plain object from a ResponesPacket message. Also converts values to other types if specified.
+             * Creates a plain object from a ResponsePacket message. Also converts values to other types if specified.
              * @function toObject
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @static
-             * @param {webworker_rpc.ResponesPacket} message ResponesPacket
+             * @param {webworker_rpc.ResponsePacket} message ResponsePacket
              * @param {$protobuf.IConversionOptions} [options] Conversion options
              * @returns {Object.<string,*>} Plain object
              */
-            ResponesPacket.toObject = function toObject(message, options) {
+            ResponsePacket.toObject = function toObject(message, options) {
                 if (!options)
                     options = {};
                 var object = {};
@@ -1427,17 +1427,17 @@
             };
     
             /**
-             * Converts this ResponesPacket to JSON.
+             * Converts this ResponsePacket to JSON.
              * @function toJSON
-             * @memberof webworker_rpc.ResponesPacket
+             * @memberof webworker_rpc.ResponsePacket
              * @instance
              * @returns {Object.<string,*>} JSON object
              */
-            ResponesPacket.prototype.toJSON = function toJSON() {
+            ResponsePacket.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
             };
     
-            return ResponesPacket;
+            return ResponsePacket;
         })();
     
         webworker_rpc.AddRegistryPacket = (function() {
@@ -2510,6 +2510,447 @@
             return DestroyManagerPacket;
         })();
     
+        webworker_rpc.LinkPacket = (function() {
+    
+            /**
+             * Properties of a LinkPacket.
+             * @memberof webworker_rpc
+             * @interface ILinkPacket
+             * @property {Array.<string>|null} [workers] LinkPacket workers
+             */
+    
+            /**
+             * Constructs a new LinkPacket.
+             * @memberof webworker_rpc
+             * @classdesc Represents a LinkPacket.
+             * @implements ILinkPacket
+             * @constructor
+             * @param {webworker_rpc.ILinkPacket=} [properties] Properties to set
+             */
+            function LinkPacket(properties) {
+                this.workers = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * LinkPacket workers.
+             * @member {Array.<string>} workers
+             * @memberof webworker_rpc.LinkPacket
+             * @instance
+             */
+            LinkPacket.prototype.workers = $util.emptyArray;
+    
+            /**
+             * Creates a new LinkPacket instance using the specified properties.
+             * @function create
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {webworker_rpc.ILinkPacket=} [properties] Properties to set
+             * @returns {webworker_rpc.LinkPacket} LinkPacket instance
+             */
+            LinkPacket.create = function create(properties) {
+                return new LinkPacket(properties);
+            };
+    
+            /**
+             * Encodes the specified LinkPacket message. Does not implicitly {@link webworker_rpc.LinkPacket.verify|verify} messages.
+             * @function encode
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {webworker_rpc.ILinkPacket} message LinkPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            LinkPacket.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.workers != null && message.workers.length)
+                    for (var i = 0; i < message.workers.length; ++i)
+                        writer.uint32(/* id 1, wireType 2 =*/10).string(message.workers[i]);
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified LinkPacket message, length delimited. Does not implicitly {@link webworker_rpc.LinkPacket.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {webworker_rpc.ILinkPacket} message LinkPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            LinkPacket.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a LinkPacket message from the specified reader or buffer.
+             * @function decode
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {webworker_rpc.LinkPacket} LinkPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            LinkPacket.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.LinkPacket();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.workers && message.workers.length))
+                            message.workers = [];
+                        message.workers.push(reader.string());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Decodes a LinkPacket message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {webworker_rpc.LinkPacket} LinkPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            LinkPacket.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a LinkPacket message.
+             * @function verify
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            LinkPacket.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.workers != null && message.hasOwnProperty("workers")) {
+                    if (!Array.isArray(message.workers))
+                        return "workers: array expected";
+                    for (var i = 0; i < message.workers.length; ++i)
+                        if (!$util.isString(message.workers[i]))
+                            return "workers: string[] expected";
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a LinkPacket message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {webworker_rpc.LinkPacket} LinkPacket
+             */
+            LinkPacket.fromObject = function fromObject(object) {
+                if (object instanceof $root.webworker_rpc.LinkPacket)
+                    return object;
+                var message = new $root.webworker_rpc.LinkPacket();
+                if (object.workers) {
+                    if (!Array.isArray(object.workers))
+                        throw TypeError(".webworker_rpc.LinkPacket.workers: array expected");
+                    message.workers = [];
+                    for (var i = 0; i < object.workers.length; ++i)
+                        message.workers[i] = String(object.workers[i]);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a LinkPacket message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof webworker_rpc.LinkPacket
+             * @static
+             * @param {webworker_rpc.LinkPacket} message LinkPacket
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            LinkPacket.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.workers = [];
+                if (message.workers && message.workers.length) {
+                    object.workers = [];
+                    for (var j = 0; j < message.workers.length; ++j)
+                        object.workers[j] = message.workers[j];
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this LinkPacket to JSON.
+             * @function toJSON
+             * @memberof webworker_rpc.LinkPacket
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            LinkPacket.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return LinkPacket;
+        })();
+    
+        webworker_rpc.ProxyCreateWorkerPacket = (function() {
+    
+            /**
+             * Properties of a ProxyCreateWorkerPacket.
+             * @memberof webworker_rpc
+             * @interface IProxyCreateWorkerPacket
+             * @property {string} workerName ProxyCreateWorkerPacket workerName
+             * @property {string} workerUrl ProxyCreateWorkerPacket workerUrl
+             * @property {webworker_rpc.IWebWorkerMessage} msg ProxyCreateWorkerPacket msg
+             */
+    
+            /**
+             * Constructs a new ProxyCreateWorkerPacket.
+             * @memberof webworker_rpc
+             * @classdesc Represents a ProxyCreateWorkerPacket.
+             * @implements IProxyCreateWorkerPacket
+             * @constructor
+             * @param {webworker_rpc.IProxyCreateWorkerPacket=} [properties] Properties to set
+             */
+            function ProxyCreateWorkerPacket(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * ProxyCreateWorkerPacket workerName.
+             * @member {string} workerName
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @instance
+             */
+            ProxyCreateWorkerPacket.prototype.workerName = "";
+    
+            /**
+             * ProxyCreateWorkerPacket workerUrl.
+             * @member {string} workerUrl
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @instance
+             */
+            ProxyCreateWorkerPacket.prototype.workerUrl = "";
+    
+            /**
+             * ProxyCreateWorkerPacket msg.
+             * @member {webworker_rpc.IWebWorkerMessage} msg
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @instance
+             */
+            ProxyCreateWorkerPacket.prototype.msg = null;
+    
+            /**
+             * Creates a new ProxyCreateWorkerPacket instance using the specified properties.
+             * @function create
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {webworker_rpc.IProxyCreateWorkerPacket=} [properties] Properties to set
+             * @returns {webworker_rpc.ProxyCreateWorkerPacket} ProxyCreateWorkerPacket instance
+             */
+            ProxyCreateWorkerPacket.create = function create(properties) {
+                return new ProxyCreateWorkerPacket(properties);
+            };
+    
+            /**
+             * Encodes the specified ProxyCreateWorkerPacket message. Does not implicitly {@link webworker_rpc.ProxyCreateWorkerPacket.verify|verify} messages.
+             * @function encode
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {webworker_rpc.IProxyCreateWorkerPacket} message ProxyCreateWorkerPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProxyCreateWorkerPacket.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.workerName);
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.workerUrl);
+                $root.webworker_rpc.WebWorkerMessage.encode(message.msg, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified ProxyCreateWorkerPacket message, length delimited. Does not implicitly {@link webworker_rpc.ProxyCreateWorkerPacket.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {webworker_rpc.IProxyCreateWorkerPacket} message ProxyCreateWorkerPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ProxyCreateWorkerPacket.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a ProxyCreateWorkerPacket message from the specified reader or buffer.
+             * @function decode
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {webworker_rpc.ProxyCreateWorkerPacket} ProxyCreateWorkerPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProxyCreateWorkerPacket.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.ProxyCreateWorkerPacket();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.workerName = reader.string();
+                        break;
+                    case 2:
+                        message.workerUrl = reader.string();
+                        break;
+                    case 3:
+                        message.msg = $root.webworker_rpc.WebWorkerMessage.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("workerName"))
+                    throw $util.ProtocolError("missing required 'workerName'", { instance: message });
+                if (!message.hasOwnProperty("workerUrl"))
+                    throw $util.ProtocolError("missing required 'workerUrl'", { instance: message });
+                if (!message.hasOwnProperty("msg"))
+                    throw $util.ProtocolError("missing required 'msg'", { instance: message });
+                return message;
+            };
+    
+            /**
+             * Decodes a ProxyCreateWorkerPacket message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {webworker_rpc.ProxyCreateWorkerPacket} ProxyCreateWorkerPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ProxyCreateWorkerPacket.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a ProxyCreateWorkerPacket message.
+             * @function verify
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ProxyCreateWorkerPacket.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (!$util.isString(message.workerName))
+                    return "workerName: string expected";
+                if (!$util.isString(message.workerUrl))
+                    return "workerUrl: string expected";
+                {
+                    var error = $root.webworker_rpc.WebWorkerMessage.verify(message.msg);
+                    if (error)
+                        return "msg." + error;
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a ProxyCreateWorkerPacket message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {webworker_rpc.ProxyCreateWorkerPacket} ProxyCreateWorkerPacket
+             */
+            ProxyCreateWorkerPacket.fromObject = function fromObject(object) {
+                if (object instanceof $root.webworker_rpc.ProxyCreateWorkerPacket)
+                    return object;
+                var message = new $root.webworker_rpc.ProxyCreateWorkerPacket();
+                if (object.workerName != null)
+                    message.workerName = String(object.workerName);
+                if (object.workerUrl != null)
+                    message.workerUrl = String(object.workerUrl);
+                if (object.msg != null) {
+                    if (typeof object.msg !== "object")
+                        throw TypeError(".webworker_rpc.ProxyCreateWorkerPacket.msg: object expected");
+                    message.msg = $root.webworker_rpc.WebWorkerMessage.fromObject(object.msg);
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a ProxyCreateWorkerPacket message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @static
+             * @param {webworker_rpc.ProxyCreateWorkerPacket} message ProxyCreateWorkerPacket
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ProxyCreateWorkerPacket.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.workerName = "";
+                    object.workerUrl = "";
+                    object.msg = null;
+                }
+                if (message.workerName != null && message.hasOwnProperty("workerName"))
+                    object.workerName = message.workerName;
+                if (message.workerUrl != null && message.hasOwnProperty("workerUrl"))
+                    object.workerUrl = message.workerUrl;
+                if (message.msg != null && message.hasOwnProperty("msg"))
+                    object.msg = $root.webworker_rpc.WebWorkerMessage.toObject(message.msg, options);
+                return object;
+            };
+    
+            /**
+             * Converts this ProxyCreateWorkerPacket to JSON.
+             * @function toJSON
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ProxyCreateWorkerPacket.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return ProxyCreateWorkerPacket;
+        })();
+    
         webworker_rpc.WebWorkerMessage = (function() {
     
             /**
@@ -2517,11 +2958,13 @@
              * @memberof webworker_rpc
              * @interface IWebWorkerMessage
              * @property {string} key WebWorkerMessage key
+             * @property {webworker_rpc.ILinkPacket|null} [dataLink] WebWorkerMessage dataLink
              * @property {webworker_rpc.IRequestLinkPacket|null} [dataRequestLink] WebWorkerMessage dataRequestLink
+             * @property {webworker_rpc.IProxyCreateWorkerPacket|null} [dataProxyCreateWorker] WebWorkerMessage dataProxyCreateWorker
              * @property {webworker_rpc.IAddRegistryPacket|null} [dataAddRegistry] WebWorkerMessage dataAddRegistry
              * @property {webworker_rpc.IGotRegistryPacket|null} [dataGotRegistry] WebWorkerMessage dataGotRegistry
              * @property {webworker_rpc.IExecutePacket|null} [dataExecute] WebWorkerMessage dataExecute
-             * @property {webworker_rpc.IResponesPacket|null} [dataResponse] WebWorkerMessage dataResponse
+             * @property {webworker_rpc.IResponsePacket|null} [dataResponse] WebWorkerMessage dataResponse
              * @property {webworker_rpc.IUnlinkPacket|null} [dataUnlink] WebWorkerMessage dataUnlink
              * @property {webworker_rpc.IDestroyManagerPacket|null} [dataDestroyManager] WebWorkerMessage dataDestroyManager
              */
@@ -2550,12 +2993,28 @@
             WebWorkerMessage.prototype.key = "";
     
             /**
+             * WebWorkerMessage dataLink.
+             * @member {webworker_rpc.ILinkPacket|null|undefined} dataLink
+             * @memberof webworker_rpc.WebWorkerMessage
+             * @instance
+             */
+            WebWorkerMessage.prototype.dataLink = null;
+    
+            /**
              * WebWorkerMessage dataRequestLink.
              * @member {webworker_rpc.IRequestLinkPacket|null|undefined} dataRequestLink
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
             WebWorkerMessage.prototype.dataRequestLink = null;
+    
+            /**
+             * WebWorkerMessage dataProxyCreateWorker.
+             * @member {webworker_rpc.IProxyCreateWorkerPacket|null|undefined} dataProxyCreateWorker
+             * @memberof webworker_rpc.WebWorkerMessage
+             * @instance
+             */
+            WebWorkerMessage.prototype.dataProxyCreateWorker = null;
     
             /**
              * WebWorkerMessage dataAddRegistry.
@@ -2583,7 +3042,7 @@
     
             /**
              * WebWorkerMessage dataResponse.
-             * @member {webworker_rpc.IResponesPacket|null|undefined} dataResponse
+             * @member {webworker_rpc.IResponsePacket|null|undefined} dataResponse
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
@@ -2610,12 +3069,12 @@
     
             /**
              * WebWorkerMessage data.
-             * @member {"dataRequestLink"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager"|undefined} data
+             * @member {"dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager"|undefined} data
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
             Object.defineProperty(WebWorkerMessage.prototype, "data", {
-                get: $util.oneOfGetter($oneOfFields = ["dataRequestLink", "dataAddRegistry", "dataGotRegistry", "dataExecute", "dataResponse", "dataUnlink", "dataDestroyManager"]),
+                get: $util.oneOfGetter($oneOfFields = ["dataLink", "dataRequestLink", "dataProxyCreateWorker", "dataAddRegistry", "dataGotRegistry", "dataExecute", "dataResponse", "dataUnlink", "dataDestroyManager"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
     
@@ -2644,20 +3103,24 @@
                 if (!writer)
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.key);
+                if (message.dataLink != null && Object.hasOwnProperty.call(message, "dataLink"))
+                    $root.webworker_rpc.LinkPacket.encode(message.dataLink, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
                 if (message.dataRequestLink != null && Object.hasOwnProperty.call(message, "dataRequestLink"))
-                    $root.webworker_rpc.RequestLinkPacket.encode(message.dataRequestLink, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                    $root.webworker_rpc.RequestLinkPacket.encode(message.dataRequestLink, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.dataProxyCreateWorker != null && Object.hasOwnProperty.call(message, "dataProxyCreateWorker"))
+                    $root.webworker_rpc.ProxyCreateWorkerPacket.encode(message.dataProxyCreateWorker, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
                 if (message.dataAddRegistry != null && Object.hasOwnProperty.call(message, "dataAddRegistry"))
-                    $root.webworker_rpc.AddRegistryPacket.encode(message.dataAddRegistry, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                    $root.webworker_rpc.AddRegistryPacket.encode(message.dataAddRegistry, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.dataGotRegistry != null && Object.hasOwnProperty.call(message, "dataGotRegistry"))
-                    $root.webworker_rpc.GotRegistryPacket.encode(message.dataGotRegistry, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                    $root.webworker_rpc.GotRegistryPacket.encode(message.dataGotRegistry, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
                 if (message.dataExecute != null && Object.hasOwnProperty.call(message, "dataExecute"))
-                    $root.webworker_rpc.ExecutePacket.encode(message.dataExecute, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+                    $root.webworker_rpc.ExecutePacket.encode(message.dataExecute, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
                 if (message.dataResponse != null && Object.hasOwnProperty.call(message, "dataResponse"))
-                    $root.webworker_rpc.ResponesPacket.encode(message.dataResponse, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                    $root.webworker_rpc.ResponsePacket.encode(message.dataResponse, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
                 if (message.dataUnlink != null && Object.hasOwnProperty.call(message, "dataUnlink"))
-                    $root.webworker_rpc.UnlinkPacket.encode(message.dataUnlink, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                    $root.webworker_rpc.UnlinkPacket.encode(message.dataUnlink, writer.uint32(/* id 9, wireType 2 =*/74).fork()).ldelim();
                 if (message.dataDestroyManager != null && Object.hasOwnProperty.call(message, "dataDestroyManager"))
-                    $root.webworker_rpc.DestroyManagerPacket.encode(message.dataDestroyManager, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                    $root.webworker_rpc.DestroyManagerPacket.encode(message.dataDestroyManager, writer.uint32(/* id 10, wireType 2 =*/82).fork()).ldelim();
                 return writer;
             };
     
@@ -2696,24 +3159,30 @@
                         message.key = reader.string();
                         break;
                     case 2:
-                        message.dataRequestLink = $root.webworker_rpc.RequestLinkPacket.decode(reader, reader.uint32());
+                        message.dataLink = $root.webworker_rpc.LinkPacket.decode(reader, reader.uint32());
                         break;
                     case 3:
-                        message.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.decode(reader, reader.uint32());
+                        message.dataRequestLink = $root.webworker_rpc.RequestLinkPacket.decode(reader, reader.uint32());
                         break;
                     case 4:
-                        message.dataGotRegistry = $root.webworker_rpc.GotRegistryPacket.decode(reader, reader.uint32());
+                        message.dataProxyCreateWorker = $root.webworker_rpc.ProxyCreateWorkerPacket.decode(reader, reader.uint32());
                         break;
                     case 5:
-                        message.dataExecute = $root.webworker_rpc.ExecutePacket.decode(reader, reader.uint32());
+                        message.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.decode(reader, reader.uint32());
                         break;
                     case 6:
-                        message.dataResponse = $root.webworker_rpc.ResponesPacket.decode(reader, reader.uint32());
+                        message.dataGotRegistry = $root.webworker_rpc.GotRegistryPacket.decode(reader, reader.uint32());
                         break;
                     case 7:
-                        message.dataUnlink = $root.webworker_rpc.UnlinkPacket.decode(reader, reader.uint32());
+                        message.dataExecute = $root.webworker_rpc.ExecutePacket.decode(reader, reader.uint32());
                         break;
                     case 8:
+                        message.dataResponse = $root.webworker_rpc.ResponsePacket.decode(reader, reader.uint32());
+                        break;
+                    case 9:
+                        message.dataUnlink = $root.webworker_rpc.UnlinkPacket.decode(reader, reader.uint32());
+                        break;
+                    case 10:
                         message.dataDestroyManager = $root.webworker_rpc.DestroyManagerPacket.decode(reader, reader.uint32());
                         break;
                     default:
@@ -2756,12 +3225,32 @@
                 var properties = {};
                 if (!$util.isString(message.key))
                     return "key: string expected";
+                if (message.dataLink != null && message.hasOwnProperty("dataLink")) {
+                    properties.data = 1;
+                    {
+                        var error = $root.webworker_rpc.LinkPacket.verify(message.dataLink);
+                        if (error)
+                            return "dataLink." + error;
+                    }
+                }
                 if (message.dataRequestLink != null && message.hasOwnProperty("dataRequestLink")) {
+                    if (properties.data === 1)
+                        return "data: multiple values";
                     properties.data = 1;
                     {
                         var error = $root.webworker_rpc.RequestLinkPacket.verify(message.dataRequestLink);
                         if (error)
                             return "dataRequestLink." + error;
+                    }
+                }
+                if (message.dataProxyCreateWorker != null && message.hasOwnProperty("dataProxyCreateWorker")) {
+                    if (properties.data === 1)
+                        return "data: multiple values";
+                    properties.data = 1;
+                    {
+                        var error = $root.webworker_rpc.ProxyCreateWorkerPacket.verify(message.dataProxyCreateWorker);
+                        if (error)
+                            return "dataProxyCreateWorker." + error;
                     }
                 }
                 if (message.dataAddRegistry != null && message.hasOwnProperty("dataAddRegistry")) {
@@ -2799,7 +3288,7 @@
                         return "data: multiple values";
                     properties.data = 1;
                     {
-                        var error = $root.webworker_rpc.ResponesPacket.verify(message.dataResponse);
+                        var error = $root.webworker_rpc.ResponsePacket.verify(message.dataResponse);
                         if (error)
                             return "dataResponse." + error;
                     }
@@ -2841,10 +3330,20 @@
                 var message = new $root.webworker_rpc.WebWorkerMessage();
                 if (object.key != null)
                     message.key = String(object.key);
+                if (object.dataLink != null) {
+                    if (typeof object.dataLink !== "object")
+                        throw TypeError(".webworker_rpc.WebWorkerMessage.dataLink: object expected");
+                    message.dataLink = $root.webworker_rpc.LinkPacket.fromObject(object.dataLink);
+                }
                 if (object.dataRequestLink != null) {
                     if (typeof object.dataRequestLink !== "object")
                         throw TypeError(".webworker_rpc.WebWorkerMessage.dataRequestLink: object expected");
                     message.dataRequestLink = $root.webworker_rpc.RequestLinkPacket.fromObject(object.dataRequestLink);
+                }
+                if (object.dataProxyCreateWorker != null) {
+                    if (typeof object.dataProxyCreateWorker !== "object")
+                        throw TypeError(".webworker_rpc.WebWorkerMessage.dataProxyCreateWorker: object expected");
+                    message.dataProxyCreateWorker = $root.webworker_rpc.ProxyCreateWorkerPacket.fromObject(object.dataProxyCreateWorker);
                 }
                 if (object.dataAddRegistry != null) {
                     if (typeof object.dataAddRegistry !== "object")
@@ -2864,7 +3363,7 @@
                 if (object.dataResponse != null) {
                     if (typeof object.dataResponse !== "object")
                         throw TypeError(".webworker_rpc.WebWorkerMessage.dataResponse: object expected");
-                    message.dataResponse = $root.webworker_rpc.ResponesPacket.fromObject(object.dataResponse);
+                    message.dataResponse = $root.webworker_rpc.ResponsePacket.fromObject(object.dataResponse);
                 }
                 if (object.dataUnlink != null) {
                     if (typeof object.dataUnlink !== "object")
@@ -2896,10 +3395,20 @@
                     object.key = "";
                 if (message.key != null && message.hasOwnProperty("key"))
                     object.key = message.key;
+                if (message.dataLink != null && message.hasOwnProperty("dataLink")) {
+                    object.dataLink = $root.webworker_rpc.LinkPacket.toObject(message.dataLink, options);
+                    if (options.oneofs)
+                        object.data = "dataLink";
+                }
                 if (message.dataRequestLink != null && message.hasOwnProperty("dataRequestLink")) {
                     object.dataRequestLink = $root.webworker_rpc.RequestLinkPacket.toObject(message.dataRequestLink, options);
                     if (options.oneofs)
                         object.data = "dataRequestLink";
+                }
+                if (message.dataProxyCreateWorker != null && message.hasOwnProperty("dataProxyCreateWorker")) {
+                    object.dataProxyCreateWorker = $root.webworker_rpc.ProxyCreateWorkerPacket.toObject(message.dataProxyCreateWorker, options);
+                    if (options.oneofs)
+                        object.data = "dataProxyCreateWorker";
                 }
                 if (message.dataAddRegistry != null && message.hasOwnProperty("dataAddRegistry")) {
                     object.dataAddRegistry = $root.webworker_rpc.AddRegistryPacket.toObject(message.dataAddRegistry, options);
@@ -2917,7 +3426,7 @@
                         object.data = "dataExecute";
                 }
                 if (message.dataResponse != null && message.hasOwnProperty("dataResponse")) {
-                    object.dataResponse = $root.webworker_rpc.ResponesPacket.toObject(message.dataResponse, options);
+                    object.dataResponse = $root.webworker_rpc.ResponsePacket.toObject(message.dataResponse, options);
                     if (options.oneofs)
                         object.data = "dataResponse";
                 }

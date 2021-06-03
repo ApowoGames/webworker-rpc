@@ -46,7 +46,7 @@ message ExecutePacket {
     optional bytes body = 4;// 复杂类型支持
 }
 
-message ResponesPacket {
+message ResponsePacket {
     required int32 id = 1;
     optional Param val = 2;
     optional string err = 3;
@@ -77,15 +77,27 @@ message DestroyManagerPacket {
     optional string service_name = 1;// 发送者(worker)名称
 }
 
+message LinkPacket {
+    repeated string workers = 1;// 待连接(worker)名称
+}
+
+message ProxyCreateWorkerPacket {
+    required string worker_name = 1;// 目标(worker)名称
+    required string worker_url = 2;// 目标(worker)地址
+    required WebWorkerMessage msg = 3;// 初始化时响应信息
+}
+
 message WebWorkerMessage {
     required string key = 1;
     oneof data {
-        RequestLinkPacket data_request_link = 2;
-        AddRegistryPacket data_add_registry = 3;
-        GotRegistryPacket data_got_registry = 4;
-        ExecutePacket data_execute = 5;
-        ResponesPacket data_response = 6;
-        UnlinkPacket data_unlink = 7;
-        DestroyManagerPacket data_destroy_manager = 8;
+        LinkPacket data_link = 2;
+        RequestLinkPacket data_request_link = 3;
+        ProxyCreateWorkerPacket data_proxy_create_worker = 4;
+        AddRegistryPacket data_add_registry = 5;
+        GotRegistryPacket data_got_registry = 6;
+        ExecutePacket data_execute = 7;
+        ResponsePacket data_response = 8;
+        UnlinkPacket data_unlink = 9;
+        DestroyManagerPacket data_destroy_manager = 10;
     }
 }
