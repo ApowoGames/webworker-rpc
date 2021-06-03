@@ -58,11 +58,22 @@ message AddRegistryPacket {
     repeated Executor executors = 3;// 发送者可调用方法
 }
 
+message GotRegistryPacket {
+    required int32 id = 1;
+    required string service_name = 2;// 发送者(worker)名称
+}
+
+message UnlinkPacket {
+    required string service_name = 1;// 发送者(worker)名称
+}
+
 message WebWorkerMessage {
     required string key = 1;
     oneof data {
         AddRegistryPacket data_add_registry = 2;
-        ExecutePacket data_execute = 3;
-        ResponesPacket data_response = 4; 
+        GotRegistryPacket data_got_registry = 3;
+        ExecutePacket data_execute = 4;
+        ResponesPacket data_response = 5;
+        UnlinkPacket data_unlink = 6;
     }
 }

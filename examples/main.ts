@@ -3,13 +3,18 @@ import {CustomData} from "./custom.data";
 
 window.onload = () => {
     RPCPeer.create("main");
-    RPCPeer.attach("foreman", "/foremanWorker.js", true).onceReady(() => {
+    RPCPeer.attach("foreman", "/foremanWorker.js").onceReady(() => {
         console.log("ready link to foreman");
         RPCPeer.remote.foreman.ForemanChild.testExtends();
         const importedData = new CustomData("1", true, 1);
-        RPCPeer.remote.foreman.ForemanChild.testSpecialParams("s", true, null, {x: 1, y: 2}).then((data) => {
-            console.log("test then ", data);
+        RPCPeer.attach("workerA", "/taskAWorker.js").onceReady(() => {
+            console.log("ready link to workerA");
+            RPCPeer.remote.foreman.ForemanChild.testSpecialParams("s", true, null, {x: 1, y: 2}).then((data) => {
+                console.log("test then ", data);
+                RPCPeer.destroyManagerWorker();
+            });
         });
+
         // peer.remote.foreman.ForemanContext.destroy();
         // peer.remote.foreman.ForemanContext.testSpecialParams("2");
 
@@ -31,7 +36,4 @@ window.onload = () => {
         // peer.remote.foreman.ForemanContext.staticSon.foremanSonFunction();
         // peer.remote.foreman.ForemanContext.staticSon.staticGrandson.foremanGrandsonFunction();
     });
-    // RPCPeer.attach("workerA", "/taskAWorker.js", true).onceReady(() => {
-    //     console.log("ready link to workerA");
-    // });
 };

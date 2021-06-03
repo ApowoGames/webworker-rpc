@@ -23,7 +23,7 @@ const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.Par
 };
 const ExportAttribute = (target, name) => {
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
-    // console.log("ExportAttribute: ", context, name, target);
+    // console.log("webworker-rpc: ExportAttribute: ", context, name, target);
 
     if (!ExportedAttributes.has(context)) {
         ExportedAttributes.set(context, []);
@@ -90,7 +90,7 @@ const MANAGER_WORKER_NAME: string = "__MANAGER";
 // manager worker sprite
 const MANAGERWORKERSPRITE = (ev) => {
     if (typeof MessageChannel === "undefined") {
-        console.error("MessageChannel undefined");
+        console.error("webworker-rpc: MessageChannel undefined");
         return;
     }
 
@@ -145,12 +145,12 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_RequestLink = (_ev: MessageEvent) => {
-        // console.log("onMessage_RequestLink ", _ev.data);
+        // console.log("webworker-rpc: " + MANAGER_WORKER_NAME + "onMessage_RequestLink ", _ev.data);
         const {serviceName, workerName, workerUrl} = _ev.data;
         const service2TarChannel = new MessageChannel();
 
         if (!channels.has(serviceName)) {
-            console.error(MANAGER_WORKER_NAME + " not yet link to " + serviceName);
+            console.error("webworker-rpc: " + MANAGER_WORKER_NAME + " not yet link to " + serviceName);
             return;
         }
         channels.get(serviceName).postMessage({
@@ -165,7 +165,7 @@ const MANAGERWORKERSPRITE = (ev) => {
             }, [service2TarChannel.port2]);
         } else {
             if (workerUrl === undefined || workerUrl === null) {
-                console.error("worker url undefined");
+                console.error("webworker-rpc: worker url undefined");
                 return;
             }
 
@@ -182,7 +182,7 @@ const MANAGERWORKERSPRITE = (ev) => {
             }, [manager2TarChannel.port2, service2TarChannel.port2]);
             // } else {
             //     const tarWorker = new Worker(location.origin + workerUrl, { name: workerName });
-            //     console.log(MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
+            //     console.log("webworker-rpc: " + MANAGERWORKERNAME + " new worker: ", location.origin + workerUrl, workerName);
 
             //     tarWorker.postMessage({ key: MESSAGEKEY_LINK, workers: [MANAGERWORKERNAME, serviceName] }, [manager2TarChannel.port2, service2TarChannel.port2]);
             // }
@@ -191,21 +191,23 @@ const MANAGERWORKERSPRITE = (ev) => {
     }
 
     const onMessage_Unlink = (_ev: MessageEvent) => {
-        const {worker} = _ev.data;
-        if (channels.has(worker)) {
-            channels.delete(worker);
+        // follow proto
+        const {dataUnlink} = _ev.data;
+        if (channels.has(dataUnlink.serviceName)) {
+            channels.delete(dataUnlink.serviceName);
         }
 
-        // console.log(MANAGERWORKERNAME + " unlink: ", channels);
+        // console.log("webworker-rpc: " + MANAGERWORKERNAME + " unlink: ", channels);
     }
 
     const onMessage_Destroy = (_ev: MessageEvent) => {
         const linkedNames = Array.from(channels.keys());
         for (const oneName of linkedNames) {
             const w = channels.get(oneName);
-            w.postMessage({key: MESSAGEKEY_UNLINK, worker: MANAGER_WORKER_NAME});
+            // follow proto
+            w.postMessage({key: MESSAGEKEY_UNLINK, dataUnlink: {serviceName: MANAGER_WORKER_NAME}});
         }
-        console.log("webworker-rpc: close manager worker");
+        console.log("webworker-rpc: manager worker closed");
         self.close();
     }
 
@@ -228,13 +230,13 @@ function ExceptClassProperties() {
         for (const key in target) {
             if (!EXCLUDE_PROPERTIES.includes(key)) {
                 EXCLUDE_PROPERTIES.push(key);
-                // console.log("ExceptProperty: ", key);
+                // console.log("webworker-rpc: ExceptProperty: ", key);
             }
         }
         for (const key of target.constructor) {
             if (!EXCLUDE_PROPERTIES.includes(key)) {
                 EXCLUDE_PROPERTIES.push(key);
-                // console.log("ExceptProperty: ", key);
+                // console.log("webworker-rpc: ExceptProperty: ", key);
             }
         }
     }
@@ -246,7 +248,7 @@ export class RPCEmitter {
     constructor() {
         this.emitFunctions = new Map();
 
-        // console.log("Emitter constructor: ", this);
+        // console.log("webworker-rpc: Emitter constructor: ", this);
 
         ExportedContexts.set(this.constructor.name, this);
         this.checkSuperExport();
@@ -255,7 +257,7 @@ export class RPCEmitter {
     @Export([webworker_rpc.ParamType.str, webworker_rpc.ParamType.executor, webworker_rpc.ParamType.str])
     @ExceptClassProperties()
     public on(event: string, executor: webworker_rpc.IExecutor, worker: string) {
-        // console.log("on", event, executor, worker, this);
+        // console.log("webworker-rpc: on", event, executor, worker, this);
 
         if (!this.emitFunctions.has(event)) {
             this.emitFunctions.set(event, []);
@@ -282,7 +284,7 @@ export class RPCEmitter {
     public emit(event: string, ...args) {
         if (!this.emitFunctions.has(event)) return;
         if (!RPCPeer.getInstance()) {
-            console.error("no peer created");
+            console.error("webworker-rpc: no peer created");
             return;
         }
 
@@ -397,7 +399,7 @@ export class RPCPeer extends RPCEmitter {
 
     static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
         if (!RPCPeer._instance) {
-            console.error("RPCPeer not created");
+            console.error("webworker-rpc: RPCPeer not created");
             return null;
         }
         return RPCPeer._instance.attach(workerName, workerUrl, onlyOneWorker);
@@ -405,7 +407,7 @@ export class RPCPeer extends RPCEmitter {
 
     static get remote() {
         if (!RPCPeer._instance) {
-            console.error("RPCPeer not created");
+            console.error("webworker-rpc: RPCPeer not created");
             return null;
         }
         return RPCPeer._instance.remote;
@@ -413,7 +415,7 @@ export class RPCPeer extends RPCEmitter {
 
     static exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
         if (!RPCPeer._instance) {
-            console.error("RPCPeer not created");
+            console.error("webworker-rpc: RPCPeer not created");
             return null;
         }
         return RPCPeer._instance.exportProperty(attr, context, attrName);
@@ -421,26 +423,34 @@ export class RPCPeer extends RPCEmitter {
 
     static destroy() {
         if (!RPCPeer._instance) {
-            console.error("RPCPeer not created");
+            console.error("webworker-rpc: RPCPeer not created");
             return null;
         }
         return RPCPeer._instance.destroy();
     }
 
+    static destroyManagerWorker() {
+        if (!RPCPeer._instance) {
+            console.error("webworker-rpc: RPCPeer not created");
+            return null;
+        }
+        return RPCPeer._instance.destroyManagerWorker();
+    }
+
     constructor(name: string) {
         super();
         if (typeof MessageChannel === "undefined") {
-            console.error("MessageChannel undefined");
+            console.error("webworker-rpc: MessageChannel undefined");
             return;
         }
 
         if (name === undefined || name === null) {
-            console.error("param <name> error");
+            console.error("webworker-rpc: param [name] error");
             return;
         }
 
         if (RPCPeer._instance) {
-            console.error(`duplicate RPCPeer created: ${name} & ${RPCPeer._instance.name}`);
+            console.error(`webworker-rpc: duplicate RPCPeer created: ${name} & ${RPCPeer._instance.name}`);
             return;
         }
         RPCPeer._instance = this;
@@ -471,26 +481,26 @@ export class RPCPeer extends RPCEmitter {
             onlyOneWorker = false;
         }
         if (this.linkListeners.has(workerName)) {
-            console.warn("already requested link to " + workerName);
+            console.warn("webworker-rpc: already requested link to " + workerName);
             return this.linkListeners.get(workerName);
         }
         const listener = new LinkListener(this.name, workerName);
 
         if (onlyOneWorker) {
             if (this.channels.has(workerName)) {
-                console.error("ONLY_ONE_WORKER mode, already linked " + workerName + ".");
+                console.error("webworker-rpc: ONLY_ONE_WORKER mode, already linked " + workerName + ".");
                 return listener;
             }
             if (this.channels.size > 0) {
-                console.error("ONLY_ONE_WORKER mode cannot create another worker. ", this.channels);
+                console.error("webworker-rpc: ONLY_ONE_WORKER mode cannot create another worker. ", this.channels);
                 return listener;
             }
             if (typeof Worker === "undefined") {
-                console.error(this.name + " cannot create worker.");
+                console.error("webworker-rpc: " + this.name + " cannot create worker.");
                 return listener;
             }
             if (workerUrl === undefined || workerUrl.length === 0) {
-                console.error("ONLY_ONE_WORKER mode not support undefined workerUrl (besides windows).");
+                console.error("webworker-rpc: ONLY_ONE_WORKER mode not support undefined workerUrl (besides windows).");
                 return listener;
             }
             this.linkListeners.set(workerName, listener);
@@ -512,11 +522,11 @@ export class RPCPeer extends RPCEmitter {
                 }
 
                 if (typeof Worker === "undefined") {
-                    console.error("Worker undefined! can not create manager worker.");
+                    console.error("webworker-rpc: Worker undefined! can not create manager worker.");
                     return;
                 }
                 const managerWorkerURL = this.getManagerWorkerURL();
-                // console.log(this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
+                // console.log("webworker-rpc: " + this.name + " new worker: ", managerWorkerURL, this.MANAGERWORKERNAME);
                 const managerWorker = new Worker(managerWorkerURL);
                 const managerChannel = new MessageChannel();
 
@@ -554,38 +564,43 @@ export class RPCPeer extends RPCEmitter {
             }
 
             // unlink: remove channel, remove registry
-            const w = this.channels.get(oneName);
-            w.postMessage({key: this.MESSAGEKEY_UNLINK, worker: this.name});
+            const messageData = new webworker_rpc.WebWorkerMessage({
+                key: this.MESSAGEKEY_UNLINK,
+                dataUnlink: new webworker_rpc.UnlinkPacket({
+                    serviceName: this.name
+                })
+            });
+            this.postMessage(messageData, oneName);
         }
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
 
-        console.log("webworker-rpc: close " + this.name);
+        console.log("webworker-rpc: " + this.name + " closed");
         self.close();
     }
 
     // 动态暴露属性 注意：若使用了自定义属性名attrName，需要自行管理暴露属性的内存释放(delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
-        // console.log(this.name + " export: ", attr, context);
+        // console.log("webworker-rpc: " + this.name + " export: ", attr, context);
         if (attrName === undefined || attrName === null) {
             for (const key in context) {
                 if (Object.prototype.hasOwnProperty.call(context, key)) {
                     const element = context[key];
                     if (element === attr) {
                         attrName = key;
-                        // console.log("attrName: ", attrName);
+                        // console.log("webworker-rpc: attrName: ", attrName);
                     }
                 }
             }
         }
         if (attrName.length === 0) {
-            console.error(`${attr} is not in ${context}`);
+            console.error(`webworker-rpc: ${attr} is not in ${context}`);
             return;
         }
 
         if (context[attrName] !== attr) {
             if (context[attrName] !== undefined && context[attrName] !== null) {
-                console.warn(`${attrName} exist, replaced`);
+                console.warn(`webworker-rpc: ${attrName} exist, replaced`);
             }
 
             // TODO: 此处添加了引用，但是没有做释放相关操作
@@ -606,7 +621,7 @@ export class RPCPeer extends RPCEmitter {
         if (existConName.length === 0) {
             conName = context.constructor.name;
             if (ExportedContexts.has(conName)) {
-                console.error(`context name <${conName}> exist`);
+                console.error(`webworker-rpc: context name <${conName}> exist`);
                 return;
             }
             ExportedContexts.set(conName, context);
@@ -628,7 +643,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     protected onWorkerUnlinked(worker: string) {
-        console.log(this.name + " onWorkerUnlinked: ", worker);
+        console.log("webworker-rpc: " + this.name + " onWorkerUnlinked: ", worker);
     }
 
     private postMessage(msg: webworker_rpc.IWebWorkerMessage, target: string) {
@@ -648,11 +663,11 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
         this.channels.set(worker, port);
-        // console.log(this.name + " addLink: ", worker);
+        // console.log("webworker-rpc: " + this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             const {key} = ev.data;
             if (key === undefined || key === null) {
-                // console.warn("<key> not in ev.data");
+                // console.warn("webworker-rpc: <key> not in ev.data");
                 return;
             }
             // TODO 使用map结构
@@ -679,7 +694,7 @@ export class RPCPeer extends RPCEmitter {
                     this.onMessage_ProxyCreateWorker(ev);
                     break;
                 default:
-                    // console.warn("got message outof control: ", ev.data);
+                    // console.warn("webworker-rpc: got message outof control: ", ev.data);
                     break;
             }
         };
@@ -716,28 +731,28 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        // console.log(this.name + " execute: ", worker, method, context, params);
+        // console.log("webworker-rpc: " + this.name + " execute: ", worker, method, context, params);
         if (!this.registry.has(worker)) {
-            console.error("worker <" + worker + "> not registed");
+            console.error("webworker-rpc: worker <" + worker + "> not registed");
             return;
         }
         // console.log(this.name + " registry: ", this.registry);
         const executor = this.registry.get(worker).find((x) => x.context === context &&
             x.method === method);
         if (executor === undefined || executor === null) {
-            console.error("method <" + method + "> not registed");
+            console.error("webworker-rpc: method <" + method + "> not registed");
             return;
         }
 
         const regParams = executor.params;
         if (regParams && regParams.length > 0) {
             if (!params || params.length === 0) {
-                console.error("method <" + method + "> execute error! ", "param.length = 0");
+                console.error("webworker-rpc: method <" + method + "> execute error! ", "param.length = 0");
                 return;
             }
 
             if (regParams.length > params.length) {
-                console.error("method <" + method + "> execute error! ", "param not enough");
+                console.error("webworker-rpc: method <" + method + "> execute error! ", "param not enough");
                 return;
             }
 
@@ -745,7 +760,7 @@ export class RPCPeer extends RPCEmitter {
                 const regP = regParams[i];
                 const remoteP = params[i];
                 if (regP.t !== remoteP.data.t) {
-                    console.error("method <" + method + "> execute error! ", "param type not match, registry: <", webworker_rpc.ParamType[regP.t], ">; execute: <", webworker_rpc.ParamType[remoteP.data.t], ">");
+                    console.error("webworker-rpc: method <" + method + "> execute error! ", "param type not match, registry: <", webworker_rpc.ParamType[regP.t], ">; execute: <", webworker_rpc.ParamType[remoteP.data.t], ">");
                     return;
                 }
             }
@@ -787,7 +802,7 @@ export class RPCPeer extends RPCEmitter {
         this.exported = true;
         for (const context of ExportedClasses) {
             if (!ExportedContexts.has(context)) {
-                console.error("Export only decorate Emitter!");
+                console.error("webworker-rpc: Export only decorate Emitter!");
                 continue;
             }
 
@@ -799,7 +814,7 @@ export class RPCPeer extends RPCEmitter {
             const keyPath = oneKey.split(".");
             const contextStr = keyPath[0];
             if (!ExportedContexts.has(contextStr)) {
-                console.error("Export only decorate Emitter!");
+                console.error("webworker-rpc: Export only decorate Emitter!");
                 continue;
             }
             for (const attr of ExportedAttributes.get(oneKey)) {
@@ -809,7 +824,7 @@ export class RPCPeer extends RPCEmitter {
                     conObj = conObj[p];
                 }
                 if (!(attr in conObj)) {
-                    console.error(`${attr} not in `, conObj);
+                    console.error(`webworker-rpc: ${attr} not in `, conObj);
                     continue;
                 }
                 this.exportObject(conObj[attr], oneKey + "." + attr, false);
@@ -819,7 +834,7 @@ export class RPCPeer extends RPCEmitter {
 
     // 通知其他worker添加回调注册表
     private postRegistry(worker: string, registry: webworker_rpc.IAddRegistryPacket) {
-        // console.log(this.name + " postRegistry: ", worker, registry);
+        // console.log("webworker-rpc: " + this.name + " postRegistry: ", worker, registry);
         if (worker === MANAGER_WORKER_NAME) return;
 
         const messageData = new webworker_rpc.WebWorkerMessage({
@@ -830,7 +845,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Link(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_Link: ", ev);
+        // console.log("webworker-rpc: " + this.name + " onMessage_Link: ", ev);
         const {workers} = ev.data;
         const ports = ev.ports;
         for (let i = 0; i < ports.length; i++) {
@@ -841,7 +856,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_AddRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_AddRegistry:", ev.data);
+        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", ev.data);
         const packet: webworker_rpc.IAddRegistryPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataAddRegistry;
         if (!this.registry.has(packet.serviceName)) {
             this.registry.set(packet.serviceName, []);
@@ -851,10 +866,11 @@ export class RPCPeer extends RPCEmitter {
         this.addRegistryProperty(packet);
 
         // send GOT message
-        if (this.channels.has(packet.serviceName)) {
-            const port = this.channels.get(packet.serviceName);
-            port.postMessage({key: this.MESSAGEKEY_GOT_REGISTRY, worker: this.name, id: packet.id});
-        }
+        const messageData = new webworker_rpc.WebWorkerMessage({
+            key: this.MESSAGEKEY_GOT_REGISTRY,
+            dataGotRegistry: new webworker_rpc.GotRegistryPacket({id: packet.id, serviceName: this.name})
+        });
+        this.postMessage(messageData, packet.serviceName);
 
         this.updateLinkState(packet.serviceName);
 
@@ -862,7 +878,7 @@ export class RPCPeer extends RPCEmitter {
         if (RPCListeners.has(packet.serviceName)) {
             const listeners = RPCListeners.get(packet.serviceName);
             for (const listener of listeners) {
-                // console.log(this.name + " remote on, ", this.remote, packet.serviceName, listener);
+                // console.log("webworker-rpc: " + this.name + " remote on, ", this.remote, packet.serviceName, listener);
                 this.remote[packet.serviceName][listener.context].on(listener.event, listener.executor, this.name);
             }
             RPCListeners.delete(packet.serviceName);
@@ -870,21 +886,21 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_GotRegistry(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_GotRegistry:", ev.data);
-        const {worker, id} = ev.data;
-        if (this.linkListeners.has(worker)) {
-            const allReady = this.linkListeners.get(worker).setPortReady(worker);
+        // console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", ev.data);
+        const packet: webworker_rpc.IGotRegistryPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataGotRegistry;
+        if (this.linkListeners.has(packet.serviceName)) {
+            const allReady = this.linkListeners.get(packet.serviceName).setPortReady(packet.serviceName);
             if (allReady) {
-                this.linkListeners.delete(worker);
+                this.linkListeners.delete(packet.serviceName);
             }
         }
-        if (this.syncRegistryListeners.has(id)) {
-            this.syncRegistryListeners.get(id).workerGotRegistry(worker);
+        if (this.syncRegistryListeners.has(packet.id)) {
+            this.syncRegistryListeners.get(packet.id).workerGotRegistry(packet.serviceName);
         }
     }
 
     private onMessage_Execute(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_Execute:", ev.data);
+        // console.log("webworker-rpc: " + this.name + " onMessage_Execute:", ev.data);
         const packet: webworker_rpc.IExecutePacket = new webworker_rpc.WebWorkerMessage(ev.data).dataExecute;
 
         const id = packet.id;
@@ -895,7 +911,7 @@ export class RPCPeer extends RPCEmitter {
         if (remoteExecutor.params !== undefined && remoteExecutor.params !== null) {
             for (const param of remoteExecutor.params) {
                 const v = new RPCParam(param).getValue();
-                // console.log("RPCParam.getValue: ", param, v);
+                // console.log("webworker-rpc: RPCParam.getValue: ", param, v);
                 // 参数支持0 undefined
                 params.push(v);
             }
@@ -911,18 +927,18 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Respond(ev: MessageEvent) {
-        // console.log(this.name + " onMessage_Respond:", ev.data);
+        // console.log("webworker-rpc: " + this.name + " onMessage_Respond:", ev.data);
         const packet: webworker_rpc.IResponesPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataResponse;
 
         if (!this.resolvers.has(packet.id)) {
-            console.error("respones.id undefined: ", packet.id);
+            console.error("webworker-rpc: respones.id undefined: ", packet.id);
             return;
         }
 
         const resolver = this.resolvers.get(packet.id);
         this.resolvers.delete(packet.id);
         if (packet.hasOwnProperty("err") && packet.err !== undefined && packet.err !== null) {
-            console.error("get error response: ", packet.err);
+            console.error("webworker-rpc: get error response: ", packet.err);
             resolver.reject(packet.err);
             return;
         }
@@ -935,34 +951,33 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Unlink(ev: MessageEvent) {
-        const {worker} = ev.data;
+        // console.log("webworker-rpc: " + this.name + " onMessage_Unlink:", ev.data);
+        const packet: webworker_rpc.IUnlinkPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataUnlink;
 
-        if (this.channels.has(worker)) {
-            this.channels.delete(worker);
+        if (this.channels.has(packet.serviceName)) {
+            this.channels.delete(packet.serviceName);
         }
-        if (this.registry.has(worker)) {
-            this.registry.delete(worker);
+        if (this.registry.has(packet.serviceName)) {
+            this.registry.delete(packet.serviceName);
         }
-        if (this.remote !== undefined && this.remote !== null && (worker in this.remote)) {
-            delete this.remote[worker];
+        if (this.remote !== undefined && this.remote !== null && (packet.serviceName in this.remote)) {
+            delete this.remote[packet.serviceName];
         }
 
-        this.onWorkerUnlinked(worker);
-
-        // console.log(this.name + " unlink: ", this.channels, this.registry, this.remote);
+        this.onWorkerUnlinked(packet.serviceName);
     }
 
     private onMessage_ProxyCreateWorker(ev: MessageEvent) {
         const {workerName, workerUrl, msg} = ev.data;
 
         if (typeof Worker === "undefined") {
-            console.error("Worker undefined! can not create worker");
+            console.error("webworker-rpc: Worker undefined! can not create worker");
             return;
         }
 
         const path = workerUrl;
         const newWorker = new Worker(path, {name: workerName});
-        console.log(this.name + " create worker: ", path, workerName);
+        console.log("webworker-rpc: " + this.name + " create worker: ", path, workerName);
         const ports = [];
         for (const oneP of ev.ports) {
             ports.push(oneP);
@@ -971,16 +986,15 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private exportObject(obj: any, rootContext: string, recursion = true): webworker_rpc.Executor[] {
-        // console.log(this.name + " exportObject: " + rootContext, obj);
+        // console.log("webworker-rpc: " + this.name + " exportObject: " + rootContext, obj);
         let addExecutors: webworker_rpc.Executor[] = [];
 
         for (const key in obj) {
             if (EXCLUDE_PROPERTIES.includes(key) && !INCLUDE_PROPERTIES.includes(key)) continue;
 
             const element = obj[key];
-            // console.log(this.name + " exportKey: " + key, element);
+            // console.log("webworker-rpc: " + this.name + " exportKey: " + key, element);
             if (typeof element === "function") {
-                // console.log("element: ", element);
                 const newExecutor = new webworker_rpc.Executor({method: key, context: rootContext});
                 if (AddRPCFunction(newExecutor)) addExecutors.push(newExecutor);
             } else if (recursion && element instanceof Object) {
@@ -1003,7 +1017,7 @@ export class RPCPeer extends RPCEmitter {
     private executeFunctionByName(functionName: string, context: string, args?: any[]) {
         const con = this.getContext(context);
         if (con === undefined || con === null) {
-            console.warn(`excute function <${functionName}> error, no context <${context}> exist`);
+            console.warn(`webworker-rpc: excute function <${functionName}> error, no context <${context}> exist`);
             return null;
         }
         return con[functionName].apply(con, args);
@@ -1012,7 +1026,7 @@ export class RPCPeer extends RPCEmitter {
     private getContext(path: string): any {
         const contexts = path.split(".");
         if (!ExportedContexts.has(contexts[0])) {
-            console.error("no context exist: ", contexts[0]);
+            console.error("webworker-rpc: no context exist: ", contexts[0]);
             return null;
         }
 
@@ -1020,7 +1034,7 @@ export class RPCPeer extends RPCEmitter {
         for (let i = 1; i < contexts.length; i++) {
             const context = contexts[i];
             if (!(context in resultCon)) {
-                console.warn(`${context} is undefined in `, resultCon);
+                console.warn(`webworker-rpc: ${context} is undefined in `, resultCon);
                 return null;
             }
             resultCon = resultCon[context];
@@ -1055,7 +1069,7 @@ export class RPCPeer extends RPCEmitter {
             }
 
             addProperty(methodCon, executor.method, (...args) => {
-                // console.log(this.name + " call property ", service, executor.method, executor.context);
+                // console.log("webworker-rpc: " + this.name + " call property ", service, executor.method, executor.context);
                 const params: RPCParam[] = [];
                 if (args !== undefined && args !== null) {
                     for (const arg of args) {
@@ -1176,7 +1190,7 @@ export class SyncRegistryListener {
 
 function addProperty(obj: any, key: string, val: any) {
     if (key in obj) {
-        console.warn("key exist, add property failed!", obj, key);
+        console.warn("webworker-rpc: key exist, add property failed!", obj, key);
         return obj;
     }
     obj[key] = val;
