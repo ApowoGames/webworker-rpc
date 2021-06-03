@@ -146,7 +146,7 @@ const MANAGERWORKERSPRITE = (ev) => {
 
     const onMessage_RequestLink = (_ev: MessageEvent) => {
         // console.log("webworker-rpc: " + MANAGER_WORKER_NAME + "onMessage_RequestLink ", _ev.data);
-        const {serviceName, workerName, workerUrl} = _ev.data;
+        const {serviceName, workerName, workerUrl} = _ev.data.dataRequestLink;
         const service2TarChannel = new MessageChannel();
 
         if (!channels.has(serviceName)) {
@@ -192,15 +192,16 @@ const MANAGERWORKERSPRITE = (ev) => {
 
     const onMessage_Unlink = (_ev: MessageEvent) => {
         // follow proto
-        const {dataUnlink} = _ev.data;
-        if (channels.has(dataUnlink.serviceName)) {
-            channels.delete(dataUnlink.serviceName);
+        const {serviceName} = _ev.data.dataUnlink;
+        if (channels.has(serviceName)) {
+            channels.delete(serviceName);
         }
 
         // console.log("webworker-rpc: " + MANAGERWORKERNAME + " unlink: ", channels);
     }
 
     const onMessage_Destroy = (_ev: MessageEvent) => {
+        const {serviceName} = _ev.data.dataDestroyManager;
         const linkedNames = Array.from(channels.keys());
         for (const oneName of linkedNames) {
             const w = channels.get(oneName);
@@ -369,12 +370,12 @@ export class RPCPeer extends RPCEmitter {
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
     private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
+    private readonly MESSAGEKEY_PROXY_CREATE_WORKER: string = "proxyCreateWorker";
     private readonly MESSAGEKEY_ADD_REGISTRY: string = "addRegistry";
     private readonly MESSAGEKEY_GOT_REGISTRY: string = "gotRegistry";
     private readonly MESSAGEKEY_EXECUTE: string = "execute";
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
-    private readonly MESSAGEKEY_PROXY_CREATE_WORKER: string = "proxyCreateWorker";
     private readonly MESSAGEKEY_DESTROY_MANAGER: string = "destroyManager";
 
     private worker: Worker;
@@ -534,12 +535,15 @@ export class RPCPeer extends RPCEmitter {
                 this.addChannel(MANAGER_WORKER_NAME, managerChannel.port1);
             }
 
-            this.channels.get(MANAGER_WORKER_NAME).postMessage({
+            const requestMsg = new webworker_rpc.WebWorkerMessage({
                 key: this.MESSAGEKEY_REQUEST_LINK,
-                serviceName: this.name,
-                workerName,
-                workerUrl
+                dataRequestLink: new webworker_rpc.RequestLinkPacket({
+                    serviceName: this.name,
+                    workerName,
+                    workerUrl
+                })
             });
+            this.postMessage(requestMsg, MANAGER_WORKER_NAME);
         }
 
         return listener;
@@ -547,8 +551,13 @@ export class RPCPeer extends RPCEmitter {
 
     public destroyManagerWorker() {
         if (!this.channels.has(MANAGER_WORKER_NAME)) return;
-        const w = this.channels.get(MANAGER_WORKER_NAME);
-        w.postMessage({key: this.MESSAGEKEY_DESTROY_MANAGER});
+        const msgData = new webworker_rpc.WebWorkerMessage({
+            key: this.MESSAGEKEY_DESTROY_MANAGER,
+            dataDestroyManager: new webworker_rpc.DestroyManagerPacket({
+                serviceName: this.name
+            })
+        });
+        this.postMessage(msgData, MANAGER_WORKER_NAME);
     }
 
     @Export()
@@ -719,12 +728,15 @@ export class RPCPeer extends RPCEmitter {
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
-                this.channels.get(MANAGER_WORKER_NAME).postMessage({
+                const requestMsg = new webworker_rpc.WebWorkerMessage({
                     key: this.MESSAGEKEY_REQUEST_LINK,
-                    serviceName: this.name,
-                    workerName: task.workerName,
-                    workerUrl: task.workerUrl
+                    dataRequestLink: new webworker_rpc.RequestLinkPacket({
+                        serviceName: this.name,
+                        workerName: task.workerName,
+                        workerUrl: task.workerUrl
+                    })
                 });
+                this.postMessage(requestMsg, MANAGER_WORKER_NAME);
             }
         }
     }

@@ -67,13 +67,25 @@ message UnlinkPacket {
     required string service_name = 1;// 发送者(worker)名称
 }
 
+message RequestLinkPacket {
+    required string service_name = 1;// 发送者(worker)名称
+    required string worker_name = 2;// 目标(worker)名称
+    required string worker_url = 3;// 目标(worker)地址
+}
+
+message DestroyManagerPacket {
+    optional string service_name = 1;// 发送者(worker)名称
+}
+
 message WebWorkerMessage {
     required string key = 1;
     oneof data {
-        AddRegistryPacket data_add_registry = 2;
-        GotRegistryPacket data_got_registry = 3;
-        ExecutePacket data_execute = 4;
-        ResponesPacket data_response = 5;
-        UnlinkPacket data_unlink = 6;
+        RequestLinkPacket data_request_link = 2;
+        AddRegistryPacket data_add_registry = 3;
+        GotRegistryPacket data_got_registry = 4;
+        ExecutePacket data_execute = 5;
+        ResponesPacket data_response = 6;
+        UnlinkPacket data_unlink = 7;
+        DestroyManagerPacket data_destroy_manager = 8;
     }
 }
