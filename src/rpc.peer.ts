@@ -3,7 +3,8 @@ import {webworker_rpc} from "./protocols";
 import {
     RPCParam,
 } from "./rpc.message";
-import { MANAGERWORKERSPRITE } from "./manager.worker";
+import {MANAGERWORKERSPRITE} from "./manager.worker";
+import {Writer} from "protobufjs";
 
 // decorator
 const ExportedFunctions: Map<string, webworker_rpc.IExecutor[]> = new Map();
@@ -334,9 +335,15 @@ export class RPCPeer extends RPCEmitter {
         this.syncRegistryListeners = new Map();
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
-            const {key} = ev.data;
+            let data: webworker_rpc.IWebWorkerMessage;
+            if (ev.data instanceof ArrayBuffer) {
+                data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
+            } else {
+                data = ev.data;
+            }
+            const {key} = data;
             if (key !== undefined && key === this.MESSAGEKEY_LINK) {// 由父节点发送的消息，除了起始节点，其他的父节点都是ManagerWorker
-                this.onMessage_Link(ev);
+                this.onMessage_Link(data.dataLink, [].concat(ev.ports));
             }
         });
     }
@@ -380,7 +387,7 @@ export class RPCPeer extends RPCEmitter {
                     workers: [this.name]
                 })
             });
-            this.send(linkMsg, newWorker, [newChannel.port2]);
+            this.send(linkMsg, newWorker, true, [newChannel.port2]);
             this.addChannel(workerName, newChannel.port1);
         } else {
             this.linkListeners.set(workerName, listener);
@@ -408,7 +415,7 @@ export class RPCPeer extends RPCEmitter {
                         workers: [this.name]
                     })
                 });
-                this.send(linkMsg, managerWorker, [managerChannel.port2]);
+                this.send(linkMsg, managerWorker, false, [managerChannel.port2]);
                 this.addChannel(MANAGER_WORKER_NAME, managerChannel.port1);
             }
 
@@ -420,7 +427,7 @@ export class RPCPeer extends RPCEmitter {
                     workerUrl
                 })
             });
-            this.send(requestMsg, MANAGER_WORKER_NAME);
+            this.send(requestMsg, MANAGER_WORKER_NAME, false);
         }
 
         return listener;
@@ -434,7 +441,7 @@ export class RPCPeer extends RPCEmitter {
                 serviceName: this.name
             })
         });
-        this.send(msgData, MANAGER_WORKER_NAME);
+        this.send(msgData, MANAGER_WORKER_NAME, false);
     }
 
     @Export()
@@ -456,7 +463,7 @@ export class RPCPeer extends RPCEmitter {
                     serviceName: this.name
                 })
             });
-            this.send(messageData, oneName);
+            this.send(messageData, oneName, oneName !== MANAGER_WORKER_NAME);
         }
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
@@ -533,16 +540,24 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // 封装postMessage
-    private send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, ports?: MessagePort[]) {
-        const buf = webworker_rpc.WebWorkerMessage.encode(msg).finish().buffer;
-        const ab = buf.slice(0);
+    private send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, encode: boolean, ports?: MessagePort[]) {
+        const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
+        const buf = u8a.buffer.slice(u8a.byteOffset, u8a.byteLength + u8a.byteOffset);
         if (typeof target === "string") {
             if (this.channels.has(target)) {
-                this.channels.get(target).postMessage(msg, [].concat(ab));
+                if (encode) {
+                    this.channels.get(target).postMessage(buf, [].concat(buf));
+                } else {
+                    this.channels.get(target).postMessage(msg);
+                }
             }
         } else {
             const transferable: Transferable[] = ports === undefined ? [] : ports;
-            target.postMessage(msg, transferable.concat(ab));
+            if (encode) {
+                target.postMessage(buf, transferable.concat(buf));
+            } else {
+                target.postMessage(msg, transferable);
+            }
         }
     }
 
@@ -557,7 +572,13 @@ export class RPCPeer extends RPCEmitter {
         this.channels.set(worker, port);
         // console.log("webworker-rpc: " + this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
-            const {key} = ev.data;
+            let data: webworker_rpc.IWebWorkerMessage;
+            if (ev.data instanceof ArrayBuffer) {
+                data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
+            } else {
+                data = ev.data;
+            }
+            const {key} = data;
             if (key === undefined || key === null) {
                 // console.warn("webworker-rpc: <key> not in ev.data");
                 return;
@@ -565,25 +586,25 @@ export class RPCPeer extends RPCEmitter {
             // TODO 使用map结构
             switch (key) {
                 case this.MESSAGEKEY_LINK:// 通过port接收到的信息，即ManagerWorker发送的消息
-                    this.onMessage_Link(ev);
+                    this.onMessage_Link(data.dataLink, [].concat(ev.ports));
                     break;
                 case this.MESSAGEKEY_ADD_REGISTRY:
-                    this.onMessage_AddRegistry(ev);
+                    this.onMessage_AddRegistry(data.dataAddRegistry);
                     break;
                 case this.MESSAGEKEY_GOT_REGISTRY:
-                    this.onMessage_GotRegistry(ev);
+                    this.onMessage_GotRegistry(data.dataGotRegistry);
                     break;
                 case this.MESSAGEKEY_EXECUTE:
-                    this.onMessage_Execute(ev);
+                    this.onMessage_Execute(data.dataExecute);
                     break;
                 case this.MESSAGEKEY_RESPOND:
-                    this.onMessage_Respond(ev);
+                    this.onMessage_Respond(data.dataResponse);
                     break;
                 case this.MESSAGEKEY_UNLINK:
-                    this.onMessage_Unlink(ev);
+                    this.onMessage_Unlink(data.dataUnlink);
                     break;
                 case this.MESSAGEKEY_PROXY_CREATE_WORKER:
-                    this.onMessage_ProxyCreateWorker(ev);
+                    this.onMessage_ProxyCreateWorker(data.dataProxyCreateWorker, [].concat(ev.ports));
                     break;
                 default:
                     // console.warn("webworker-rpc: got message outof control: ", ev.data);
@@ -619,7 +640,7 @@ export class RPCPeer extends RPCEmitter {
                         workerUrl: task.workerUrl
                     })
                 });
-                this.send(requestMsg, MANAGER_WORKER_NAME);
+                this.send(requestMsg, MANAGER_WORKER_NAME, false);
             }
         }
     }
@@ -680,7 +701,7 @@ export class RPCPeer extends RPCEmitter {
                 })
             });
 
-            this.send(messageData, worker);
+            this.send(messageData, worker, true);
         });
     }
 
@@ -689,7 +710,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_RESPOND,
             dataResponse: new webworker_rpc.ResponsePacket({id, val: val.data, err})
         });
-        this.send(messageData, worker);
+        this.send(messageData, worker, true);
     }
 
     private updateRegistry() {
@@ -736,14 +757,12 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_ADD_REGISTRY,
             dataAddRegistry: registry
         });
-        this.send(messageData, worker);
+        this.send(messageData, worker, true);
     }
 
-    private onMessage_Link(ev: MessageEvent) {
+    private onMessage_Link(packet: webworker_rpc.ILinkPacket, ports: MessagePort[]) {
         // console.log("webworker-rpc: " + this.name + " onMessage_Link: ", ev);
-        const packet: webworker_rpc.ILinkPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataLink;
         const {workers} = packet;
-        const ports = ev.ports;
         for (let i = 0; i < ports.length; i++) {
             const onePort = ports[i];
             const oneWorker = workers[i];
@@ -751,9 +770,8 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private onMessage_AddRegistry(ev: MessageEvent) {
+    private onMessage_AddRegistry(packet: webworker_rpc.IAddRegistryPacket) {
         // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", ev.data);
-        const packet: webworker_rpc.IAddRegistryPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataAddRegistry;
         const {id, serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
@@ -768,7 +786,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_GOT_REGISTRY,
             dataGotRegistry: new webworker_rpc.GotRegistryPacket({id: id, serviceName: this.name})
         });
-        this.send(messageData, serviceName);
+        this.send(messageData, serviceName, true);
 
         this.updateLinkState(serviceName);
 
@@ -783,9 +801,8 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private onMessage_GotRegistry(ev: MessageEvent) {
+    private onMessage_GotRegistry(packet: webworker_rpc.IGotRegistryPacket) {
         // console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", ev.data);
-        const packet: webworker_rpc.IGotRegistryPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataGotRegistry;
         const {id, serviceName} = packet;
 
         if (this.linkListeners.has(serviceName)) {
@@ -799,9 +816,8 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private onMessage_Execute(ev: MessageEvent) {
+    private onMessage_Execute(packet: webworker_rpc.IExecutePacket) {
         // console.log("webworker-rpc: " + this.name + " onMessage_Execute:", ev.data);
-        const packet: webworker_rpc.IExecutePacket = new webworker_rpc.WebWorkerMessage(ev.data).dataExecute;
         const {id, header} = packet;
         const {serviceName, remoteExecutor} = header;
 
@@ -824,9 +840,8 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private onMessage_Respond(ev: MessageEvent) {
+    private onMessage_Respond(packet: webworker_rpc.IResponsePacket) {
         // console.log("webworker-rpc: " + this.name + " onMessage_Respond:", ev.data);
-        const packet: webworker_rpc.IResponsePacket = new webworker_rpc.WebWorkerMessage(ev.data).dataResponse;
         const {id, val} = packet;
 
         if (!this.resolvers.has(id)) {
@@ -849,9 +864,8 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
-    private onMessage_Unlink(ev: MessageEvent) {
+    private onMessage_Unlink(packet: webworker_rpc.IUnlinkPacket) {
         // console.log("webworker-rpc: " + this.name + " onMessage_Unlink:", ev.data);
-        const packet: webworker_rpc.IUnlinkPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataUnlink;
         const {serviceName} = packet;
 
         if (this.channels.has(serviceName)) {
@@ -867,8 +881,7 @@ export class RPCPeer extends RPCEmitter {
         this.onWorkerUnlinked(serviceName);
     }
 
-    private onMessage_ProxyCreateWorker(ev: MessageEvent) {
-        const packet: webworker_rpc.IProxyCreateWorkerPacket = new webworker_rpc.WebWorkerMessage(ev.data).dataProxyCreateWorker;
+    private onMessage_ProxyCreateWorker(packet: webworker_rpc.IProxyCreateWorkerPacket, ports: MessagePort[]) {
         const {workerName, workerUrl, msg} = packet;
 
         if (typeof Worker === "undefined") {
@@ -879,11 +892,7 @@ export class RPCPeer extends RPCEmitter {
         const path = workerUrl;
         const newWorker = new Worker(path, {name: workerName});
         console.log("webworker-rpc: " + this.name + " create worker: ", path, workerName);
-        const ports = [];
-        for (const oneP of ev.ports) {
-            ports.push(oneP);
-        }
-        this.send(msg, newWorker, ports);
+        this.send(msg, newWorker, true, [].concat(ports));
     }
 
     private exportObject(obj: any, rootContext: string, recursion = true): webworker_rpc.Executor[] {
