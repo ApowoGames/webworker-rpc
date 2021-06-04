@@ -233,6 +233,7 @@ export class RPCPeer extends RPCEmitter {
     public name: string;
 
     private static _instance: RPCPeer;
+    private static useSharedArrayBuffer: boolean = false;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
     private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
@@ -311,6 +312,11 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
+        if (typeof SharedArrayBuffer === "undefined") {
+            console.warn("webworker-rpc: SharedArrayBuffer is undefined, use ArrayBuffer instead");
+            RPCPeer.useSharedArrayBuffer = false;
+        }
+
         if (name === undefined || name === null) {
             console.error("webworker-rpc: param [name] error");
             return;
@@ -336,7 +342,8 @@ export class RPCPeer extends RPCEmitter {
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
             let data: webworker_rpc.IWebWorkerMessage;
-            if (ev.data instanceof ArrayBuffer) {
+            if ((RPCPeer.useSharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
+                (!RPCPeer.useSharedArrayBuffer && ev.data instanceof ArrayBuffer)) {
                 data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
             } else {
                 data = ev.data;
@@ -541,23 +548,29 @@ export class RPCPeer extends RPCEmitter {
 
     // 封装postMessage
     private send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, encode: boolean, ports?: MessagePort[]) {
-        const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
-        const buf = u8a.buffer.slice(u8a.byteOffset, u8a.byteLength + u8a.byteOffset);
+        let message: any = msg;
+        let transferable: Transferable[] = ports === undefined ? [] : ports;
+        if (encode) {
+            const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
+            if (RPCPeer.useSharedArrayBuffer) {
+                const sab = new SharedArrayBuffer(u8a.byteLength);
+                const u8a_sab = new Uint8Array(sab);
+                u8a_sab.set(u8a, 0);
+                message = sab;
+            } else {
+                // ArrayBuffer
+                const ab = u8a.buffer.slice(u8a.byteOffset, u8a.byteLength + u8a.byteOffset);
+                message = ab;
+                transferable = transferable.concat(ab);
+            }
+        }
+
         if (typeof target === "string") {
             if (this.channels.has(target)) {
-                if (encode) {
-                    this.channels.get(target).postMessage(buf, [].concat(buf));
-                } else {
-                    this.channels.get(target).postMessage(msg);
-                }
+                this.channels.get(target).postMessage(message, transferable);
             }
         } else {
-            const transferable: Transferable[] = ports === undefined ? [] : ports;
-            if (encode) {
-                target.postMessage(buf, transferable.concat(buf));
-            } else {
-                target.postMessage(msg, transferable);
-            }
+            target.postMessage(message, transferable);
         }
     }
 
@@ -573,7 +586,8 @@ export class RPCPeer extends RPCEmitter {
         // console.log("webworker-rpc: " + this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             let data: webworker_rpc.IWebWorkerMessage;
-            if (ev.data instanceof ArrayBuffer) {
+            if ((RPCPeer.useSharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
+                (!RPCPeer.useSharedArrayBuffer && ev.data instanceof ArrayBuffer)) {
                 data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
             } else {
                 data = ev.data;

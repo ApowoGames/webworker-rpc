@@ -35,6 +35,7 @@ module.exports = {
     }),
   ],
   devServer: {
+    writeToDisk: true,
     contentBase: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
     host: '0.0.0.0',
