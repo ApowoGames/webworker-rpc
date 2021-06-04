@@ -233,7 +233,7 @@ export class RPCPeer extends RPCEmitter {
     public name: string;
 
     private static _instance: RPCPeer;
-    private static useSharedArrayBuffer: boolean = false;
+    private static useSharedArrayBuffer: boolean = true;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
     private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
