@@ -403,7 +403,7 @@ export class RPCPeer extends RPCEmitter {
                     workers: [this.name]
                 })
             });
-            this.send(linkMsg, newWorker, true, [newChannel.port2]);
+            this.__send(linkMsg, newWorker, true, [newChannel.port2]);
             this.addChannel(workerName, newChannel.port1);
         } else {
             this.linkListeners.set(workerName, listener);
@@ -431,7 +431,7 @@ export class RPCPeer extends RPCEmitter {
                         workers: [this.name]
                     })
                 });
-                this.send(linkMsg, managerWorker, false, [managerChannel.port2]);
+                this.__send(linkMsg, managerWorker, false, [managerChannel.port2]);
                 this.addChannel(MANAGER_WORKER_NAME, managerChannel.port1);
             }
 
@@ -443,7 +443,7 @@ export class RPCPeer extends RPCEmitter {
                     workerUrl
                 })
             });
-            this.send(requestMsg, MANAGER_WORKER_NAME, false);
+            this.__send(requestMsg, MANAGER_WORKER_NAME, false);
         }
 
         return listener;
@@ -457,7 +457,7 @@ export class RPCPeer extends RPCEmitter {
                 serviceName: this.name
             })
         });
-        this.send(msgData, MANAGER_WORKER_NAME, false);
+        this.__send(msgData, MANAGER_WORKER_NAME, false);
     }
 
     @Export()
@@ -479,7 +479,7 @@ export class RPCPeer extends RPCEmitter {
                     serviceName: this.name
                 })
             });
-            this.send(messageData, oneName, oneName !== MANAGER_WORKER_NAME);
+            this.__send(messageData, oneName, oneName !== MANAGER_WORKER_NAME);
         }
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
@@ -556,7 +556,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     // 封装postMessage
-    private send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, encode: boolean, ports?: MessagePort[]) {
+    private __send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, encode: boolean, ports?: MessagePort[]) {
         let message: any = msg;
         let transferable: Transferable[] = ports === undefined ? [] : ports;
         // let preTime = new Date().getTime();
@@ -694,7 +694,7 @@ export class RPCPeer extends RPCEmitter {
                         workerUrl: task.workerUrl
                     })
                 });
-                this.send(requestMsg, MANAGER_WORKER_NAME, false);
+                this.__send(requestMsg, MANAGER_WORKER_NAME, false);
             }
         }
     }
@@ -755,7 +755,7 @@ export class RPCPeer extends RPCEmitter {
                 })
             });
 
-            this.send(messageData, worker, true);
+            this.__send(messageData, worker, true);
         });
     }
 
@@ -764,7 +764,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_RESPOND,
             dataResponse: new webworker_rpc.ResponsePacket({id, val: val.data, err})
         });
-        this.send(messageData, worker, true);
+        this.__send(messageData, worker, true);
     }
 
     private updateRegistry() {
@@ -811,7 +811,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_ADD_REGISTRY,
             dataAddRegistry: registry
         });
-        this.send(messageData, worker, true);
+        this.__send(messageData, worker, true);
     }
 
     private onMessage_Link(packet: webworker_rpc.ILinkPacket, ports: MessagePort[]) {
@@ -840,7 +840,7 @@ export class RPCPeer extends RPCEmitter {
             key: this.MESSAGEKEY_GOT_REGISTRY,
             dataGotRegistry: new webworker_rpc.GotRegistryPacket({id: id, serviceName: this.name})
         });
-        this.send(messageData, serviceName, true);
+        this.__send(messageData, serviceName, true);
 
         this.updateLinkState(serviceName);
 
@@ -946,7 +946,7 @@ export class RPCPeer extends RPCEmitter {
         const path = workerUrl;
         const newWorker = new Worker(path, {name: workerName});
         console.log("webworker-rpc: " + this.name + " create worker: ", path, workerName);
-        this.send(msg, newWorker, true, [].concat(ports));
+        this.__send(msg, newWorker, true, [].concat(ports));
     }
 
     private exportObject(obj: any, rootContext: string, recursion = true): webworker_rpc.Executor[] {
