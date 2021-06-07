@@ -6,12 +6,14 @@ window.onload = () => {
     RPCPeer.attach("foreman", "/foremanWorker.js").onceReady(() => {
         console.log("ready link to foreman");
 
-        const line = 2000;
-        const arr = new Uint8Array(line * 1024 * 1024);
-        console.log("uccessfully created the array. The array has " + line + " m");
-        const startTime = new Date().getTime();
-        RPCPeer.remote.foreman.ForemanChild.testLargeMsg(arr);
-        const timeTaken = new Date().getTime() - startTime;
+        RPCPeer.remote.foreman.ForemanChild.testLargeMsg({x: 10, y: 10});
+
+        // const line = 2000;
+        // const arr = new Uint8Array(line * 1024 * 1024);
+        // console.log("uccessfully created the array. The array has " + line + " m");
+        // const startTime = new Date().getTime();
+        // RPCPeer.remote.foreman.ForemanChild.testLargeMsg(arr);
+        // const timeTaken = new Date().getTime() - startTime;
 
         // RPCPeer.remote.foreman.ForemanChild.testExtends();
         // const importedData = new CustomData("1", true, 1);

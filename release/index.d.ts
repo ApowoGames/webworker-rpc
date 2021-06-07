@@ -1396,6 +1396,11 @@ declare module 'webworker-rpc/rpc.peer' {
         off(event: string, executor?: webworker_rpc.IExecutor, worker?: string): void;
         emit(event: string, ...args: any[]): void;
     }
+    export enum MsgTransType {
+        Obj = 0,
+        Transferable = 1,
+        SharedArrayBuffer = 2
+    }
     export class RPCPeer extends RPCEmitter {
         ["remote"]: {
             [worker: string]: {
@@ -1403,6 +1408,7 @@ declare module 'webworker-rpc/rpc.peer' {
             };
         };
         name: string;
+        static msgTransType: MsgTransType;
         static create(name: string): RPCPeer;
         static getInstance(): RPCPeer;
         static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener;

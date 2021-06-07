@@ -36,7 +36,7 @@ class ForemanContext extends RPCPeer {
 
     @Export()
     public testLargeMsg(data) {
-
+        console.log(data);
     }
 
     @Export()

@@ -1,4 +1,5 @@
 import {webworker_rpc} from "./protocols";
+import {MsgTransType, RPCPeer} from "./rpc.peer";
 
 export class RPCParam {
     static createByValue(val): RPCParam {
@@ -17,13 +18,21 @@ export class RPCParam {
         }
 
         const constructorName = val.constructor.name;
-        if (!CustomDataClasses.has(constructorName)) {
-            console.error(constructorName + " not use @RPCData");
-            return new RPCParam({t: webworker_rpc.ParamType.custom, className: "null"});
+        if (RPCPeer.msgTransType === MsgTransType.Transferable || RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer) {
+            if (!CustomDataClasses.has(constructorName)) {
+                console.error(constructorName + " not use @RPCData");
+                return new RPCParam({t: webworker_rpc.ParamType.custom, className: "null"});
+            }
+
+            const customClass = CustomDataClasses.get(constructorName);
+            const str = customClass.encode(val);
+            return new RPCParam({t: webworker_rpc.ParamType.custom, valStr: str, className: constructorName});
+        } else {
+            // obj
+            const result = new RPCParam({t: webworker_rpc.ParamType.custom, className: constructorName});
+            result.data["valCustom"] = val;
+            return result;
         }
-        const customClass = CustomDataClasses.get(constructorName);
-        const str = customClass.encode(val);
-        return new RPCParam({t: webworker_rpc.ParamType.custom, valStr: str, className: constructorName});
     }
 
     public data: webworker_rpc.Param;
@@ -41,12 +50,16 @@ export class RPCParam {
                 if (this.data.className === "undefined") {
                     return undefined;
                 }
-                if (!CustomDataClasses.has(this.data.className)) {
-                    console.error(this.data.className + " not use @RPCData");
-                    return null;
+                if (RPCPeer.msgTransType === MsgTransType.Transferable || RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer) {
+                    if (!CustomDataClasses.has(this.data.className)) {
+                        console.error(this.data.className + " not use @RPCData");
+                        return null;
+                    }
+                    const customClass = CustomDataClasses.get(this.data.className);
+                    return customClass.decode(this.data.valStr);
+                } else {
+                    return this.data["valCustom"];
                 }
-                const customClass = CustomDataClasses.get(this.data.className);
-                return customClass.decode(this.data.valStr);
             }
             default: {
                 return this.data[this.data.val];

@@ -223,7 +223,7 @@ export class RPCEmitter {
 }
 
 // 消息传输方式
-enum MsgTransType {
+export enum MsgTransType {
     Obj,
     Transferable,
     SharedArrayBuffer = 2
@@ -239,8 +239,8 @@ export class RPCPeer extends RPCEmitter {
 
     public name: string;
 
+    public static msgTransType: MsgTransType = MsgTransType.Obj;
     private static _instance: RPCPeer;
-    private static msgTransType: MsgTransType = MsgTransType.Obj;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
     private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
@@ -624,11 +624,11 @@ export class RPCPeer extends RPCEmitter {
             let data: webworker_rpc.IWebWorkerMessage;
             if ((RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
                 (RPCPeer.msgTransType === MsgTransType.Transferable && ev.data instanceof ArrayBuffer)) {
-                console.log("webworker-rpc: Start decode...");
-                const startTime = new Date().getTime();
+                // console.log("webworker-rpc: Start decode...");
+                // const startTime = new Date().getTime();
                 data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
-                const timeTaken = new Date().getTime() - startTime;
-                console.log("webworker-rpc: Decode completed in " + timeTaken + "ms.");
+                // const timeTaken = new Date().getTime() - startTime;
+                // console.log("webworker-rpc: Decode completed in " + timeTaken + "ms.");
             } else {
                 data = ev.data;
             }
