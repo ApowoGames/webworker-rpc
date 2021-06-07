@@ -5,35 +5,23 @@ window.onload = () => {
     RPCPeer.create("main");
     RPCPeer.attach("foreman", "/foremanWorker.js").onceReady(() => {
         console.log("ready link to foreman");
-        RPCPeer.remote.foreman.ForemanChild.testExtends();
-        const importedData = new CustomData("1", true, 1);
-        RPCPeer.attach("workerA", "/taskAWorker.js").onceReady(() => {
-            console.log("ready link to workerA");
-            RPCPeer.remote.foreman.ForemanChild.testSpecialParams("s", true, null, {x: 1, y: 2}).then((data) => {
-                console.log("test then ", data);
-                RPCPeer.destroyManagerWorker();
-            });
-        });
 
-        // peer.remote.foreman.ForemanContext.destroy();
-        // peer.remote.foreman.ForemanContext.testSpecialParams("2");
+        const line = 2000;
+        const arr = new Uint8Array(line * 1024 * 1024);
+        console.log("uccessfully created the array. The array has " + line + " m");
+        const startTime = new Date().getTime();
+        RPCPeer.remote.foreman.ForemanChild.testLargeMsg(arr);
+        const timeTaken = new Date().getTime() - startTime;
 
-        // peer.remote.foreman.ForemanContext.testSpecialParams([0], false, undefined, null).then((val) => {
-        //   console.log("result: ", val);
+        // RPCPeer.remote.foreman.ForemanChild.testExtends();
+        // const importedData = new CustomData("1", true, 1);
+        // RPCPeer.attach("workerA", "/taskAWorker.js").onceReady(() => {
+        //     console.log("ready link to workerA");
+        //     RPCPeer.remote.foreman.ForemanChild.testSpecialParams("s", true, null, {x: 1, y: 2}).then((data) => {
+        //         console.log("test then ", data);
+        //         RPCPeer.destroyManagerWorker();
+        //     });
         // });
-        // peer.remote.foreman.ForemanContext.son.grandSon.destroy();
-        // peer.remote.foreman.ForemanContext.multiParams(0, undefined, { x: 1 });
-        // peer.remote.foreman.ForemanContext.createSon().then(() => {
-        //   console.log("createSon then");
-        //   peer.remote.foreman.ForemanContext.son.foremanSonFunction();
-        //   peer.remote.foreman.ForemanContext.son2.foremanSonFunction();
-        // });
-        // peer.remote.foreman.ForemanContext.getValue().then((val) => {
-        //   console.log("main got value: ", val);
-        // });
-        // peer.remote.foreman.ForemanChild.setValue({ "posX": 10, "posY": 15, "flipX": true });
-        // peer.remote.foreman.ForemanContext.son.foremanSonStaticFunction();
-        // peer.remote.foreman.ForemanContext.staticSon.foremanSonFunction();
-        // peer.remote.foreman.ForemanContext.staticSon.staticGrandson.foremanGrandsonFunction();
+
     });
 };

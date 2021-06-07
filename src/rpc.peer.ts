@@ -222,6 +222,13 @@ export class RPCEmitter {
     }
 }
 
+// 消息传输方式
+enum MsgTransType {
+    Obj,
+    Transferable,
+    SharedArrayBuffer = 2
+}
+
 // 各个worker之间通信桥梁
 export class RPCPeer extends RPCEmitter {
     ["remote"]: {
@@ -233,7 +240,7 @@ export class RPCPeer extends RPCEmitter {
     public name: string;
 
     private static _instance: RPCPeer;
-    private static useSharedArrayBuffer: boolean = true;
+    private static msgTransType: MsgTransType = MsgTransType.Obj;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
     private readonly MESSAGEKEY_REQUEST_LINK: string = "requestLink"; // TODO: define type of data
@@ -314,7 +321,9 @@ export class RPCPeer extends RPCEmitter {
 
         if (typeof SharedArrayBuffer === "undefined") {
             console.warn("webworker-rpc: SharedArrayBuffer is undefined, use ArrayBuffer instead");
-            RPCPeer.useSharedArrayBuffer = false;
+            if (RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer) {
+                RPCPeer.msgTransType = MsgTransType.Obj;
+            }
         }
 
         if (name === undefined || name === null) {
@@ -342,8 +351,8 @@ export class RPCPeer extends RPCEmitter {
 
         this.worker.addEventListener("message", (ev: MessageEvent) => {
             let data: webworker_rpc.IWebWorkerMessage;
-            if ((RPCPeer.useSharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
-                (!RPCPeer.useSharedArrayBuffer && ev.data instanceof ArrayBuffer)) {
+            if ((RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
+                (RPCPeer.msgTransType === MsgTransType.Transferable && ev.data instanceof ArrayBuffer)) {
                 data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
             } else {
                 data = ev.data;
@@ -550,24 +559,51 @@ export class RPCPeer extends RPCEmitter {
     private send(msg: webworker_rpc.IWebWorkerMessage, target: string | Worker, encode: boolean, ports?: MessagePort[]) {
         let message: any = msg;
         let transferable: Transferable[] = ports === undefined ? [] : ports;
+        // let preTime = new Date().getTime();
         if (encode) {
-            const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
-            if (RPCPeer.useSharedArrayBuffer) {
-                const sab = new SharedArrayBuffer(u8a.byteLength);
-                const u8a_sab = new Uint8Array(sab);
-                u8a_sab.set(u8a, 0);
-                message = sab;
-            } else {
-                // ArrayBuffer
-                const ab = u8a.buffer.slice(u8a.byteOffset, u8a.byteLength + u8a.byteOffset);
-                message = ab;
-                transferable = transferable.concat(ab);
+            // console.log("webworker-rpc: Start encode...");
+
+            switch (RPCPeer.msgTransType) {
+                case MsgTransType.SharedArrayBuffer: {
+                    const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
+                    // console.log("webworker-rpc: encode(msg).finish() cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    const sab = new SharedArrayBuffer(u8a.byteLength);
+                    // console.log("webworker-rpc: new SharedArrayBuffer cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    const u8a_sab = new Uint8Array(sab);
+                    // console.log("webworker-rpc: new Uint8Array cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    u8a_sab.set(u8a, 0);
+                    // console.log("webworker-rpc: set(u8a, 0) cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    message = sab;
+                }
+                    break;
+
+                case MsgTransType.Transferable: {
+                    const u8a = webworker_rpc.WebWorkerMessage.encode(msg).finish();
+                    // console.log("webworker-rpc: encode(msg).finish() cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    const ab = u8a.buffer.slice(u8a.byteOffset, u8a.byteLength + u8a.byteOffset);
+                    // console.log("webworker-rpc: u8a.buffer.slice cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                    message = ab;
+                    transferable = transferable.concat(ab);
+                    // console.log("webworker-rpc: transferable.concat(ab) cost " + (new Date().getTime() - preTime) + "ms.");
+                    // preTime = new Date().getTime();
+                }
+                    break;
+
+                default:
+                    break;
             }
         }
 
         if (typeof target === "string") {
             if (this.channels.has(target)) {
                 this.channels.get(target).postMessage(message, transferable);
+                // console.log("webworker-rpc: PostMessage completed in " + (new Date().getTime() - preTime) + "ms.");
             }
         } else {
             target.postMessage(message, transferable);
@@ -586,9 +622,13 @@ export class RPCPeer extends RPCEmitter {
         // console.log("webworker-rpc: " + this.name + " addLink: ", worker);
         port.onmessage = (ev: MessageEvent) => {
             let data: webworker_rpc.IWebWorkerMessage;
-            if ((RPCPeer.useSharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
-                (!RPCPeer.useSharedArrayBuffer && ev.data instanceof ArrayBuffer)) {
+            if ((RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer && ev.data instanceof SharedArrayBuffer) ||
+                (RPCPeer.msgTransType === MsgTransType.Transferable && ev.data instanceof ArrayBuffer)) {
+                console.log("webworker-rpc: Start decode...");
+                const startTime = new Date().getTime();
                 data = webworker_rpc.WebWorkerMessage.decode(new Uint8Array(ev.data));
+                const timeTaken = new Date().getTime() - startTime;
+                console.log("webworker-rpc: Decode completed in " + timeTaken + "ms.");
             } else {
                 data = ev.data;
             }

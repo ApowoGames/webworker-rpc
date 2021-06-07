@@ -35,6 +35,11 @@ class ForemanContext extends RPCPeer {
     // }
 
     @Export()
+    public testLargeMsg(data) {
+
+    }
+
+    @Export()
     public testSpecialParams(arg1, arg2, arg3, arg4) {
         console.log("", arg1, arg2, arg3, arg4);
         return new CustomData(arg1, arg2, arg3);
