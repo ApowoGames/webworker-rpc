@@ -5,7 +5,7 @@ import {CustomData} from "../custom.data";
 // worker对应的实体，用于注册worker之间的回调，方法
 // @Export()
 class ForemanContext extends RPCPeer {
-    @Export()
+    // @Export()
     public attr1: ForemanAttribute;
     // @Export()
     // public static staticSon: ForemanSon;
@@ -13,7 +13,6 @@ class ForemanContext extends RPCPeer {
     constructor() {
         super("foreman");
 
-        this.attr1 = new ForemanAttribute();
         // ForemanContext.staticSon = new ForemanSon();
 
         // this.linkTo("workerA", "/taskAWorker.js").onceReady(() => {
@@ -33,6 +32,17 @@ class ForemanContext extends RPCPeer {
     //     this.son = new ForemanSon();
     //     this.export(this.son, this);
     // }
+
+    @Export()
+    public exportAttr(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.attr1 = new ForemanAttributeAttribute();
+            this.exportProperty(this.attr1, this, "attr2")
+                .onceReady(() => {
+                    resolve();
+                });
+        });
+    }
 
     @Export()
     public testLargeMsg(data) {
@@ -105,18 +115,16 @@ class ForemanContext extends RPCPeer {
 }
 
 class ForemanAttribute {
-    public attr2: ForemanAttributeAttribute;
-    public static staticAttr2: ForemanAttributeAttribute;
 
     constructor() {
-        this.attr2 = new ForemanAttributeAttribute();
-        ForemanAttribute.staticAttr2 = new ForemanAttributeAttribute();
     }
 
+    @Export()
     public foremanSonFunction() {
         console.log("foremanSonFunction");
     }
 
+    @Export()
     public static foremanSonStaticFunction() {
         console.log("foremanSonStaticFunction");
     }
@@ -126,17 +134,11 @@ class ForemanAttribute {
     }
 }
 
-class ForemanAttributeAttribute {
+class ForemanAttributeAttribute extends ForemanAttribute {
 
-    constructor() {
-    }
-
+    @Export()
     public foremanGrandsonFunction() {
         console.log("foremanGrandsonFunction");
-    }
-
-    private privateFunction() {
-        console.log("privateFunction");
     }
 
     private destroy() {
@@ -146,7 +148,7 @@ class ForemanAttributeAttribute {
 
 class ForemanChild extends ForemanContext {
 
-    // @Export()
+    @Export()
     public testExtends() {
         super.testExtends();
         console.log("testExtends: child");

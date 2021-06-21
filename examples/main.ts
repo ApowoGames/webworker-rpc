@@ -6,7 +6,12 @@ window.onload = () => {
     RPCPeer.attach("foreman", "/foremanWorker.js").onceReady(() => {
         console.log("ready link to foreman");
 
-        RPCPeer.remote.foreman.ForemanChild.testLargeMsg({x: 10, y: 10});
+        RPCPeer.remote.foreman.ForemanChild.exportAttr()
+            .then(() => {
+                RPCPeer.remote.foreman.ForemanChild.attr2.foremanGrandsonFunction();
+                RPCPeer.remote.foreman.ForemanChild.attr2.foremanSonFunction();
+                RPCPeer.remote.foreman.ForemanChild.attr2.foremanSonStaticFunction();
+            });
 
         // const line = 2000;
         // const arr = new Uint8Array(line * 1024 * 1024);

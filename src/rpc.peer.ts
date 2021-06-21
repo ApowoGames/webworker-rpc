@@ -4,7 +4,6 @@ import {
     RPCParam,
 } from "./rpc.message";
 import {MANAGERWORKERSPRITE} from "./manager.worker";
-import {Writer} from "protobufjs";
 
 // decorator
 const ExportedFunctions: Map<string, webworker_rpc.IExecutor[]> = new Map();
@@ -12,6 +11,7 @@ const ExportedContexts: Map<string, any> = new Map();
 const ExportedClasses: string[] = [];// 等待link之后，递归注册其所有function
 const ExportedAttributes: Map<string, string[]> = new Map();// 等待link之后，注册其所有function
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
+    // console.log("webworker-rpc: ExportFunction: ", target, name, descriptor);
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
     const params: webworker_rpc.Param[] = [];
     if (paramTypes !== undefined && paramTypes !== null) {
@@ -516,6 +516,7 @@ export class RPCPeer extends RPCEmitter {
             context[attrName] = attr;
         }
 
+        // 确认context名称 并更新ExportedContext
         let existConName = "";
         const existConNames = Array.from(ExportedContexts.keys());
         for (const oneName of existConNames) {
@@ -525,7 +526,6 @@ export class RPCPeer extends RPCEmitter {
                 break;
             }
         }
-
         let conName = existConName;
         if (existConName.length === 0) {
             conName = context.constructor.name;
@@ -536,7 +536,36 @@ export class RPCPeer extends RPCEmitter {
             ExportedContexts.set(conName, context);
         }
 
-        const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
+        // 遍历节点获取所有方法，不递归查找父类
+        // const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
+
+        // 根据@Export装饰符获取目标方法， 递归父类 判断类名是否记录
+        const addExecutors = [];
+        let superObj = attr;
+        let superClassName = Object.getPrototypeOf(superObj).constructor.name;
+        let superStaticName = superClassName + ".constructor";
+        const contextRoot = conName + "." + attrName;
+        while (superClassName !== "Object") {
+            if (ExportedFunctions.has(superClassName)) {
+                for (const iExecutor of ExportedFunctions.get(superClassName)) {
+                    const chengedExe = new webworker_rpc.Executor(iExecutor);
+                    chengedExe.context = contextRoot;
+                    addExecutors.push(chengedExe);
+                }
+            }
+            if (ExportedFunctions.has(superStaticName)) {
+                for (const iExecutor of ExportedFunctions.get(superStaticName)) {
+                    const chengedExe = new webworker_rpc.Executor(iExecutor);
+                    chengedExe.context = contextRoot + ".constructor";
+                    addExecutors.push(chengedExe);
+                }
+            }
+
+            superObj = Object.getPrototypeOf(superObj);
+            superClassName = Object.getPrototypeOf(superObj).constructor.name;
+            superStaticName = superClassName + ".constructor";
+        }
+
         const linkedNames = Array.from(this.channels.keys());
         this.registryPackID++;
         const listener = new SyncRegistryListener(this.registryPackID, linkedNames);
@@ -669,8 +698,10 @@ export class RPCPeer extends RPCEmitter {
         this.updateRegistry();
 
         // post registry
-        let allRegistry: webworker_rpc.IExecutor[] = [];
+        const allRegistry: webworker_rpc.IExecutor[] = [];
         ExportedFunctions.forEach((exe, con) => {
+            let conHead = con.split(".")[0];
+            if (!ExportedContexts.has(conHead)) return;
             for (const rpcExecutor of exe) {
                 allRegistry.push(rpcExecutor);
             }
@@ -825,7 +856,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_AddRegistry(packet: webworker_rpc.IAddRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", ev.data);
+        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet.executors);
         const {id, serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
