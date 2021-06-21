@@ -1,14 +1,14 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.75",
+  "version": "0.0.76",
   "main": "release/index.js",
   "types": "release/index.d.ts",
   "author": "apowo",
   "license": "MIT",
   "scripts": {
     "dev": "rm -rf types && rm -rf dist && webpack --config ./webpack.dev.config.js && rm -rf types && webpack-dev-server --config ./webpack.dev.config.js",
-    "build:dev": "rm -rf types && rm -rf release && webpack && cp src/protocols.d.ts types/src/ && yarn dts && rm -rf types",
-    "build": "yarn build:dev && yarn version --patch",
+    "build:dev": "rm -rf types && rm -rf release && webpack --mode=development && cp src/protocols.d.ts types/src/ && yarn dts && rm -rf types",
+    "build": "rm -rf types && rm -rf release && webpack --mode=production && cp src/protocols.d.ts types/src/ && yarn dts && rm -rf types && yarn version --patch",
     "dts": "dts-bundle --configJson dts-bundle.json",
     "mkproto:clean": "rimraf ./src/protocols.d.ts ./src/protocols.js",
     "mkproto:tojs": "pbjs -t static-module ./protocol/*.proto -o ./src/protocols.js",
