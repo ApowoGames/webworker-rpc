@@ -13,6 +13,7 @@ const ExportedAttributes: Map<string, string[]> = new Map();// 等待link之后�
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
     // console.log("webworker-rpc: ExportFunction: ", target, name, descriptor);
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
+    console.log("#rpc ExportFunction: ", context, name);
     const params: webworker_rpc.Param[] = [];
     if (paramTypes !== undefined && paramTypes !== null) {
         for (const pt of paramTypes) {
