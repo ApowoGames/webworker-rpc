@@ -542,10 +542,13 @@ export class RPCPeer extends RPCEmitter {
         // 根据@Export装饰符获取目标方法， 递归父类 判断类名是否记录
         const addExecutors = [];
         let superObj = attr;
+        console.log("#rpc " + this.name + " attr: ", attr);
         let superClassName = Object.getPrototypeOf(superObj).constructor.name;
         let superStaticName = superClassName + ".constructor";
         const contextRoot = conName + "." + attrName;
+        console.log("#rpc " + this.name + " ExportedFunctions: ", ExportedFunctions);
         while (superClassName !== "Object") {
+            console.log("#rpc " + this.name + " className: ", superClassName);
             if (ExportedFunctions.has(superClassName)) {
                 for (const iExecutor of ExportedFunctions.get(superClassName)) {
                     const chengedExe = new webworker_rpc.Executor(iExecutor);
