@@ -339,7 +339,7 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
         RPCPeer._instance = this;
-        console.log("webworker-rpc: new peer: ", name);
+        console.log("webworker-rpc: new peer: ", rpcID, name);
 
         this.name = name;
         this.worker = self as any;
