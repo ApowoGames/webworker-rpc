@@ -5,6 +5,8 @@ import {
 } from "./rpc.message";
 import {MANAGERWORKERSPRITE} from "./manager.worker";
 
+const rpcID = Math.floor(Math.random() * 100);
+
 // decorator
 const ExportedFunctions: Map<string, webworker_rpc.IExecutor[]> = new Map();
 const ExportedContexts: Map<string, any> = new Map();
@@ -13,7 +15,6 @@ const ExportedAttributes: Map<string, string[]> = new Map();// 等待link之后�
 const ExportFunction = (target, name, descriptor, paramTypes?: webworker_rpc.ParamType[]) => {
     // console.log("webworker-rpc: ExportFunction: ", target, name, descriptor);
     const context = typeof target === "function" ? target.name + ".constructor" : target.constructor.name;
-    console.log("#rpc ExportFunction: ", context, name);
     const params: webworker_rpc.Param[] = [];
     if (paramTypes !== undefined && paramTypes !== null) {
         for (const pt of paramTypes) {
@@ -46,10 +47,9 @@ const AddRPCFunction = (executor: webworker_rpc.IExecutor) => {
     const idx = arr.findIndex((x) => x.method === executor.method);
     if (idx < 0) {
         arr.push(executor);
-        console.log("#rpc AddRPCFunction: ", executor.context, executor.method);
+        console.log("#rpc AddRPCFunction: ", rpcID, executor.context, executor.method, ExportedFunctions);
         return true;
     }
-    console.log("#rpc AddRPCFunction failed: ", arr);
     return false;
 }
 
@@ -181,7 +181,6 @@ export class RPCEmitter {
                     oneExe.context = mClassName;
                 }
                 ExportedFunctions.delete(superClassName);
-                console.log("#rpc delete ExportedFunctions: ", superClassName, mClassName);
                 const preExes = ExportedFunctions.get(mClassName) || [];
                 ExportedFunctions.set(mClassName, preExes.concat(exe));
             }
@@ -191,7 +190,6 @@ export class RPCEmitter {
                     oneExe.context = mStaticName;
                 }
                 ExportedFunctions.delete(superStaticName);
-                console.log("#rpc delete ExportedFunctions: ", superStaticName, mStaticName);
                 const preExes = ExportedFunctions.get(mStaticName) || [];
                 ExportedFunctions.set(mStaticName, preExes.concat(exe));
             }
@@ -551,7 +549,7 @@ export class RPCPeer extends RPCEmitter {
         let superClassName = Object.getPrototypeOf(superObj).constructor.name;
         let superStaticName = superClassName + ".constructor";
         const contextRoot = conName + "." + attrName;
-        console.log("#rpc " + this.name + " ExportedFunctions: ", ExportedFunctions);
+        console.log("#rpc " + this.name + " ExportedFunctions: ", rpcID, ExportedFunctions);
         while (superClassName !== "Object") {
             console.log("#rpc " + this.name + " className: ", superClassName);
             if (ExportedFunctions.has(superClassName)) {
