@@ -46,8 +46,10 @@ const AddRPCFunction = (executor: webworker_rpc.IExecutor) => {
     const idx = arr.findIndex((x) => x.method === executor.method);
     if (idx < 0) {
         arr.push(executor);
+        console.log("#rpc AddRPCFunction: ", executor.context, executor.method);
         return true;
     }
+    console.log("#rpc AddRPCFunction failed: ", arr);
     return false;
 }
 
@@ -179,6 +181,7 @@ export class RPCEmitter {
                     oneExe.context = mClassName;
                 }
                 ExportedFunctions.delete(superClassName);
+                console.log("#rpc delete ExportedFunctions: ", superClassName, mClassName);
                 const preExes = ExportedFunctions.get(mClassName) || [];
                 ExportedFunctions.set(mClassName, preExes.concat(exe));
             }
@@ -188,6 +191,7 @@ export class RPCEmitter {
                     oneExe.context = mStaticName;
                 }
                 ExportedFunctions.delete(superStaticName);
+                console.log("#rpc delete ExportedFunctions: ", superStaticName, mStaticName);
                 const preExes = ExportedFunctions.get(mStaticName) || [];
                 ExportedFunctions.set(mStaticName, preExes.concat(exe));
             }
