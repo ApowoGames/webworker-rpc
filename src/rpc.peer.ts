@@ -36,6 +36,7 @@ const ExportAttribute = (target, name) => {
     ExportedAttributes.get(context).push(name);
 }
 const ExportClass = (target) => {
+    if (ExportedClasses.indexOf(target.name) >= 0) return target;
     ExportedClasses.push(target.name);
     return target;
 }
@@ -483,6 +484,11 @@ export class RPCPeer extends RPCEmitter {
             });
             this.__send(messageData, oneName, oneName !== MANAGER_WORKER_NAME);
         }
+
+        this.resolvers.forEach((val) => {
+            val.reject("worker destroy");
+        });
+        this.resolvers.clear();
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
 
