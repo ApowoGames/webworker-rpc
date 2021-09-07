@@ -36,3 +36,10 @@ $ yarn mkproto
 
 ### Develop Run
 yarn dev
+
+### Build Run
+yarn build
+git add .
+git commit -m "vxxx"
+git push
+git push gitlab master
