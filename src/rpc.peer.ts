@@ -300,6 +300,14 @@ export class RPCPeer extends RPCEmitter {
         return RPCPeer._instance.exportProperty(attr, context, attrName);
     }
 
+    static cancelExportProperty(attr: any, context: any, attrName?: string) {
+        if (!RPCPeer._instance) {
+            console.error("webworker-rpc: RPCPeer not created");
+            return;
+        }
+        RPCPeer._instance.cancelExportProperty(attr, context, attrName);
+    }
+
     static destroy() {
         if (!RPCPeer._instance) {
             console.error("webworker-rpc: RPCPeer not created");
