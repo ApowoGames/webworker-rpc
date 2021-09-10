@@ -1520,6 +1520,7 @@ declare module 'webworker-rpc/rpc.peer' {
             };
         };
         static exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;
+        static cancelExportProperty(attr: any, context: any, attrName?: string): void;
         static destroy(): void;
         static destroyManagerWorker(): void;
         constructor(name: string);
