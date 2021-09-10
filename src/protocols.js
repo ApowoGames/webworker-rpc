@@ -1904,6 +1904,237 @@
             return GotRegistryPacket;
         })();
     
+        webworker_rpc.RemoveRegistryPacket = (function() {
+    
+            /**
+             * Properties of a RemoveRegistryPacket.
+             * @memberof webworker_rpc
+             * @interface IRemoveRegistryPacket
+             * @property {string} serviceName RemoveRegistryPacket serviceName
+             * @property {Array.<webworker_rpc.IExecutor>|null} [executors] RemoveRegistryPacket executors
+             */
+    
+            /**
+             * Constructs a new RemoveRegistryPacket.
+             * @memberof webworker_rpc
+             * @classdesc Represents a RemoveRegistryPacket.
+             * @implements IRemoveRegistryPacket
+             * @constructor
+             * @param {webworker_rpc.IRemoveRegistryPacket=} [properties] Properties to set
+             */
+            function RemoveRegistryPacket(properties) {
+                this.executors = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+    
+            /**
+             * RemoveRegistryPacket serviceName.
+             * @member {string} serviceName
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @instance
+             */
+            RemoveRegistryPacket.prototype.serviceName = "";
+    
+            /**
+             * RemoveRegistryPacket executors.
+             * @member {Array.<webworker_rpc.IExecutor>} executors
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @instance
+             */
+            RemoveRegistryPacket.prototype.executors = $util.emptyArray;
+    
+            /**
+             * Creates a new RemoveRegistryPacket instance using the specified properties.
+             * @function create
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {webworker_rpc.IRemoveRegistryPacket=} [properties] Properties to set
+             * @returns {webworker_rpc.RemoveRegistryPacket} RemoveRegistryPacket instance
+             */
+            RemoveRegistryPacket.create = function create(properties) {
+                return new RemoveRegistryPacket(properties);
+            };
+    
+            /**
+             * Encodes the specified RemoveRegistryPacket message. Does not implicitly {@link webworker_rpc.RemoveRegistryPacket.verify|verify} messages.
+             * @function encode
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {webworker_rpc.IRemoveRegistryPacket} message RemoveRegistryPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            RemoveRegistryPacket.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.serviceName);
+                if (message.executors != null && message.executors.length)
+                    for (var i = 0; i < message.executors.length; ++i)
+                        $root.webworker_rpc.Executor.encode(message.executors[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+    
+            /**
+             * Encodes the specified RemoveRegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.RemoveRegistryPacket.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {webworker_rpc.IRemoveRegistryPacket} message RemoveRegistryPacket message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            RemoveRegistryPacket.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+    
+            /**
+             * Decodes a RemoveRegistryPacket message from the specified reader or buffer.
+             * @function decode
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {webworker_rpc.RemoveRegistryPacket} RemoveRegistryPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            RemoveRegistryPacket.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.webworker_rpc.RemoveRegistryPacket();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.serviceName = reader.string();
+                        break;
+                    case 2:
+                        if (!(message.executors && message.executors.length))
+                            message.executors = [];
+                        message.executors.push($root.webworker_rpc.Executor.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                if (!message.hasOwnProperty("serviceName"))
+                    throw $util.ProtocolError("missing required 'serviceName'", { instance: message });
+                return message;
+            };
+    
+            /**
+             * Decodes a RemoveRegistryPacket message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {webworker_rpc.RemoveRegistryPacket} RemoveRegistryPacket
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            RemoveRegistryPacket.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+    
+            /**
+             * Verifies a RemoveRegistryPacket message.
+             * @function verify
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            RemoveRegistryPacket.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (!$util.isString(message.serviceName))
+                    return "serviceName: string expected";
+                if (message.executors != null && message.hasOwnProperty("executors")) {
+                    if (!Array.isArray(message.executors))
+                        return "executors: array expected";
+                    for (var i = 0; i < message.executors.length; ++i) {
+                        var error = $root.webworker_rpc.Executor.verify(message.executors[i]);
+                        if (error)
+                            return "executors." + error;
+                    }
+                }
+                return null;
+            };
+    
+            /**
+             * Creates a RemoveRegistryPacket message from a plain object. Also converts values to their respective internal types.
+             * @function fromObject
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {Object.<string,*>} object Plain object
+             * @returns {webworker_rpc.RemoveRegistryPacket} RemoveRegistryPacket
+             */
+            RemoveRegistryPacket.fromObject = function fromObject(object) {
+                if (object instanceof $root.webworker_rpc.RemoveRegistryPacket)
+                    return object;
+                var message = new $root.webworker_rpc.RemoveRegistryPacket();
+                if (object.serviceName != null)
+                    message.serviceName = String(object.serviceName);
+                if (object.executors) {
+                    if (!Array.isArray(object.executors))
+                        throw TypeError(".webworker_rpc.RemoveRegistryPacket.executors: array expected");
+                    message.executors = [];
+                    for (var i = 0; i < object.executors.length; ++i) {
+                        if (typeof object.executors[i] !== "object")
+                            throw TypeError(".webworker_rpc.RemoveRegistryPacket.executors: object expected");
+                        message.executors[i] = $root.webworker_rpc.Executor.fromObject(object.executors[i]);
+                    }
+                }
+                return message;
+            };
+    
+            /**
+             * Creates a plain object from a RemoveRegistryPacket message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @static
+             * @param {webworker_rpc.RemoveRegistryPacket} message RemoveRegistryPacket
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            RemoveRegistryPacket.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.executors = [];
+                if (options.defaults)
+                    object.serviceName = "";
+                if (message.serviceName != null && message.hasOwnProperty("serviceName"))
+                    object.serviceName = message.serviceName;
+                if (message.executors && message.executors.length) {
+                    object.executors = [];
+                    for (var j = 0; j < message.executors.length; ++j)
+                        object.executors[j] = $root.webworker_rpc.Executor.toObject(message.executors[j], options);
+                }
+                return object;
+            };
+    
+            /**
+             * Converts this RemoveRegistryPacket to JSON.
+             * @function toJSON
+             * @memberof webworker_rpc.RemoveRegistryPacket
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            RemoveRegistryPacket.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+    
+            return RemoveRegistryPacket;
+        })();
+    
         webworker_rpc.UnlinkPacket = (function() {
     
             /**
@@ -2963,6 +3194,7 @@
              * @property {webworker_rpc.IProxyCreateWorkerPacket|null} [dataProxyCreateWorker] WebWorkerMessage dataProxyCreateWorker
              * @property {webworker_rpc.IAddRegistryPacket|null} [dataAddRegistry] WebWorkerMessage dataAddRegistry
              * @property {webworker_rpc.IGotRegistryPacket|null} [dataGotRegistry] WebWorkerMessage dataGotRegistry
+             * @property {webworker_rpc.IRemoveRegistryPacket|null} [dataRemoveRegistry] WebWorkerMessage dataRemoveRegistry
              * @property {webworker_rpc.IExecutePacket|null} [dataExecute] WebWorkerMessage dataExecute
              * @property {webworker_rpc.IResponsePacket|null} [dataResponse] WebWorkerMessage dataResponse
              * @property {webworker_rpc.IUnlinkPacket|null} [dataUnlink] WebWorkerMessage dataUnlink
@@ -3033,6 +3265,14 @@
             WebWorkerMessage.prototype.dataGotRegistry = null;
     
             /**
+             * WebWorkerMessage dataRemoveRegistry.
+             * @member {webworker_rpc.IRemoveRegistryPacket|null|undefined} dataRemoveRegistry
+             * @memberof webworker_rpc.WebWorkerMessage
+             * @instance
+             */
+            WebWorkerMessage.prototype.dataRemoveRegistry = null;
+    
+            /**
              * WebWorkerMessage dataExecute.
              * @member {webworker_rpc.IExecutePacket|null|undefined} dataExecute
              * @memberof webworker_rpc.WebWorkerMessage
@@ -3069,12 +3309,12 @@
     
             /**
              * WebWorkerMessage data.
-             * @member {"dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager"|undefined} data
+             * @member {"dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataRemoveRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager"|undefined} data
              * @memberof webworker_rpc.WebWorkerMessage
              * @instance
              */
             Object.defineProperty(WebWorkerMessage.prototype, "data", {
-                get: $util.oneOfGetter($oneOfFields = ["dataLink", "dataRequestLink", "dataProxyCreateWorker", "dataAddRegistry", "dataGotRegistry", "dataExecute", "dataResponse", "dataUnlink", "dataDestroyManager"]),
+                get: $util.oneOfGetter($oneOfFields = ["dataLink", "dataRequestLink", "dataProxyCreateWorker", "dataAddRegistry", "dataGotRegistry", "dataRemoveRegistry", "dataExecute", "dataResponse", "dataUnlink", "dataDestroyManager"]),
                 set: $util.oneOfSetter($oneOfFields)
             });
     
@@ -3113,14 +3353,16 @@
                     $root.webworker_rpc.AddRegistryPacket.encode(message.dataAddRegistry, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
                 if (message.dataGotRegistry != null && Object.hasOwnProperty.call(message, "dataGotRegistry"))
                     $root.webworker_rpc.GotRegistryPacket.encode(message.dataGotRegistry, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+                if (message.dataRemoveRegistry != null && Object.hasOwnProperty.call(message, "dataRemoveRegistry"))
+                    $root.webworker_rpc.RemoveRegistryPacket.encode(message.dataRemoveRegistry, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
                 if (message.dataExecute != null && Object.hasOwnProperty.call(message, "dataExecute"))
-                    $root.webworker_rpc.ExecutePacket.encode(message.dataExecute, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                    $root.webworker_rpc.ExecutePacket.encode(message.dataExecute, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
                 if (message.dataResponse != null && Object.hasOwnProperty.call(message, "dataResponse"))
-                    $root.webworker_rpc.ResponsePacket.encode(message.dataResponse, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
+                    $root.webworker_rpc.ResponsePacket.encode(message.dataResponse, writer.uint32(/* id 9, wireType 2 =*/74).fork()).ldelim();
                 if (message.dataUnlink != null && Object.hasOwnProperty.call(message, "dataUnlink"))
-                    $root.webworker_rpc.UnlinkPacket.encode(message.dataUnlink, writer.uint32(/* id 9, wireType 2 =*/74).fork()).ldelim();
+                    $root.webworker_rpc.UnlinkPacket.encode(message.dataUnlink, writer.uint32(/* id 10, wireType 2 =*/82).fork()).ldelim();
                 if (message.dataDestroyManager != null && Object.hasOwnProperty.call(message, "dataDestroyManager"))
-                    $root.webworker_rpc.DestroyManagerPacket.encode(message.dataDestroyManager, writer.uint32(/* id 10, wireType 2 =*/82).fork()).ldelim();
+                    $root.webworker_rpc.DestroyManagerPacket.encode(message.dataDestroyManager, writer.uint32(/* id 11, wireType 2 =*/90).fork()).ldelim();
                 return writer;
             };
     
@@ -3174,15 +3416,18 @@
                         message.dataGotRegistry = $root.webworker_rpc.GotRegistryPacket.decode(reader, reader.uint32());
                         break;
                     case 7:
-                        message.dataExecute = $root.webworker_rpc.ExecutePacket.decode(reader, reader.uint32());
+                        message.dataRemoveRegistry = $root.webworker_rpc.RemoveRegistryPacket.decode(reader, reader.uint32());
                         break;
                     case 8:
-                        message.dataResponse = $root.webworker_rpc.ResponsePacket.decode(reader, reader.uint32());
+                        message.dataExecute = $root.webworker_rpc.ExecutePacket.decode(reader, reader.uint32());
                         break;
                     case 9:
-                        message.dataUnlink = $root.webworker_rpc.UnlinkPacket.decode(reader, reader.uint32());
+                        message.dataResponse = $root.webworker_rpc.ResponsePacket.decode(reader, reader.uint32());
                         break;
                     case 10:
+                        message.dataUnlink = $root.webworker_rpc.UnlinkPacket.decode(reader, reader.uint32());
+                        break;
+                    case 11:
                         message.dataDestroyManager = $root.webworker_rpc.DestroyManagerPacket.decode(reader, reader.uint32());
                         break;
                     default:
@@ -3273,6 +3518,16 @@
                             return "dataGotRegistry." + error;
                     }
                 }
+                if (message.dataRemoveRegistry != null && message.hasOwnProperty("dataRemoveRegistry")) {
+                    if (properties.data === 1)
+                        return "data: multiple values";
+                    properties.data = 1;
+                    {
+                        var error = $root.webworker_rpc.RemoveRegistryPacket.verify(message.dataRemoveRegistry);
+                        if (error)
+                            return "dataRemoveRegistry." + error;
+                    }
+                }
                 if (message.dataExecute != null && message.hasOwnProperty("dataExecute")) {
                     if (properties.data === 1)
                         return "data: multiple values";
@@ -3355,6 +3610,11 @@
                         throw TypeError(".webworker_rpc.WebWorkerMessage.dataGotRegistry: object expected");
                     message.dataGotRegistry = $root.webworker_rpc.GotRegistryPacket.fromObject(object.dataGotRegistry);
                 }
+                if (object.dataRemoveRegistry != null) {
+                    if (typeof object.dataRemoveRegistry !== "object")
+                        throw TypeError(".webworker_rpc.WebWorkerMessage.dataRemoveRegistry: object expected");
+                    message.dataRemoveRegistry = $root.webworker_rpc.RemoveRegistryPacket.fromObject(object.dataRemoveRegistry);
+                }
                 if (object.dataExecute != null) {
                     if (typeof object.dataExecute !== "object")
                         throw TypeError(".webworker_rpc.WebWorkerMessage.dataExecute: object expected");
@@ -3419,6 +3679,11 @@
                     object.dataGotRegistry = $root.webworker_rpc.GotRegistryPacket.toObject(message.dataGotRegistry, options);
                     if (options.oneofs)
                         object.data = "dataGotRegistry";
+                }
+                if (message.dataRemoveRegistry != null && message.hasOwnProperty("dataRemoveRegistry")) {
+                    object.dataRemoveRegistry = $root.webworker_rpc.RemoveRegistryPacket.toObject(message.dataRemoveRegistry, options);
+                    if (options.oneofs)
+                        object.data = "dataRemoveRegistry";
                 }
                 if (message.dataExecute != null && message.hasOwnProperty("dataExecute")) {
                     object.dataExecute = $root.webworker_rpc.ExecutePacket.toObject(message.dataExecute, options);

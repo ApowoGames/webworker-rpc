@@ -11,6 +11,8 @@ window.onload = () => {
                 RPCPeer.remote.foreman.ForemanChild.attr2.foremanGrandsonFunction();
                 RPCPeer.remote.foreman.ForemanChild.attr2.foremanSonFunction();
                 RPCPeer.remote.foreman.ForemanChild.attr2.foremanSonStaticFunction();
+
+                RPCPeer.remote.foreman.ForemanChild.cancelExportAttr();
             });
 
         // const line = 2000;

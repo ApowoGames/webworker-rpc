@@ -763,6 +763,102 @@ declare module 'webworker-rpc/protocols' {
                     toJSON(): { [k: string]: any };
             }
     
+            /** Properties of a RemoveRegistryPacket. */
+            interface IRemoveRegistryPacket {
+    
+                    /** RemoveRegistryPacket serviceName */
+                    serviceName: string;
+    
+                    /** RemoveRegistryPacket executors */
+                    executors?: (webworker_rpc.IExecutor[]|null);
+            }
+    
+            /** Represents a RemoveRegistryPacket. */
+            class RemoveRegistryPacket implements IRemoveRegistryPacket {
+    
+                    /**
+                        * Constructs a new RemoveRegistryPacket.
+                        * @param [properties] Properties to set
+                        */
+                    constructor(properties?: webworker_rpc.IRemoveRegistryPacket);
+    
+                    /** RemoveRegistryPacket serviceName. */
+                    serviceName: string;
+    
+                    /** RemoveRegistryPacket executors. */
+                    executors: webworker_rpc.IExecutor[];
+    
+                    /**
+                        * Creates a new RemoveRegistryPacket instance using the specified properties.
+                        * @param [properties] Properties to set
+                        * @returns RemoveRegistryPacket instance
+                        */
+                    static create(properties?: webworker_rpc.IRemoveRegistryPacket): webworker_rpc.RemoveRegistryPacket;
+    
+                    /**
+                        * Encodes the specified RemoveRegistryPacket message. Does not implicitly {@link webworker_rpc.RemoveRegistryPacket.verify|verify} messages.
+                        * @param message RemoveRegistryPacket message or plain object to encode
+                        * @param [writer] Writer to encode to
+                        * @returns Writer
+                        */
+                    static encode(message: webworker_rpc.IRemoveRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+    
+                    /**
+                        * Encodes the specified RemoveRegistryPacket message, length delimited. Does not implicitly {@link webworker_rpc.RemoveRegistryPacket.verify|verify} messages.
+                        * @param message RemoveRegistryPacket message or plain object to encode
+                        * @param [writer] Writer to encode to
+                        * @returns Writer
+                        */
+                    static encodeDelimited(message: webworker_rpc.IRemoveRegistryPacket, writer?: $protobuf.Writer): $protobuf.Writer;
+    
+                    /**
+                        * Decodes a RemoveRegistryPacket message from the specified reader or buffer.
+                        * @param reader Reader or buffer to decode from
+                        * @param [length] Message length if known beforehand
+                        * @returns RemoveRegistryPacket
+                        * @throws {Error} If the payload is not a reader or valid buffer
+                        * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                        */
+                    static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): webworker_rpc.RemoveRegistryPacket;
+    
+                    /**
+                        * Decodes a RemoveRegistryPacket message from the specified reader or buffer, length delimited.
+                        * @param reader Reader or buffer to decode from
+                        * @returns RemoveRegistryPacket
+                        * @throws {Error} If the payload is not a reader or valid buffer
+                        * @throws {$protobuf.util.ProtocolError} If required fields are missing
+                        */
+                    static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): webworker_rpc.RemoveRegistryPacket;
+    
+                    /**
+                        * Verifies a RemoveRegistryPacket message.
+                        * @param message Plain object to verify
+                        * @returns `null` if valid, otherwise the reason why it is not
+                        */
+                    static verify(message: { [k: string]: any }): (string|null);
+    
+                    /**
+                        * Creates a RemoveRegistryPacket message from a plain object. Also converts values to their respective internal types.
+                        * @param object Plain object
+                        * @returns RemoveRegistryPacket
+                        */
+                    static fromObject(object: { [k: string]: any }): webworker_rpc.RemoveRegistryPacket;
+    
+                    /**
+                        * Creates a plain object from a RemoveRegistryPacket message. Also converts values to other types if specified.
+                        * @param message RemoveRegistryPacket
+                        * @param [options] Conversion options
+                        * @returns Plain object
+                        */
+                    static toObject(message: webworker_rpc.RemoveRegistryPacket, options?: $protobuf.IConversionOptions): { [k: string]: any };
+    
+                    /**
+                        * Converts this RemoveRegistryPacket to JSON.
+                        * @returns JSON object
+                        */
+                    toJSON(): { [k: string]: any };
+            }
+    
             /** Properties of an UnlinkPacket. */
             interface IUnlinkPacket {
     
@@ -1258,6 +1354,9 @@ declare module 'webworker-rpc/protocols' {
                     /** WebWorkerMessage dataGotRegistry */
                     dataGotRegistry?: (webworker_rpc.IGotRegistryPacket|null);
     
+                    /** WebWorkerMessage dataRemoveRegistry */
+                    dataRemoveRegistry?: (webworker_rpc.IRemoveRegistryPacket|null);
+    
                     /** WebWorkerMessage dataExecute */
                     dataExecute?: (webworker_rpc.IExecutePacket|null);
     
@@ -1298,6 +1397,9 @@ declare module 'webworker-rpc/protocols' {
                     /** WebWorkerMessage dataGotRegistry. */
                     dataGotRegistry?: (webworker_rpc.IGotRegistryPacket|null);
     
+                    /** WebWorkerMessage dataRemoveRegistry. */
+                    dataRemoveRegistry?: (webworker_rpc.IRemoveRegistryPacket|null);
+    
                     /** WebWorkerMessage dataExecute. */
                     dataExecute?: (webworker_rpc.IExecutePacket|null);
     
@@ -1311,7 +1413,7 @@ declare module 'webworker-rpc/protocols' {
                     dataDestroyManager?: (webworker_rpc.IDestroyManagerPacket|null);
     
                     /** WebWorkerMessage data. */
-                    data?: ("dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager");
+                    data?: ("dataLink"|"dataRequestLink"|"dataProxyCreateWorker"|"dataAddRegistry"|"dataGotRegistry"|"dataRemoveRegistry"|"dataExecute"|"dataResponse"|"dataUnlink"|"dataDestroyManager");
     
                     /**
                         * Creates a new WebWorkerMessage instance using the specified properties.
@@ -1425,6 +1527,7 @@ declare module 'webworker-rpc/rpc.peer' {
         destroyManagerWorker(): void;
         destroy(): void;
         exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;
+        cancelExportProperty(attr: any, context: any, attrName?: string): void;
         protected onWorkerUnlinked(worker: string): void;
     }
     export class LinkListener {

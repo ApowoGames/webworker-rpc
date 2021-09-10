@@ -144,7 +144,7 @@ export class RPCEmitter {
             const executors = this.emitFunctions.get(event);
             const idx = executors.findIndex((x) => x.worker === worker && x.executor === executor);
             if (idx > 0) {
-                executors.splice(idx, 0);
+                executors.splice(idx, 1);
             }
         } else {
             this.emitFunctions.delete(event);
@@ -250,6 +250,7 @@ export class RPCPeer extends RPCEmitter {
     private readonly MESSAGEKEY_PROXY_CREATE_WORKER: string = "proxyCreateWorker";
     private readonly MESSAGEKEY_ADD_REGISTRY: string = "addRegistry";
     private readonly MESSAGEKEY_GOT_REGISTRY: string = "gotRegistry";
+    private readonly MESSAGEKEY_REMOVE_REGISTRY: string = "removeRegistry";
     private readonly MESSAGEKEY_EXECUTE: string = "execute";
     private readonly MESSAGEKEY_RESPOND: string = "respond";
     private readonly MESSAGEKEY_UNLINK: string = "unlink";
@@ -496,7 +497,7 @@ export class RPCPeer extends RPCEmitter {
         self.close();
     }
 
-    // 动态暴露属性 注意：若使用了自定义属性名attrName，需要自行管理暴露属性的内存释放(delete context[attrName])
+    // 动态暴露属性 注意：若使用了自定义属性名attrName，需要管理好暴露属性的内存释放(cancelExportProperty / delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
         // console.log("webworker-rpc: " + this.name + " export: ", attr, context);
         if (attrName === undefined || attrName === null) {
@@ -520,7 +521,7 @@ export class RPCPeer extends RPCEmitter {
                 console.warn(`webworker-rpc: ${attrName} exist, replaced`);
             }
 
-            // TODO: 此处添加了引用，但是没有做释放相关操作
+            // 此处添加了引用，释放操作需调用接口cancelExportProperty或手动delete
             context[attrName] = attr;
         }
 
@@ -547,32 +548,7 @@ export class RPCPeer extends RPCEmitter {
         // 遍历节点获取所有方法，不递归查找父类
         // const addExecutors = this.exportObject(attr, conName + "." + attrName, false);
 
-        // 根据@Export装饰符获取目标方法， 递归父类 判断类名是否记录
-        const addExecutors = [];
-        let superObj = attr;
-        let superClassName = Object.getPrototypeOf(superObj).constructor.name;
-        let superStaticName = superClassName + ".constructor";
-        const contextRoot = conName + "." + attrName;
-        while (superClassName !== "Object") {
-            if (ExportedFunctions.has(superClassName)) {
-                for (const iExecutor of ExportedFunctions.get(superClassName)) {
-                    const chengedExe = new webworker_rpc.Executor(iExecutor);
-                    chengedExe.context = contextRoot;
-                    addExecutors.push(chengedExe);
-                }
-            }
-            if (ExportedFunctions.has(superStaticName)) {
-                for (const iExecutor of ExportedFunctions.get(superStaticName)) {
-                    const chengedExe = new webworker_rpc.Executor(iExecutor);
-                    chengedExe.context = contextRoot + ".constructor";
-                    addExecutors.push(chengedExe);
-                }
-            }
-
-            superObj = Object.getPrototypeOf(superObj);
-            superClassName = Object.getPrototypeOf(superObj).constructor.name;
-            superStaticName = superClassName + ".constructor";
-        }
+        const addExecutors = this.getExcutors(attr, conName, attrName);
 
         const linkedNames = Array.from(this.channels.keys());
         this.registryPackID++;
@@ -585,7 +561,64 @@ export class RPCPeer extends RPCEmitter {
                 executors: addExecutors
             }));
         }
+
+        // console.log("#export ", this.name, this, this.remote);
+
         return listener;
+    }
+
+    public cancelExportProperty(attr: any, context: any, attrName?: string) {
+        let definedAttrName = true;
+        if (attrName === undefined || attrName === null) {
+            definedAttrName = false;
+            for (const key in context) {
+                if (Object.prototype.hasOwnProperty.call(context, key)) {
+                    const element = context[key];
+                    if (element === attr) {
+                        attrName = key;
+                        // console.log("webworker-rpc: attrName: ", attrName);
+                    }
+                }
+            }
+        }
+        if (attrName.length === 0) {
+            console.error(`webworker-rpc: ${attr} is not in ${context}`);
+            return;
+        }
+
+        let conName = "";
+        const existConNames = Array.from(ExportedContexts.keys());
+        for (const oneName of existConNames) {
+            const oneCon = ExportedContexts.get(oneName);
+            if (oneCon === context) {
+                conName = oneName;
+                break;
+            }
+        }
+
+        if (conName.length === 0) {
+            console.error(`webworker-rpc: ${conName} not exists`);
+            return;
+        }
+
+        const addExecutors = this.getExcutors(attr, conName, attrName);
+
+        const linkedNames = Array.from(this.channels.keys());
+        for (const oneName of linkedNames) {
+            this.cancelRegistry(oneName, new webworker_rpc.RemoveRegistryPacket({
+                serviceName: this.name,
+                executors: addExecutors
+            }));
+        }
+
+        // 针对自定义attrName 删除context上的节点
+        if (definedAttrName) {
+            if (context[attrName] !== undefined && context[attrName] !== null) {
+                delete context[attrName];
+            }
+        }
+
+        // console.log("#cancel export ", this.name, this, this.remote);
     }
 
     protected onWorkerUnlinked(worker: string) {
@@ -684,6 +717,9 @@ export class RPCPeer extends RPCEmitter {
                     break;
                 case this.MESSAGEKEY_GOT_REGISTRY:
                     this.onMessage_GotRegistry(data.dataGotRegistry);
+                    break;
+                case this.MESSAGEKEY_REMOVE_REGISTRY:
+                    this.onMessage_RemoveRegistry(data.dataRemoveRegistry);
                     break;
                 case this.MESSAGEKEY_EXECUTE:
                     this.onMessage_Execute(data.dataExecute);
@@ -853,6 +889,17 @@ export class RPCPeer extends RPCEmitter {
         this.__send(messageData, worker, true);
     }
 
+    // 通知其他worker删除注册表
+    private cancelRegistry(worker: string, registry: webworker_rpc.IRemoveRegistryPacket) {
+        if (worker === MANAGER_WORKER_NAME) return;
+
+        const messageData = new webworker_rpc.WebWorkerMessage({
+            key: this.MESSAGEKEY_REMOVE_REGISTRY,
+            dataRemoveRegistry: registry
+        });
+        this.__send(messageData, worker, true);
+    }
+
     private onMessage_Link(packet: webworker_rpc.ILinkPacket, ports: MessagePort[]) {
         // console.log("webworker-rpc: " + this.name + " onMessage_Link: ", ev);
         const {workers} = packet;
@@ -864,7 +911,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_AddRegistry(packet: webworker_rpc.IAddRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet.executors);
+        console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet);
         const {id, serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
@@ -872,7 +919,7 @@ export class RPCPeer extends RPCEmitter {
         }
         const newRegistries = this.registry.get(serviceName).concat(executors);
         this.registry.set(serviceName, newRegistries);
-        this.addRegistryProperty(packet);
+        this.addRegistryProperty(serviceName, executors);
 
         // send GOT message
         const messageData = new webworker_rpc.WebWorkerMessage({
@@ -892,10 +939,12 @@ export class RPCPeer extends RPCEmitter {
             }
             RPCListeners.delete(serviceName);
         }
+
+        // console.log("#on export ", this.name, this, this.remote);
     }
 
     private onMessage_GotRegistry(packet: webworker_rpc.IGotRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", ev.data);
+        // console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", packet);
         const {id, serviceName} = packet;
 
         if (this.linkListeners.has(serviceName)) {
@@ -907,6 +956,26 @@ export class RPCPeer extends RPCEmitter {
         if (this.syncRegistryListeners.has(id)) {
             this.syncRegistryListeners.get(id).workerGotRegistry(serviceName);
         }
+    }
+
+    private onMessage_RemoveRegistry(packet: webworker_rpc.IRemoveRegistryPacket) {
+        console.log("webworker-rpc: " + this.name + " onMessage_RemoveRegistry:", packet);
+        const {serviceName, executors} = packet;
+
+        if (!this.registry.has(serviceName)) {
+            console.warn(`webworker-rpc: on message remove registry, service name ${serviceName} not exists`);
+            return;
+        }
+        const curExecutors = this.registry.get(serviceName);
+        for (let i = curExecutors.length - 1; i >= 0; i--) {
+            const oneExe = curExecutors[i];
+            if (executors.indexOf(oneExe) >= 0) {
+                curExecutors.splice(i, 1);
+            }
+        }
+        this.removeRegistryProperty(serviceName, executors);
+
+        // console.log("#on cancel export ", this.name, this, this.remote);
     }
 
     private onMessage_Execute(packet: webworker_rpc.IExecutePacket) {
@@ -1045,10 +1114,8 @@ export class RPCPeer extends RPCEmitter {
         return resultCon;
     }
 
-    private addRegistryProperty(packet: webworker_rpc.IAddRegistryPacket) {
+    private addRegistryProperty(serviceName: string, executors: webworker_rpc.IExecutor[]) {
         if (this.remote === undefined || this.remote === null) this.remote = {};
-
-        const {serviceName, executors} = packet;
 
         let serviceProp = {};
         if (serviceName in this.remote) {
@@ -1084,6 +1151,56 @@ export class RPCPeer extends RPCEmitter {
         }
     }
 
+    private removeRegistryProperty(serviceName: string, executors: webworker_rpc.IExecutor[]) {
+        if (this.remote === undefined || this.remote === null) {
+            console.warn(`webworker-rpc: no remote created`);
+            return;
+        }
+
+        const serviceProp = this.remote[serviceName];
+        if (serviceProp === undefined || serviceProp === null) {
+            console.warn(`webworker-rpc: worker ${serviceName} not exists`);
+            return;
+        }
+
+        // todo: delete
+        for (const executor of executors) {
+            const contexts = executor.context.split(".");
+            let targetCon = serviceProp;
+            let getFinalCon = true;
+            const conPath = [];
+            for (const context of contexts) {
+                if (context === "constructor") {
+                    continue;
+                }
+                conPath.push(context);
+                if (!Object.prototype.hasOwnProperty.call(targetCon, context)) {
+                    getFinalCon = false;
+                    break;
+                }
+                targetCon = targetCon[context];
+            }
+            if (!getFinalCon) continue;
+
+            if (Object.prototype.hasOwnProperty.call(targetCon, executor.method)) {
+                delete targetCon[executor.method];
+            }
+
+            // 往上递归至serviceProp 删除空的节点
+            while (conPath.length > 0) {
+                if (Object.getOwnPropertyNames(targetCon).length > 0) {
+                    break;
+                }
+                const toDelete = conPath.splice(-1, 1)[0];
+                targetCon = serviceProp;
+                for (const conPathElement of conPath) {
+                    targetCon = serviceProp[conPathElement];
+                }
+                delete targetCon[toDelete];
+            }
+        }
+    }
+
     private getManagerWorkerURL(): string {
         const resolveString = MANAGERWORKERSPRITE.toString();
         const webWorkerTemplate = `
@@ -1106,6 +1223,36 @@ export class RPCPeer extends RPCEmitter {
 
     private handlerExcuteResult(service: string, id: number, result?: any) {
         this.respond(service, id, RPCParam.createByValue(result));
+    }
+
+    // 根据@Export装饰符获取目标方法， 递归父类 判断类名是否记录
+    private getExcutors(attr: any, conName: string, attrName: string): webworker_rpc.IExecutor[] {
+        const addExecutors = [];
+        let superObj = attr;
+        let superClassName = Object.getPrototypeOf(superObj).constructor.name;
+        let superStaticName = superClassName + ".constructor";
+        const contextRoot = conName + "." + attrName;
+        while (superClassName !== "Object") {
+            if (ExportedFunctions.has(superClassName)) {
+                for (const iExecutor of ExportedFunctions.get(superClassName)) {
+                    const chengedExe = new webworker_rpc.Executor(iExecutor);
+                    chengedExe.context = contextRoot;
+                    addExecutors.push(chengedExe);
+                }
+            }
+            if (ExportedFunctions.has(superStaticName)) {
+                for (const iExecutor of ExportedFunctions.get(superStaticName)) {
+                    const chengedExe = new webworker_rpc.Executor(iExecutor);
+                    chengedExe.context = contextRoot + ".constructor";
+                    addExecutors.push(chengedExe);
+                }
+            }
+
+            superObj = Object.getPrototypeOf(superObj);
+            superClassName = Object.getPrototypeOf(superObj).constructor.name;
+            superStaticName = superClassName + ".constructor";
+        }
+        return addExecutors;
     }
 }
 

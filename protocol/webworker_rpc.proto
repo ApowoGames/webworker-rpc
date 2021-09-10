@@ -63,6 +63,11 @@ message GotRegistryPacket {
     required string service_name = 2;// 发送者(worker)名称
 }
 
+message RemoveRegistryPacket {
+    required string service_name = 1;// 发送者(worker)名称
+    repeated Executor executors = 2;// 发送者可调用方法
+}
+
 message UnlinkPacket {
     required string service_name = 1;// 发送者(worker)名称
 }
@@ -95,9 +100,10 @@ message WebWorkerMessage {
         ProxyCreateWorkerPacket data_proxy_create_worker = 4;
         AddRegistryPacket data_add_registry = 5;
         GotRegistryPacket data_got_registry = 6;
-        ExecutePacket data_execute = 7;
-        ResponsePacket data_response = 8;
-        UnlinkPacket data_unlink = 9;
-        DestroyManagerPacket data_destroy_manager = 10;
+        RemoveRegistryPacket data_remove_registry = 7;
+        ExecutePacket data_execute = 8;
+        ResponsePacket data_response = 9;
+        UnlinkPacket data_unlink = 10;
+        DestroyManagerPacket data_destroy_manager = 11;
     }
 }

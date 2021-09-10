@@ -45,6 +45,11 @@ class ForemanContext extends RPCPeer {
     }
 
     @Export()
+    public cancelExportAttr() {
+        this.cancelExportProperty(this.attr1, this, "attr2");
+    }
+
+    @Export()
     public testLargeMsg(data) {
         console.log(data);
     }
