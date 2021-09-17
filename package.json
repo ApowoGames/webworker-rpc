@@ -1,6 +1,6 @@
 {
   "name": "webworker-rpc",
-  "version": "0.0.85",
+  "version": "0.0.86",
   "main": "release/index.js",
   "types": "release/index.d.ts",
   "author": "apowo",
