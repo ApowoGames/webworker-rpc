@@ -507,7 +507,7 @@ export class RPCPeer extends RPCEmitter {
 
     // 动态暴露属性 注意：若使用了自定义属性名attrName，需要管理好暴露属性的内存释放(cancelExportProperty / delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
-        console.log("webworker-rpc: " + this.name + " export: ", attr, context, attrName);
+        // console.log("webworker-rpc: " + this.name + " export: ", attr, context, attrName);
         if (attrName === undefined || attrName === null) {
             for (const key in context) {
                 if (Object.prototype.hasOwnProperty.call(context, key)) {
@@ -576,7 +576,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     public cancelExportProperty(attr: any, context: any, attrName?: string) {
-        console.log("webworker-rpc: " + this.name + " cancel export: ", attr, context, attrName);
+        // console.log("webworker-rpc: " + this.name + " cancel export: ", attr, context, attrName);
         let definedAttrName = true;
         if (attrName === undefined || attrName === null) {
             definedAttrName = false;
