@@ -331,9 +331,9 @@ export class RPCPeer extends RPCEmitter {
             return;
         }
 
-        if (typeof SharedArrayBuffer === "undefined") {
-            console.warn("webworker-rpc: SharedArrayBuffer is undefined, use ArrayBuffer instead");
-            if (RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer) {
+        if (RPCPeer.msgTransType === MsgTransType.SharedArrayBuffer) {
+            if (typeof SharedArrayBuffer === "undefined") {
+                console.warn("webworker-rpc: SharedArrayBuffer is undefined, use ArrayBuffer instead");
                 RPCPeer.msgTransType = MsgTransType.Obj;
             }
         }
