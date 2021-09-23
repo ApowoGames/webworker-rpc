@@ -920,7 +920,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_AddRegistry(packet: webworker_rpc.IAddRegistryPacket) {
-        console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet);
+        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet);
         const {id, serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
