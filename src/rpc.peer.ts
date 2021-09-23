@@ -243,6 +243,7 @@ export class RPCPeer extends RPCEmitter {
     public name: string;
 
     public static msgTransType: MsgTransType = MsgTransType.Obj;
+    public static debug: boolean = false;
     private static _instance: RPCPeer;
 
     private readonly MESSAGEKEY_LINK: string = "link"; // TODO: define type of data
@@ -507,7 +508,7 @@ export class RPCPeer extends RPCEmitter {
 
     // 动态暴露属性 注意：若使用了自定义属性名attrName，需要管理好暴露属性的内存释放(cancelExportProperty / delete context[attrName])
     public exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener {
-        // console.log("webworker-rpc: " + this.name + " export: ", attr, context, attrName);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " export: ", attr, context, attrName);
         if (attrName === undefined || attrName === null) {
             for (const key in context) {
                 if (Object.prototype.hasOwnProperty.call(context, key)) {
@@ -576,7 +577,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     public cancelExportProperty(attr: any, context: any, attrName?: string) {
-        // console.log("webworker-rpc: " + this.name + " cancel export: ", attr, context, attrName);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " cancel export: ", attr, context, attrName);
         let definedAttrName = true;
         if (attrName === undefined || attrName === null) {
             definedAttrName = false;
@@ -785,7 +786,7 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        console.log("webworker-rpc: " + this.name + " execute: ", worker, method, context, params);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " execute: ", worker, method, context, params);
         if (!this.registry.has(worker)) {
             console.error("webworker-rpc: worker <" + worker + "> not registed");
             return;
@@ -910,7 +911,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Link(packet: webworker_rpc.ILinkPacket, ports: MessagePort[]) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_Link: ", ev);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_Link: ", packet);
         const {workers} = packet;
         for (let i = 0; i < ports.length; i++) {
             const onePort = ports[i];
@@ -920,7 +921,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_AddRegistry(packet: webworker_rpc.IAddRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_AddRegistry:", packet);
         const {id, serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
@@ -953,7 +954,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_GotRegistry(packet: webworker_rpc.IGotRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", packet);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_GotRegistry:", packet);
         const {id, serviceName} = packet;
 
         if (this.linkListeners.has(serviceName)) {
@@ -969,7 +970,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_RemoveRegistry(packet: webworker_rpc.IRemoveRegistryPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_RemoveRegistry:", packet);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_RemoveRegistry:", packet);
         const {serviceName, executors} = packet;
 
         if (!this.registry.has(serviceName)) {
@@ -989,7 +990,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Execute(packet: webworker_rpc.IExecutePacket) {
-        console.log("webworker-rpc: " + this.name + " onMessage_Execute:", packet);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_Execute:", packet);
         const {id, header} = packet;
         const {serviceName, remoteExecutor} = header;
 
@@ -1013,7 +1014,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Respond(packet: webworker_rpc.IResponsePacket) {
-        console.log("webworker-rpc: " + this.name + " onMessage_Respond:", packet);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_Respond:", packet);
         const {id, val} = packet;
 
         if (!this.resolvers.has(id)) {
@@ -1037,7 +1038,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Unlink(packet: webworker_rpc.IUnlinkPacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_Unlink:", ev.data);
+        if (RPCPeer.debug) console.log("webworker-rpc: " + this.name + " onMessage_Unlink:", packet);
         const {serviceName} = packet;
 
         if (this.channels.has(serviceName)) {

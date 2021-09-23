@@ -1511,6 +1511,7 @@ declare module 'webworker-rpc/rpc.peer' {
         };
         name: string;
         static msgTransType: MsgTransType;
+        static debug: boolean;
         static create(name: string): RPCPeer;
         static getInstance(): RPCPeer;
         static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener;
