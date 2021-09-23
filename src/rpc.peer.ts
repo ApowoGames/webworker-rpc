@@ -856,7 +856,7 @@ export class RPCPeer extends RPCEmitter {
         this.exported = true;
         for (const context of ExportedClasses) {
             if (!ExportedContexts.has(context)) {
-                console.error("webworker-rpc: Export only decorate Emitter!");
+                console.error("webworker-rpc: Export only decorate Emitter! check class: " + context);
                 continue;
             }
 
@@ -868,7 +868,7 @@ export class RPCPeer extends RPCEmitter {
             const keyPath = oneKey.split(".");
             const contextStr = keyPath[0];
             if (!ExportedContexts.has(contextStr)) {
-                console.error("webworker-rpc: Export only decorate Emitter!");
+                console.error("webworker-rpc: Export only decorate Emitter! check attribute: " + oneKey);
                 continue;
             }
             for (const attr of ExportedAttributes.get(oneKey)) {
