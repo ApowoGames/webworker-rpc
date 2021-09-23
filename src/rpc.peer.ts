@@ -785,7 +785,7 @@ export class RPCPeer extends RPCEmitter {
 
     // worker调用其他worker方法
     private execute(worker: string, method: string, context: string, params?: RPCParam[]): Promise<any> {
-        // console.log("webworker-rpc: " + this.name + " execute: ", worker, method, context, params);
+        console.log("webworker-rpc: " + this.name + " execute: ", worker, method, context, params);
         if (!this.registry.has(worker)) {
             console.error("webworker-rpc: worker <" + worker + "> not registed");
             return;
@@ -989,7 +989,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Execute(packet: webworker_rpc.IExecutePacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_Execute:", ev.data);
+        console.log("webworker-rpc: " + this.name + " onMessage_Execute:", packet);
         const {id, header} = packet;
         const {serviceName, remoteExecutor} = header;
 
@@ -1013,7 +1013,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     private onMessage_Respond(packet: webworker_rpc.IResponsePacket) {
-        // console.log("webworker-rpc: " + this.name + " onMessage_Respond:", ev.data);
+        console.log("webworker-rpc: " + this.name + " onMessage_Respond:", packet);
         const {id, val} = packet;
 
         if (!this.resolvers.has(id)) {
