@@ -495,14 +495,43 @@ export class RPCPeer extends RPCEmitter {
             this.__send(messageData, oneName, oneName !== MANAGER_WORKER_NAME);
         }
 
+        // clear private variables
+        this.remote = null;
+        this.worker = null;
+        this.registry.clear();
+        this.channels.clear();
+        this.linkListeners.clear();
+        this.linkTasks.length = 0;
         this.resolvers.forEach((val) => {
             val.reject("worker destroy");
         });
         this.resolvers.clear();
+        this.syncRegistryListeners.clear();
+
+        // clear static variables
+        ExportedClasses.length = 0;
+        ExportedContexts.clear();
+        ExportedFunctions.clear();
+        ExportedAttributes.clear();
+        RPCListeners.clear();
 
         if (RPCPeer._instance !== undefined && RPCPeer._instance !== null) RPCPeer._instance = null;
 
         console.log("webworker-rpc: " + this.name + " closed");
+        console.log("webworker-rpc: " + this.name + " variables check: ",
+            this.remote,
+            this.worker,
+            this.registry.size,
+            this.channels.size,
+            this.linkListeners.size,
+            this.linkTasks.length,
+            this.resolvers.size,
+            this.syncRegistryListeners.size,
+            ExportedClasses.length,
+            ExportedContexts.size,
+            ExportedFunctions.size,
+            ExportedAttributes.size,
+            RPCListeners.size);
         self.close();
     }
 

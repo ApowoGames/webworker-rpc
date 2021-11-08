@@ -13,6 +13,8 @@ window.onload = () => {
                 RPCPeer.remote.foreman.ForemanChild.attr2.foremanSonStaticFunction();
 
                 RPCPeer.remote.foreman.ForemanChild.cancelExportAttr();
+
+                RPCPeer.remote.foreman.ForemanChild.destroy();
             });
 
         // const line = 2000;
