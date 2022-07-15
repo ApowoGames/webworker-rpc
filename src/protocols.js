@@ -2952,6 +2952,7 @@
              * @interface IProxyCreateWorkerPacket
              * @property {string} workerName ProxyCreateWorkerPacket workerName
              * @property {string} workerUrl ProxyCreateWorkerPacket workerUrl
+             * @property {string|null} [workerType] ProxyCreateWorkerPacket workerType
              * @property {webworker_rpc.IWebWorkerMessage} msg ProxyCreateWorkerPacket msg
              */
     
@@ -2987,6 +2988,14 @@
             ProxyCreateWorkerPacket.prototype.workerUrl = "";
     
             /**
+             * ProxyCreateWorkerPacket workerType.
+             * @member {string} workerType
+             * @memberof webworker_rpc.ProxyCreateWorkerPacket
+             * @instance
+             */
+            ProxyCreateWorkerPacket.prototype.workerType = "";
+    
+            /**
              * ProxyCreateWorkerPacket msg.
              * @member {webworker_rpc.IWebWorkerMessage} msg
              * @memberof webworker_rpc.ProxyCreateWorkerPacket
@@ -3020,7 +3029,9 @@
                     writer = $Writer.create();
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.workerName);
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.workerUrl);
-                $root.webworker_rpc.WebWorkerMessage.encode(message.msg, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.workerType != null && Object.hasOwnProperty.call(message, "workerType"))
+                    writer.uint32(/* id 3, wireType 2 =*/26).string(message.workerType);
+                $root.webworker_rpc.WebWorkerMessage.encode(message.msg, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
                 return writer;
             };
     
@@ -3062,6 +3073,9 @@
                         message.workerUrl = reader.string();
                         break;
                     case 3:
+                        message.workerType = reader.string();
+                        break;
+                    case 4:
                         message.msg = $root.webworker_rpc.WebWorkerMessage.decode(reader, reader.uint32());
                         break;
                     default:
@@ -3109,6 +3123,9 @@
                     return "workerName: string expected";
                 if (!$util.isString(message.workerUrl))
                     return "workerUrl: string expected";
+                if (message.workerType != null && message.hasOwnProperty("workerType"))
+                    if (!$util.isString(message.workerType))
+                        return "workerType: string expected";
                 {
                     var error = $root.webworker_rpc.WebWorkerMessage.verify(message.msg);
                     if (error)
@@ -3133,6 +3150,8 @@
                     message.workerName = String(object.workerName);
                 if (object.workerUrl != null)
                     message.workerUrl = String(object.workerUrl);
+                if (object.workerType != null)
+                    message.workerType = String(object.workerType);
                 if (object.msg != null) {
                     if (typeof object.msg !== "object")
                         throw TypeError(".webworker_rpc.ProxyCreateWorkerPacket.msg: object expected");
@@ -3157,12 +3176,15 @@
                 if (options.defaults) {
                     object.workerName = "";
                     object.workerUrl = "";
+                    object.workerType = "";
                     object.msg = null;
                 }
                 if (message.workerName != null && message.hasOwnProperty("workerName"))
                     object.workerName = message.workerName;
                 if (message.workerUrl != null && message.hasOwnProperty("workerUrl"))
                     object.workerUrl = message.workerUrl;
+                if (message.workerType != null && message.hasOwnProperty("workerType"))
+                    object.workerType = message.workerType;
                 if (message.msg != null && message.hasOwnProperty("msg"))
                     object.msg = $root.webworker_rpc.WebWorkerMessage.toObject(message.msg, options);
                 return object;

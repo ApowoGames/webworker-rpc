@@ -1229,6 +1229,9 @@ export namespace webworker_rpc {
         /** ProxyCreateWorkerPacket workerUrl */
         workerUrl: string;
 
+        /** ProxyCreateWorkerPacket workerType */
+        workerType?: (string|null);
+
         /** ProxyCreateWorkerPacket msg */
         msg: webworker_rpc.IWebWorkerMessage;
     }
@@ -1247,6 +1250,9 @@ export namespace webworker_rpc {
 
         /** ProxyCreateWorkerPacket workerUrl. */
         public workerUrl: string;
+
+        /** ProxyCreateWorkerPacket workerType. */
+        public workerType: string;
 
         /** ProxyCreateWorkerPacket msg. */
         public msg: webworker_rpc.IWebWorkerMessage;

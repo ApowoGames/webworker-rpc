@@ -1240,6 +1240,9 @@ declare module 'webworker-rpc/protocols' {
                     /** ProxyCreateWorkerPacket workerUrl */
                     workerUrl: string;
     
+                    /** ProxyCreateWorkerPacket workerType */
+                    workerType?: (string|null);
+    
                     /** ProxyCreateWorkerPacket msg */
                     msg: webworker_rpc.IWebWorkerMessage;
             }
@@ -1258,6 +1261,9 @@ declare module 'webworker-rpc/protocols' {
     
                     /** ProxyCreateWorkerPacket workerUrl. */
                     workerUrl: string;
+    
+                    /** ProxyCreateWorkerPacket workerType. */
+                    workerType: string;
     
                     /** ProxyCreateWorkerPacket msg. */
                     msg: webworker_rpc.IWebWorkerMessage;
@@ -1525,7 +1531,7 @@ declare module 'webworker-rpc/rpc.peer' {
         static destroy(): void;
         static destroyManagerWorker(): void;
         constructor(name: string);
-        attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener;
+        attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean, workerType?: WorkerType): LinkListener;
         destroyManagerWorker(): void;
         destroy(): void;
         exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;
