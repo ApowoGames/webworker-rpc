@@ -1520,7 +1520,7 @@ declare module 'webworker-rpc/rpc.peer' {
         static debug: boolean;
         static create(name: string): RPCPeer;
         static getInstance(): RPCPeer;
-        static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener;
+        static attach(workerName: string, workerUrl?: string | URL, onlyOneWorker?: boolean): LinkListener;
         static get remote(): {
             [worker: string]: {
                 [context: string]: any;
@@ -1531,7 +1531,7 @@ declare module 'webworker-rpc/rpc.peer' {
         static destroy(): void;
         static destroyManagerWorker(): void;
         constructor(name: string);
-        attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean, workerType?: WorkerType): LinkListener;
+        attach(workerName: string, workerUrl?: string | URL, onlyOneWorker?: boolean, workerType?: WorkerType): LinkListener;
         destroyManagerWorker(): void;
         destroy(): void;
         exportProperty(attr: any, context: any, attrName?: string): SyncRegistryListener;

@@ -261,7 +261,7 @@ export class RPCPeer extends RPCEmitter {
     private registry: Map<string, webworker_rpc.IExecutor[]>;
     private channels: Map<string, MessagePort>;
     private linkListeners: Map<string, LinkListener>;
-    private linkTasks: { workerName: string, workerUrl?: string }[];
+    private linkTasks: { workerName: string, workerUrl?: string | URL }[];
     private exported: boolean = false;
     private resolvers: Map<number, ValueResolver<any>>;
     private registryPackID: number;
@@ -277,7 +277,7 @@ export class RPCPeer extends RPCEmitter {
         return RPCPeer._instance;
     }
 
-    static attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean): LinkListener {
+    static attach(workerName: string, workerUrl?: string | URL, onlyOneWorker?: boolean): LinkListener {
         if (!RPCPeer._instance) {
             console.error("webworker-rpc: RPCPeer not created");
             return null;
@@ -378,7 +378,7 @@ export class RPCPeer extends RPCEmitter {
     }
 
     @ExceptClassProperties()
-    public attach(workerName: string, workerUrl?: string, onlyOneWorker?: boolean, workerType?: WorkerType): LinkListener {
+    public attach(workerName: string, workerUrl?: string | URL, onlyOneWorker?: boolean, workerType?: WorkerType): LinkListener {
         if (onlyOneWorker === undefined) {
             onlyOneWorker = false;
         }
@@ -404,7 +404,7 @@ export class RPCPeer extends RPCEmitter {
                 console.error("webworker-rpc: " + this.name + " cannot create worker.");
                 return listener;
             }
-            if (workerUrl === undefined || workerUrl.length === 0) {
+            if (workerUrl === undefined || (typeof workerUrl === "string" && workerUrl.length === 0)) {
                 console.error("webworker-rpc: ONLY_ONE_WORKER mode not support undefined workerUrl (besides windows).");
                 return listener;
             }
@@ -451,12 +451,13 @@ export class RPCPeer extends RPCEmitter {
                 this.addChannel(MANAGER_WORKER_NAME, managerChannel.port1);
             }
 
+            const tempUrl: string | undefined = workerUrl instanceof URL ? workerUrl.toString() : workerUrl;
             const requestMsg = new webworker_rpc.WebWorkerMessage({
                 key: this.MESSAGEKEY_REQUEST_LINK,
                 dataRequestLink: new webworker_rpc.RequestLinkPacket({
                     serviceName: this.name,
                     workerName,
-                    workerUrl
+                    workerUrl: tempUrl
                 })
             });
             this.__send(requestMsg, MANAGER_WORKER_NAME, false);
@@ -803,12 +804,13 @@ export class RPCPeer extends RPCEmitter {
             const taskNum = this.linkTasks.length;
             for (let i = 0; i < taskNum; i++) {
                 const task = this.linkTasks.pop();
+                const tempUrl: string | undefined = task.workerUrl instanceof URL ? task.workerUrl.toString() : task.workerUrl;
                 const requestMsg = new webworker_rpc.WebWorkerMessage({
                     key: this.MESSAGEKEY_REQUEST_LINK,
                     dataRequestLink: new webworker_rpc.RequestLinkPacket({
                         serviceName: this.name,
                         workerName: task.workerName,
-                        workerUrl: task.workerUrl
+                        workerUrl: tempUrl
                     })
                 });
                 this.__send(requestMsg, MANAGER_WORKER_NAME, false);
@@ -1095,7 +1097,7 @@ export class RPCPeer extends RPCEmitter {
         }
 
         const path = workerUrl;
-        const tarWorkerType : WorkerType = workerType && workerType == "module" ? "module" : "classic"; 
+        const tarWorkerType: WorkerType = workerType && workerType == "module" ? "module" : "classic";
         const newWorker = new Worker(path, { name: workerName, type: tarWorkerType });
         console.log("webworker-rpc: " + this.name + " create worker: ", path, workerName);
         this.__send(msg, newWorker, true, [].concat(ports));

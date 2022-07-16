@@ -3,7 +3,7 @@ import {CustomData} from "./custom.data";
 
 window.onload = () => {
     RPCPeer.create("main");
-    RPCPeer.attach("foreman", "/foremanWorker.js").onceReady(() => {
+    RPCPeer.attach("foreman", new URL("/foremanWorker.js", location.origin)).onceReady(() => {
         console.log("ready link to foreman");
 
         RPCPeer.remote.foreman.ForemanChild.exportAttr()
